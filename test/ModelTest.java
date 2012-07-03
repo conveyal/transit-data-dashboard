@@ -34,8 +34,11 @@ public class ModelTest extends UnitTest {
 
     @Test
     public void testAgencyFeedRelation () {
-        NtdAgency bart = NtdAgency.find("byWebsite", "http://bart.gov").first();
+        NtdAgency bart = NtdAgency.find("byWebsite", "http://www.bart.gov").first();
         NtdAgency kcm = NtdAgency.find("byWebsite", "http://metro.kingcounty.gov").first();
+
+        assertNotNull(bart);
+        assertNotNull(kcm);
 
         assertEquals(2, bart.feeds.size());
         assertEquals(2, kcm.feeds.size());
@@ -50,5 +53,24 @@ public class ModelTest extends UnitTest {
         assertEquals(bartGtfs[1], kcmGtfs[1]);
         assertEquals("http://www.bart.gov", bartGtfs[0].agencyWebsite);
         assertEquals("http://metro.kingcounty.gov", kcmGtfs[0].agencyWebsite);
+    }
+
+    @Test
+    public void testMetroAreaHasAgencies () {
+        MetroArea sf = MetroArea.find("byName", "San Francisco-Oakland-San José, CA").first();
+        
+        assertNotNull(sf);
+        assertEquals(1, sf.getAgencies().size());
+
+        assertEquals("BART", sf.getAgencies().get(0).name);
+    }
+
+    @Test
+    public void testFeedHasAgencies () {
+        GtfsFeed mergedFeed = GtfsFeed.find("byAgencyWebsite", "http://example.com").first();
+        
+        assertNotNull(mergedFeed);
+        
+        assertEquals(2, mergedFeed.agencies.size());
     }
 }

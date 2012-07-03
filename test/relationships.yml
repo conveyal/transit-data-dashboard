@@ -30,12 +30,12 @@ NtdAgency(myAgency):
         website: http://www.example.com
 
 GtfsFeed(bart_gtfs):
-        agencies: [bart]
+        agencies: bart
         official: true
         agencyWebsite: http://www.bart.gov
 
 GtfsFeed(kcm):
-        agencies: [kcm]
+        agencies: kcm
         official: true
         agencyWebsite: http://metro.kingcounty.gov
 

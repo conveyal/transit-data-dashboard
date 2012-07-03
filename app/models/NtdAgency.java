@@ -18,7 +18,10 @@ public class NtdAgency extends Model {
     @URL
     public String website;
 
-    /** This agency's ID in the National Transit Database */
+    /** 
+     * This agency's ID in the National Transit Database. Stored as string to preserve
+     * leading zeros.
+     */
     public String ntdId;
 
     /** Service area population */
@@ -35,7 +38,7 @@ public class NtdAgency extends Model {
     @ManyToOne
     public MetroArea metroArea;
 
-    @ManyToMany(mappedBy="agencies")
+    @ManyToMany(cascade=CascadeType.PERSIST)
     public Set<GtfsFeed> feeds;
 
     /** 
@@ -43,6 +46,9 @@ public class NtdAgency extends Model {
      * correct.
      */
     public String toString () {
-        return name;
+        if (name != null && !name.equals(""))
+            return name;
+        else
+            return website;
     }
 }

@@ -25,19 +25,23 @@ public class MetroArea extends Model {
     
     // TODO: geometry
 
-    // TODO: cascade?
-    @OneToMany(mappedBy="metroArea")
-    public List<NtdAgency> ntdAgencies;
+    /**
+     * Get a list of agencies for this metro.
+     */
+    public List<NtdAgency> getAgencies() {
+        return NtdAgency.find("byMetroArea", this).fetch();
+    }
 
     /**
      * Return the string used in the admin interface
      */
     public String toString () {
+        List<NtdAgency> agencies = getAgencies();
         if (name != null && !name.equals("")) {
             return name;
         }
-        else if (ntdAgencies.size() != 0) {
-            return "Metro including " + ntdAgencies.get(0).name;
+        else if (agencies.size() != 0) {
+            return "Metro including " + agencies.get(0).name;
         }
         else {
             return "Empty metro area";
