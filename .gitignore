@@ -1,5 +1,12 @@
+<<<<<<< HEAD
 .#*
 #*#
 *~
 tmp/*
 db/*
+*.class
+# Package Files #
+*.jar
+*.war
+*.ear
+
