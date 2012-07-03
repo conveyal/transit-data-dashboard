@@ -1,0 +1,46 @@
+MetroArea(sf):
+        name: San Francisco-Oakland-San José, CA
+
+MetroArea(unnamedEmpty):
+        name:
+
+MetroArea(unnamedFull):
+        name:
+
+MetroArea(unnamedFullNoAgencyName):
+        name:
+
+NtdAgency(bart):
+        metroArea: sf
+        name: BART
+        website: http://www.bart.gov
+        ntdId: 9003
+        population: 5900000
+        ridership:
+        passengerMiles:
+
+NtdAgency(kcm):
+        metroArea: unnamedFull
+        name: King County Metro
+        website: http://metro.kingcounty.gov
+        ntdId: 0001
+
+NtdAgency(myAgency):
+        metroArea: unnamedFullNoAgencyName
+        website: http://www.example.com
+
+GtfsFeed(bart_gtfs):
+        agencies: [bart]
+        official: true
+        agencyWebsite: http://www.bart.gov
+
+GtfsFeed(kcm):
+        agencies: [kcm]
+        official: true
+        agencyWebsite: http://metro.kingcounty.gov
+
+GtfsFeed(westCoast):
+        agencies: [kcm, bart]
+        official: false
+        agencyWebsite: http://example.com
+        

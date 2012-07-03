@@ -1,0 +1,33 @@
+03 Jul 2012 08:04:09,574 INFO  ~ Starting /home/matthewc/openplans/gtfs_analysis/gtfscoverage
+03 Jul 2012 08:04:09,588 INFO  ~ Module crud is available (/usr/local/play-1.2.4/modules/crud)
+03 Jul 2012 08:04:11,707 WARN  ~ You're running Play! in DEV mode
+03 Jul 2012 08:04:12,082 INFO  ~ Listening for HTTP on port 9000 (Waiting a first request to start) ...
+03 Jul 2012 08:04:30,707 ERROR ~ 
+
+@6b0181mmh
+Internal Server Error (500) for request GET /@tests
+
+Compilation error (In /test/ModelTest.java around line 26)
+The file /test/ModelTest.java could not be compiled. Error raised is : metroArea cannot be resolved or is not a field
+
+play.exceptions.CompilationException: metroArea cannot be resolved or is not a field
+	at play.classloading.ApplicationCompiler$2.acceptResult(ApplicationCompiler.java:246)
+	at org.eclipse.jdt.internal.compiler.Compiler.handleInternalException(Compiler.java:676)
+	at org.eclipse.jdt.internal.compiler.Compiler.compile(Compiler.java:520)
+	at play.classloading.ApplicationCompiler.compile(ApplicationCompiler.java:282)
+	at play.classloading.ApplicationClassloader.getAllClasses(ApplicationClassloader.java:424)
+	at play.classloading.ApplicationClassloader.getAssignableClasses(ApplicationClassloader.java:453)
+	at play.classloading.ApplicationClassloader$getAssignableClasses.call(Unknown Source)
+	at {module:crud}/app/views/tags/crud/types.tag.(line:3)
+	at play.templates.GroovyTemplate.internalRender(GroovyTemplate.java:232)
+	at play.templates.GroovyTemplate$ExecutableTemplate.invokeTag(GroovyTemplate.java:379)
+	at {module:crud}/conf/routes.(line:4)
+	at play.templates.GroovyTemplate.internalRender(GroovyTemplate.java:232)
+	at play.templates.Template.render(Template.java:26)
+	at play.templates.GroovyTemplate.render(GroovyTemplate.java:187)
+	at play.mvc.Router.parse(Router.java:162)
+	at play.mvc.Router.parse(Router.java:190)
+	at play.mvc.Router.parse(Router.java:164)
+	at play.mvc.Router.load(Router.java:48)
+	at play.mvc.Router.detectChanges(Router.java:219)
+	at Invocation.HTTP Request(Play!)
