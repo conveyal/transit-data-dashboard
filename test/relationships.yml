@@ -27,7 +27,7 @@ NtdAgency(kcm):
 
 NtdAgency(myAgency):
         metroArea: unnamedFullNoAgencyName
-        website: http://www.example.com
+        website: http://example.com
 
 GtfsFeed(bart_gtfs):
         agencies: bart

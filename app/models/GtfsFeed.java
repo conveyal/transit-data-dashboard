@@ -70,15 +70,14 @@ public class GtfsFeed extends Model {
     /** The number of trips per calendar, on average */
     public int tripsPerCalendar;
 
-    // TODO: what do the different cascade types do?
-    @ManyToMany(cascade=CascadeType.PERSIST)
-    // TODO: why is a set used here?
-    public Set<NtdAgency> agencies;
+    /**
+     * Get the agencies this feed refers to.
+     */
+    public List<NtdAgency> getAgencies () {
+        return NtdAgency.find("inFeeds", this).fetch();
+    }
 
     public String toString () {
-        if (dataExchangeId != null && !dataExchangeId.equals(""))
-            return dataExchangeId;
-        else
-            return "GTFS for " + agencyWebsite;
+        return "GTFS for " + agencyWebsite;
     }
 }

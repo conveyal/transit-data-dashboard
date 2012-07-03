@@ -41,7 +41,12 @@ public class MetroArea extends Model {
             return name;
         }
         else if (agencies.size() != 0) {
-            return "Metro including " + agencies.get(0).name;
+            if (agencies.get(0).name != null && !agencies.get(0).name.equals("")) {
+                return "Metro including " + agencies.get(0).name;
+            }
+            else {
+                return "Metro including " + agencies.get(0).website;
+            }
         }
         else {
             return "Empty metro area";

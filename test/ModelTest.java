@@ -22,9 +22,11 @@ public class ModelTest extends UnitTest {
         // must be done.
         MetroArea sf = MetroArea.find("byName", "San Francisco-Oakland-San José, CA").first();
         MetroArea empty = MetroArea.find("byId", 1L).first();
-        MetroArea full = NtdAgency.find("byWebsite", "http://metro.kingcounty.gov").first()
+        MetroArea full = ((NtdAgency) NtdAgency.find("byWebsite", "http://metro.kingcounty.gov")
+                          .first())
             .metroArea;
-        MetroArea fullNoAgencyName = NtdAgency.find("byWebsite", "http://example.com").first()
+        MetroArea fullNoAgencyName = ((NtdAgency) NtdAgency.find("byWebsite", "http://example.com")
+                                      .first())
             .metroArea;
         assertEquals("San Francisco-Oakland-San José, CA", sf.toString());
         //        assertEquals("Empty metro area", empty.toString());
@@ -71,6 +73,6 @@ public class ModelTest extends UnitTest {
         
         assertNotNull(mergedFeed);
         
-        assertEquals(2, mergedFeed.agencies.size());
+        assertEquals(2, mergedFeed.getAgencies().size());
     }
 }
