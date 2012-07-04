@@ -51,4 +51,9 @@ public class NtdAgency extends Model {
         else
             return website;
     }
+
+    // TODO: argumented constructors
+    public NtdAgency () {
+        feeds = new TreeSet<GtfsFeed>();
+    }
 }

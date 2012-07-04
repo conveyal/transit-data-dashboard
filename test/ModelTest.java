@@ -75,4 +75,45 @@ public class ModelTest extends UnitTest {
         
         assertEquals(2, mergedFeed.getAgencies().size());
     }
+
+    @Test
+    public void testBidirectionalRelationships () {
+        // TODO: create constructors, maybe project lombok
+        NtdAgency agency = new NtdAgency();
+        GtfsFeed feed = new GtfsFeed();
+        MetroArea metro = new MetroArea();
+
+        agency.name = "The Funicular";
+        agency.website = "http://funicular.example.com";
+        agency.ntdId = "99991";
+        agency.population = 2000;
+
+        feed.country = "Mars";
+        feed.feedBaseUrl = "http://funicular.example.com/gtfs";
+        feed.official = true;
+        feed.agencyWebsite = "http://funicular.example.com";
+
+        metro.name = "Los Angeles, CA";
+
+        agency.metroArea = metro;
+        assertNotNull(agency.feeds);
+        agency.feeds.add(feed);
+
+        // wrt http://stackoverflow.com/questions/8169279
+        metro.save();
+        agency.save();
+        feed.save();
+
+        // confirm that they worked in the direction they were defined
+        assertEquals(metro, agency.metroArea);
+        // Set does not provide a get method.
+        assertEquals(feed, agency.feeds.toArray()[0]);
+
+        // confirm that the bidirectionality worked correctly
+        assertEquals(1, metro.getAgencies().size());
+        assertEquals(agency, metro.getAgencies().get(0));
+
+        assertEquals(1, feed.getAgencies().size());
+        assertEquals(agency, feed.getAgencies().get(0));
+    }
 }

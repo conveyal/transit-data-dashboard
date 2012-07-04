@@ -74,7 +74,10 @@ public class GtfsFeed extends Model {
      * Get the agencies this feed refers to.
      */
     public List<NtdAgency> getAgencies () {
-        return NtdAgency.find("inFeeds", this).fetch();
+        // modified from http://stackoverflow.com/questions/7898960
+        return NtdAgency.find("SELECT a FROM NtdAgency a INNER JOIN a.feeds feeds WHERE ? IN feeds",
+                              this)
+            .fetch();
     }
 
     public String toString () {
