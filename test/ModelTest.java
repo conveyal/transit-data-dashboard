@@ -116,4 +116,20 @@ public class ModelTest extends UnitTest {
         assertEquals(1, feed.getAgencies().size());
         assertEquals(agency, feed.getAgencies().get(0));
     }
+
+    @Test
+    public void testArgumentedConstructors () {
+        NtdAgency agency = new NtdAgency("The Funicular", "http://example.net", "09999", 100000,
+                                         590000, 4000000);
+
+        agency.save();
+        
+        assertNotNull(agency.feeds);
+        assertEquals(0, agency.feeds.size());
+        assertEquals("The Funicular", agency.name);
+        assertEquals("09999", agency.ntdId);
+        assertEquals(100000, agency.population);
+        assertEquals(590000, agency.ridership);
+        assertEquals(4000000, agency.passengerMiles);
+    }
 }

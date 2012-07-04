@@ -56,4 +56,15 @@ public class NtdAgency extends Model {
     public NtdAgency () {
         feeds = new TreeSet<GtfsFeed>();
     }
+
+    public NtdAgency (String name, String website, String ntdId, int population,
+                      int ridership, int passengerMiles) {
+        this.name = name;
+        this.website = website;
+        this.ntdId = ntdId;
+        this.population = population;
+        this.ridership = ridership;
+        this.passengerMiles = passengerMiles;
+        feeds = new TreeSet<GtfsFeed>();
+    }      
 }
