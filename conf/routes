@@ -13,5 +13,7 @@ GET     /public/                                staticDir:public
 
 *       /admin                                  module:crud
 
+*       /api/{controller}/{action}              {controller}.{action}   
+
 # Catch all
-*       /{controller}/{action}                  {controller}.{action}
+#*       /{controller}/{action}                  {controller}.{action}  
