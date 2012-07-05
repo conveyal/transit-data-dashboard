@@ -85,7 +85,7 @@ public class GtfsFeed extends Model {
     }
 
     public String toString () {
-        return "GTFS for " + agencyUrl;
+        return "GTFS for " + agencyName;
     }
 
     public GtfsFeed () {};
