@@ -28,9 +28,18 @@ public class MetroArea extends Model {
     /**
      * Get a list of agencies for this metro.
      */
-    public List<NtdAgency> getAgencies() {
+    public List<NtdAgency> getAgencies () {
         return NtdAgency.find("byMetroArea", this).fetch();
     }
+
+    /**
+     * Make a new metro area
+     */
+    public MetroArea (String name) {
+        this.name = name;
+    }
+
+    public MetroArea () {};
 
     /**
      * Return the string used in the admin interface
@@ -45,7 +54,7 @@ public class MetroArea extends Model {
                 return "Metro including " + agencies.get(0).name;
             }
             else {
-                return "Metro including " + agencies.get(0).website;
+                return "Metro including " + agencies.get(0).url;
             }
         }
         else {

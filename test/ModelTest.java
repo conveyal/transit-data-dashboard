@@ -2,6 +2,7 @@ import org.junit.*;
 import java.util.*;
 import play.test.*;
 import models.*;
+import play.db.jpa.Model;
 
 public class ModelTest extends UnitTest {
     @Before
@@ -11,9 +12,104 @@ public class ModelTest extends UnitTest {
         Fixtures.loadModels("relationships.yml");
     }
 
-    @Test
-    public void testInstatiation () {
+    // these next 3 functions return a valid instance of the object, unsaved. They are used to
+    // test validation: the test receives a valid object, invalidates one field, then tries to 
+    // save
+    private MetroArea getValidMetroArea () {
+        return new MetroArea ("Redding, CA");
+    }
+
+    private NtdAgency getValidNtdAgency () {
+        MetroArea metro = MetroArea.find("byName", "San Francisco-Oakland-San José, CA").first();
+        NtdAgency agency = new NtdAgency(
+            // name
+            "My Test Agency",
+            // url
+            "http://example.org",
+            // ntdId
+            "00099",
+            // population
+            1000,
+            // ridership
+            1000000,
+            // passenger miles
+            750000
+                                         );
+
+        agency.metroArea = metro;
+        return agency;
+    }
+
+    private GtfsFeed getValidGtfsFeed () {
+        return new GtfsFeed(
+            "My Test Agency", // agency name
+            "http://valid-gtfs.example.org", // agency url
+            "us", // country
+            "my-test-agency", // data exchange id
+            "http://example.net/my-test-agency", // data exchange url
+            new Date(), // date added
+            new Date(), // date modified
+            "http://valid-gtfs.example.org/dev", // feed base url
+            "http://valid-gtfs.example.org/lic", // license url
+            true, // official
+            "HI", // state
+            "Honolulu, HI" // area description
+                            );
+    }
         
+    // this function returns true if there was a validation exception saving the object
+    private boolean throwsValidationException (Model object) {
+        object.save();
+
+        // to test: http://stackoverflow.com/questions/156503
+        return true;
+    }
+
+    @Test
+    public void testValidationAndInstantiation () {
+        // first, make sure we can save them
+        // note, this also confirms we can instantiate them.
+        getValidMetroArea().save();
+        getValidNtdAgency().save();
+        getValidGtfsFeed().save();
+
+        MetroArea metro;
+        NtdAgency agency;
+        GtfsFeed feed;
+
+        metro = MetroArea.find("byName", "Redding, CA").first();
+        assertNotNull(metro);
+        assertEquals("Redding, CA", metro.name);
+
+        agency = NtdAgency.find("byUrl", "http://example.org").first();
+        assertNotNull(agency);
+        assertEquals("My Test Agency", agency.name);
+        assertEquals("http://example.org", agency.url);
+        assertEquals("00099", agency.ntdId);
+        assertEquals(1000, agency.population);
+        assertEquals(1000000, agency.ridership);
+        assertEquals(750000, agency.passengerMiles);
+
+        feed = GtfsFeed.find("byAgencyUrl", "http://valid-gtfs.example.org").first();
+        assertNotNull(feed);
+        assertEquals("My Test Agency", feed.agencyName);
+        assertEquals("http://valid-gtfs.example.org", feed.agencyUrl);
+        assertEquals("us", feed.country);
+        assertEquals("my-test-agency", feed.dataExchangeId);
+        assertEquals("http://example.net/my-test-agency", feed.dataExchangeUrl);
+        // TODO: check date
+        assertEquals("http://valid-gtfs.example.org/dev", feed.feedBaseUrl);
+        assertEquals("http://valid-gtfs.example.org/lic", feed.licenseUrl);
+        assertEquals(true, feed.official);
+        assertEquals("HI", feed.state);
+        assertEquals("Honolulu, HI", feed.areaDescription);
+
+        // no validation rules on MetroArea class, at least not yet
+        // no name
+        agency = getValidNtdAgency();
+        agency.name = null;
+        agency.url = "this is not a url";
+        throwsValidationException(agency);
     }
 
     @Test
@@ -22,10 +118,10 @@ public class ModelTest extends UnitTest {
         // must be done.
         MetroArea sf = MetroArea.find("byName", "San Francisco-Oakland-San José, CA").first();
         MetroArea empty = MetroArea.find("byId", 1L).first();
-        MetroArea full = ((NtdAgency) NtdAgency.find("byWebsite", "http://metro.kingcounty.gov")
+        MetroArea full = ((NtdAgency) NtdAgency.find("byUrl", "http://metro.kingcounty.gov")
                           .first())
             .metroArea;
-        MetroArea fullNoAgencyName = ((NtdAgency) NtdAgency.find("byWebsite", "http://example.com")
+        MetroArea fullNoAgencyName = ((NtdAgency) NtdAgency.find("byUrl", "http://example.com")
                                       .first())
             .metroArea;
         assertEquals("San Francisco-Oakland-San José, CA", sf.toString());
@@ -36,8 +132,8 @@ public class ModelTest extends UnitTest {
 
     @Test
     public void testAgencyFeedRelation () {
-        NtdAgency bart = NtdAgency.find("byWebsite", "http://www.bart.gov").first();
-        NtdAgency kcm = NtdAgency.find("byWebsite", "http://metro.kingcounty.gov").first();
+        NtdAgency bart = NtdAgency.find("byUrl", "http://www.bart.gov").first();
+        NtdAgency kcm = NtdAgency.find("byUrl", "http://metro.kingcounty.gov").first();
 
         assertNotNull(bart);
         assertNotNull(kcm);
@@ -51,10 +147,31 @@ public class ModelTest extends UnitTest {
         bart.feeds.toArray(bartGtfs);
         kcm.feeds.toArray(kcmGtfs);
 
+        GtfsFeed bartSingle, kcmSingle, bartMerged, kcmMerged;
+
         // this is the combined GTFS
-        assertEquals(bartGtfs[1], kcmGtfs[1]);
-        assertEquals("http://www.bart.gov", bartGtfs[0].agencyWebsite);
-        assertEquals("http://metro.kingcounty.gov", kcmGtfs[0].agencyWebsite);
+        // sort out the arrays
+        if (bartGtfs[0].getAgencies().size() == 2) {
+            bartMerged = bartGtfs[0];
+            bartSingle = bartGtfs[1];
+        }
+        else {
+            bartMerged = bartGtfs[1];
+            bartSingle = bartGtfs[0];
+        }
+
+        if (kcmGtfs[0].getAgencies().size() == 2) {
+            kcmMerged = kcmGtfs[0];
+            kcmSingle = kcmGtfs[1];
+        }
+        else {
+            kcmMerged = kcmGtfs[1];
+            kcmSingle = kcmGtfs[0];
+        }
+
+        assertEquals(bartMerged, kcmMerged);
+        assertEquals("http://www.bart.gov", bartSingle.agencyUrl);
+        assertEquals("http://metro.kingcounty.gov", kcmSingle.agencyUrl);
     }
 
     @Test
@@ -69,7 +186,7 @@ public class ModelTest extends UnitTest {
 
     @Test
     public void testFeedHasAgencies () {
-        GtfsFeed mergedFeed = GtfsFeed.find("byAgencyWebsite", "http://example.com").first();
+        GtfsFeed mergedFeed = GtfsFeed.find("byAgencyUrl", "http://example.com").first();
         
         assertNotNull(mergedFeed);
         
@@ -84,14 +201,14 @@ public class ModelTest extends UnitTest {
         MetroArea metro = new MetroArea();
 
         agency.name = "The Funicular";
-        agency.website = "http://funicular.example.com";
+        agency.url = "http://funicular.example.com";
         agency.ntdId = "99991";
         agency.population = 2000;
 
         feed.country = "Mars";
         feed.feedBaseUrl = "http://funicular.example.com/gtfs";
         feed.official = true;
-        feed.agencyWebsite = "http://funicular.example.com";
+        feed.agencyUrl = "http://funicular.example.com";
 
         metro.name = "Los Angeles, CA";
 

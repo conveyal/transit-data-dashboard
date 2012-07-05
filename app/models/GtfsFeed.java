@@ -8,6 +8,10 @@ import play.data.validation.*;
 
 @Entity
 public class GtfsFeed extends Model {
+
+    /** The name of this agency, customer-facing */
+    @Required
+    public String agencyName;
     
     /** The human-readable area description, from Data Exchange, generally */
     public String areaDescription;
@@ -56,7 +60,7 @@ public class GtfsFeed extends Model {
      */
     @Required
     @URL
-    public String agencyWebsite;
+    public String agencyUrl;
 
     // TODO: time period
     /** The number of trips in this GTFS */
@@ -81,6 +85,26 @@ public class GtfsFeed extends Model {
     }
 
     public String toString () {
-        return "GTFS for " + agencyWebsite;
+        return "GTFS for " + agencyUrl;
     }
+
+    public GtfsFeed () {};
+
+    public GtfsFeed (String agencyName, String agencyUrl, String country, 
+                     String dataExchangeId, String dataExchangeUrl, Date dateAdded,
+                     Date dateUpdated, String feedBaseUrl, String licenseUrl, boolean official,
+                     String state, String areaDescription) {
+        this.agencyName = agencyName;
+        this.areaDescription = areaDescription;
+        this.country = country;
+        this.dataExchangeId = dataExchangeId;
+        this.dataExchangeUrl = dataExchangeUrl;
+        this.dateAdded = dateAdded;
+        this.dateUpdated = dateUpdated;
+        this.feedBaseUrl = feedBaseUrl;
+        this.official = official;
+        this.licenseUrl = licenseUrl;
+        this.state = state;
+        this.agencyUrl = agencyUrl;
+    }            
 }

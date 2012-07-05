@@ -16,7 +16,7 @@ public class NtdAgency extends Model {
     /** This agency's primary location on the WWW */
     @Required
     @URL
-    public String website;
+    public String url;
 
     /** 
      * This agency's ID in the National Transit Database. Stored as string to preserve
@@ -49,7 +49,7 @@ public class NtdAgency extends Model {
         if (name != null && !name.equals(""))
             return name;
         else
-            return website;
+            return url;
     }
 
     // TODO: argumented constructors
@@ -57,10 +57,10 @@ public class NtdAgency extends Model {
         feeds = new TreeSet<GtfsFeed>();
     }
 
-    public NtdAgency (String name, String website, String ntdId, int population,
+    public NtdAgency (String name, String url, String ntdId, int population,
                       int ridership, int passengerMiles) {
         this.name = name;
-        this.website = website;
+        this.url = url;
         this.ntdId = ntdId;
         this.population = population;
         this.ridership = ridership;
