@@ -61,9 +61,16 @@ public class MetroAreas extends Controller {
         // TODO: stringbuilder
         String output = "{\"type\": \"FeatureCollection\", \"features\": [";
         List<MetroArea> areas = MetroArea.findAll();
+        boolean first = true;
         for (MetroArea a : areas) {
-            // TODO: super slow
-            output += getMetroAsJson(a.id) + ",";
+            if (!first) {
+                // TODO: super slow
+                output += "," + getMetroAsJson(a.id);
+            }
+            else {
+                first = false;
+                output += getMetroAsJson(a.id);
+            }   
         }
         output += "]}";
         renderJSON(output);
