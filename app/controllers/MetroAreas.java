@@ -8,6 +8,7 @@ import utils.GeometryUtils;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.io.ParseException;
 import javax.persistence.Query;
+import java.util.List;
 
 public class MetroAreas extends Controller {
     /**
@@ -29,10 +30,7 @@ public class MetroAreas extends Controller {
         new MetroArea(name, the_geom).save();
     }
 
-    /**
-     * Return a MetroArea as GeoJSON
-     */
-    public static void get (int id) {
+    private static String getMetroAsJson (long id) {
         // max decimal places 6 (per demory), include GeoJSON short CRS (2)
         // TODO: is FROM MetroArea the right thing to do here?
         String query = "SELECT m.name, ST_AsGeoJSON(m.the_geom, 6, 2) AS geom " +
@@ -45,7 +43,29 @@ public class MetroAreas extends Controller {
         String output = "{\"properties\": {\"name\": \"" + (String) result[0] + "\"}," +
             "\"geometry\":" + (String) result[1] + "," + 
             "\"type\": \"Feature\"}";
-        
+
+        return output;
+    }
+
+    /**
+     * Return a MetroArea as GeoJSON
+     */
+    public static void get (long id) {
+        renderJSON(getMetroAsJson(id));
+    }
+
+    /**
+     * Return a list of all metro areas
+     */
+    public static void getAll () {
+        // TODO: stringbuilder
+        String output = "{\"type\": \"FeatureCollection\", \"features\": [";
+        List<MetroArea> areas = MetroArea.findAll();
+        for (MetroArea a : areas) {
+            // TODO: super slow
+            output += getMetroAsJson(a.id) + ",";
+        }
+        output += "]}";
         renderJSON(output);
     }
 }
