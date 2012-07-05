@@ -7,7 +7,7 @@ import play.db.jpa.Model;
 public class ModelTest extends UnitTest {
     @Before
     public void setUp () {
-        // clear the db
+        // TODO: this seems to only delete the ones loaded from fixtures.
         Fixtures.deleteAll();
         Fixtures.loadModels("relationships.yml");
     }
@@ -16,7 +16,8 @@ public class ModelTest extends UnitTest {
     // test validation: the test receives a valid object, invalidates one field, then tries to 
     // save
     private MetroArea getValidMetroArea () {
-        return new MetroArea ("Redding, CA");
+        // null geometry for now
+        return new MetroArea ("Redding, CA", null);
     }
 
     private NtdAgency getValidNtdAgency () {
@@ -53,7 +54,8 @@ public class ModelTest extends UnitTest {
             "http://valid-gtfs.example.org/lic", // license url
             true, // official
             "HI", // state
-            "Honolulu, HI" // area description
+            "Honolulu, HI", // area description
+            null
                             );
     }
         
@@ -63,6 +65,17 @@ public class ModelTest extends UnitTest {
 
         // to test: http://stackoverflow.com/questions/156503
         return true;
+    }
+
+    // these two test to see if there is leakage between tests
+    @Test
+    public void testInstantiateToSeeIfAvailableLater () {
+        getValidMetroArea().save();
+    }
+
+    @Test
+    public void testSeeIfStillAvailable () {
+        assertEquals(0, MetroArea.find("byName", "Redding, CA").fetch().size());
     }
 
     @Test

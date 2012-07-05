@@ -5,6 +5,8 @@ import java.util.*;
 
 import play.db.jpa.*;
 import play.data.validation.*;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import org.hibernate.annotations.Type;
 
 @Entity
 public class MetroArea extends Model {
@@ -23,7 +25,8 @@ public class MetroArea extends Model {
     @Id
     public int id;*/
     
-    // TODO: geometry
+    @Type(type = "org.hibernatespatial.GeometryUserType")
+    public MultiPolygon the_geom;
 
     /**
      * Get a list of agencies for this metro.
@@ -35,8 +38,9 @@ public class MetroArea extends Model {
     /**
      * Make a new metro area
      */
-    public MetroArea (String name) {
+    public MetroArea (String name, MultiPolygon the_geom) {
         this.name = name;
+        this.the_geom = the_geom;
     }
 
     public MetroArea () {};

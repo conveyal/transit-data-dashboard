@@ -3,15 +3,3 @@
 require:
     - play
     - play -> crud
-    - org.postgis -> postgis-main 
-    - org.hibernate -> hibernate-spatial
-    - org.hibernatespatial -> hibernate-spatial-postgis
-    - com.vividsolutions -> jts 1.8
-    
-repositories:
-    - hibernatespatial:
-        type: iBiblio
-        root: "http://www.hibernatespatial.org/repository"
-        contains:
-            - org.hibernatespatial -> *
-            - org.hibernate -> *

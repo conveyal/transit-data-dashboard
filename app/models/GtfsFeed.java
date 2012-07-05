@@ -5,6 +5,8 @@ import java.util.*;
 
 import play.db.jpa.*;
 import play.data.validation.*;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import org.hibernate.annotations.Type;
 
 @Entity
 public class GtfsFeed extends Model {
@@ -74,6 +76,9 @@ public class GtfsFeed extends Model {
     /** The number of trips per calendar, on average */
     public int tripsPerCalendar;
 
+    @Type(type = "org.hibernatespatial.GeometryUserType")
+    public MultiPolygon the_geom;
+
     /**
      * Get the agencies this feed refers to.
      */
@@ -93,7 +98,7 @@ public class GtfsFeed extends Model {
     public GtfsFeed (String agencyName, String agencyUrl, String country, 
                      String dataExchangeId, String dataExchangeUrl, Date dateAdded,
                      Date dateUpdated, String feedBaseUrl, String licenseUrl, boolean official,
-                     String state, String areaDescription) {
+                     String state, String areaDescription, MultiPolygon the_geom) {
         this.agencyName = agencyName;
         this.areaDescription = areaDescription;
         this.country = country;
@@ -106,5 +111,6 @@ public class GtfsFeed extends Model {
         this.licenseUrl = licenseUrl;
         this.state = state;
         this.agencyUrl = agencyUrl;
+        this.the_geom = the_geom;
     }            
 }
