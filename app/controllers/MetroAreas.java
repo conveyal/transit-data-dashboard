@@ -11,6 +11,11 @@ import javax.persistence.Query;
 import java.util.List;
 
 public class MetroAreas extends Controller {
+    // TODO: writing JSON by hand is ugly
+    private static String jsonFeature = "{\"properties\": {\"name\": \"%s\"}," +
+            "\"geometry\": %s," + 
+            "\"type\": \"Feature\"}";
+
     /**
      * Create a new Metro Area
      * @param name The name of this metro area
@@ -39,12 +44,7 @@ public class MetroAreas extends Controller {
         q.setParameter(1, id);
         Object[] result = (Object[]) q.getResultList().get(0);
 
-        // TODO: writing JSON by hand is ugly
-        String output = "{\"properties\": {\"name\": \"" + (String) result[0] + "\"}," +
-            "\"geometry\":" + (String) result[1] + "," + 
-            "\"type\": \"Feature\"}";
-
-        return output;
+        return String.format(jsonFeature, (String) result[0], (String) result[1]);
     }
 
     /**
@@ -62,14 +62,20 @@ public class MetroAreas extends Controller {
         String output = "{\"type\": \"FeatureCollection\", \"features\": [";
         List<MetroArea> areas = MetroArea.findAll();
         boolean first = true;
-        for (MetroArea a : areas) {
+
+        String query = "SELECT m.name, ST_AsGeoJSON(m.the_geom, 6, 2) AS geom " +
+            "FROM MetroArea m";
+        Query q = JPA.em().createNativeQuery(query);
+        List<Object[]> results = q.getResultList();
+
+        for (Object[] result : results) {
             if (!first) {
                 // TODO: super slow
-                output += "," + getMetroAsJson(a.id);
+                output += "," +  String.format(jsonFeature, (String) result[0], (String) result[1]);
             }
             else {
                 first = false;
-                output += getMetroAsJson(a.id);
+                output +=  String.format(jsonFeature, (String) result[0], (String) result[1]);
             }   
         }
         output += "]}";
