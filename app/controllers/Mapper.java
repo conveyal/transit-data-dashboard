@@ -159,6 +159,60 @@ public class Mapper extends Controller {
             agency.save();
         }
     }
+
+    /**
+     * Name metro areas based on area description of largest agency by ridership
+     */
+    public static void autoNameMetroAreas () {
+        List<MetroArea> areas = MetroArea.findAll();
+        List<String[]> renames = new ArrayList<String[]>();
+        String[] rename;
+        NtdAgency largestAgency = null;
+
+        // TODO: more efficient, DB driven algorithm
+        for (MetroArea area : areas) {
+            for (NtdAgency agency : area.getAgencies()) {
+                if (agency.feeds.size() == 0) {
+                    Logger.debug("Agency has no feeds");
+                    continue;
+                }
+
+                // if there's one agency, it's the largest
+                if (largestAgency == null) {
+                    Logger.debug("setting agency");
+                    largestAgency = agency;
+                    continue;
+                }
+
+                // don't bother if it doesn't have a feed, since that's where the name comes
+                // from
+                if (agency.ridership > largestAgency.ridership) {
+                    largestAgency = agency;
+                }
+            }
+
+            rename = new String[2];
+            rename[0] = area.name;
+
+            if (largestAgency == null) {
+                rename[1] = "-Unchanged-";
+
+                // no need to re set, already null
+                continue;
+            }
+
+            area.name = ((GtfsFeed) largestAgency.feeds.toArray()[0]).areaDescription;
+            rename[1] = area.name;
+            area.save();
+            
+            renames.add(rename);
+
+            // clean up
+            largestAgency = null;
+        }
+
+        render(renames);
+    }       
 }
             
             
