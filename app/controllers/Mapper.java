@@ -26,9 +26,9 @@ public class Mapper extends Controller {
 
         // just to give the user an idea of percentages
         long feedCount = GtfsFeed.count();
-
-        // GtfsFeed on left of left join because we're mapping many feeds to one agency
-        // many agencies to one feed is more difficult
+        
+        // Inner join - don't match those that don't match
+        // this may match in two directions
         Query q = JPA.em().createNativeQuery(
                                        "SELECT f.id AS feedid, a.id AS agencyid, " + 
                                        "a.name AS agencyname, f.agencyName as feedname, " +
