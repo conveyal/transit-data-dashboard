@@ -10,7 +10,8 @@ import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.io.ParseException;
 
 public class GeometryUtils {
-    private static HashMap<Integer, GeometryFactory> geomFactories = new HashMap<Integer, GeometryFactory>();
+    private static HashMap<Integer, GeometryFactory> geomFactories = 
+        new HashMap<Integer, GeometryFactory>();
     private static HashMap<Integer, WKTReader> wktReaders = new HashMap<Integer, WKTReader>();
     private static PrecisionModel defaultPrecisionModel = new PrecisionModel();
 
