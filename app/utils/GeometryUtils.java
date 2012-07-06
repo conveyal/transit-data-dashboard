@@ -66,5 +66,16 @@ public class GeometryUtils {
 
         return wktr.read(geometrySplit[1]);  
     }
+
+    /**
+     * Parse a bounding box in the format left,bottom,right,top to a PostGIS BOX(...) construct.
+     */
+    public static String parseBbox (String bbox) {
+        StringBuilder sb = new StringBuilder(32);
+        sb.append("BOX(");
+        sb.append(bbox);
+        sb.append(')');
+        return sb.toString();
+    }
 }
             
