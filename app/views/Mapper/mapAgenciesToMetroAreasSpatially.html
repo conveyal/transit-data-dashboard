@@ -1,0 +1,24 @@
+#{extends 'main.html' /}
+#{set title:'Agency to Metro Area Mapping' /}
+
+<h3>${matches.size()} / ${agencyCount} agencies matched</h3>
+
+<table>
+  <thead>
+    <tr>
+      <td>Agency Name</td>
+      <td>Agency URL</td>
+      <td>Metro Area Name</td>
+    </tr>
+  </thead>
+  <tbody>
+    #{list items:matches, as:'match'}
+      <tr>
+        <td>${match[0]}</td>
+        <td>${match[1]}</td>
+        <td>${match[2]}</td>
+      </tr>
+    #{/list}
+  </tbody>
+</table>
+
