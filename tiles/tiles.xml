@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Map[]>
+<Map srs="+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over" background-color="rgba(0, 0, 0, 0)">
+
+<Parameters>
+  <Parameter name="bounds">-180,-85.05112877980659,180,85.05112877980659</Parameter>
+  <Parameter name="center">0,0,2</Parameter>
+  <Parameter name="format">png</Parameter>
+  <Parameter name="minzoom">0</Parameter>
+  <Parameter name="maxzoom">22</Parameter>
+  <Parameter name="name"><![CDATA[Metro Areas and Agencies]]></Parameter>
+</Parameters>
+
+
+<Style name="metros" filter-mode="first">
+  <Rule>
+    <MaxScaleDenominator>400000</MaxScaleDenominator>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
+  </Rule>
+  <Rule>
+    <MinScaleDenominator>400000</MinScaleDenominator>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill-opacity="0.5" fill="#aaee88" />
+  </Rule>
+</Style>
+<Layer name="metros"
+  srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs">
+    <StyleName>metros</StyleName>
+    <Datasource>
+       <Parameter name="type"><![CDATA[postgis]]></Parameter>
+       <Parameter name="table"><![CDATA[dashboard.metroarea]]></Parameter>
+       <Parameter name="extent"><![CDATA[]]></Parameter>
+       <Parameter name="key_field"><![CDATA[id]]></Parameter>
+       <Parameter name="geometry_field"><![CDATA[the_geom]]></Parameter>
+       <Parameter name="host"><![CDATA[localhost]]></Parameter>
+       <Parameter name="dbname"><![CDATA[dashboard]]></Parameter>
+       <Parameter name="user"><![CDATA[dashboard]]></Parameter>
+       <Parameter name="password"><![CDATA[gtfsdata]]></Parameter>
+       <Parameter name="id"><![CDATA[metros]]></Parameter>
+       <Parameter name="project"><![CDATA[metros_agencies]]></Parameter>
+       <Parameter name="srs"><![CDATA[null]]></Parameter>
+    </Datasource>
+  </Layer>
+
+<Style name="feeds" filter-mode="first">
+  <Rule>
+    <MinScaleDenominator>750000</MinScaleDenominator>
+    <Filter>([status] = 1)</Filter>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.1" />
+  </Rule>
+  <Rule>
+    <MaxScaleDenominator>750000</MaxScaleDenominator>
+    <Filter>([status] = 1)</Filter>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill="#4444ff" fill-opacity="0.1" />
+  </Rule>
+  <Rule>
+    <MinScaleDenominator>750000</MinScaleDenominator>
+    <Filter>([status] = 0)</Filter>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.1" />
+  </Rule>
+  <Rule>
+    <MaxScaleDenominator>750000</MaxScaleDenominator>
+    <Filter>([status] = 0)</Filter>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill="#aabb33" fill-opacity="0.1" />
+  </Rule>
+  <Rule>
+    <MinScaleDenominator>750000</MinScaleDenominator>
+    <Filter>([status] = -1)</Filter>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.1" />
+  </Rule>
+  <Rule>
+    <MaxScaleDenominator>750000</MaxScaleDenominator>
+    <Filter>([status] = -1)</Filter>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill="#ee0000" fill-opacity="0.1" />
+  </Rule>
+  <Rule>
+    <MinScaleDenominator>750000</MinScaleDenominator>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.1" />
+  </Rule>
+  <Rule>
+    <MaxScaleDenominator>750000</MaxScaleDenominator>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill-opacity="0.1" />
+  </Rule>
+</Style>
+<Layer name="feeds"
+  srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs">
+    <StyleName>feeds</StyleName>
+    <Datasource>
+       <Parameter name="type"><![CDATA[postgis]]></Parameter>
+       <Parameter name="table"><![CDATA[(SELECT *, 
+CASE
+  -- more than two months left
+  WHEN expirationdate > current_date + 60 THEN 1
+  -- between 0 and 2 months left
+  WHEN expirationdate > current_date THEN 0
+  -- expired feed
+  ELSE -1
+END AS status
+FROM dashboard.gtfsfeed) q]]></Parameter>
+       <Parameter name="extent"><![CDATA[]]></Parameter>
+       <Parameter name="key_field"><![CDATA[id]]></Parameter>
+       <Parameter name="geometry_field"><![CDATA[the_geom]]></Parameter>
+       <Parameter name="host"><![CDATA[localhost]]></Parameter>
+       <Parameter name="user"><![CDATA[dashboard]]></Parameter>
+       <Parameter name="password"><![CDATA[gtfsdata]]></Parameter>
+       <Parameter name="dbname"><![CDATA[dashboard]]></Parameter>
+    </Datasource>
+  </Layer>
+
+</Map>
