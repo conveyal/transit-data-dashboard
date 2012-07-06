@@ -14,14 +14,14 @@
 
 <Style name="metros" filter-mode="first">
   <Rule>
-    <MaxScaleDenominator>400000</MaxScaleDenominator>
+    <MaxScaleDenominator>3000000</MaxScaleDenominator>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.7" />
   </Rule>
   <Rule>
-    <MinScaleDenominator>400000</MinScaleDenominator>
+    <MinScaleDenominator>3000000</MinScaleDenominator>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill-opacity="0.5" fill="#aaee88" />
+    <PolygonSymbolizer fill-opacity="0.7" fill="#11dd00" />
   </Rule>
 </Style>
 <Layer name="metros"
@@ -45,50 +45,50 @@
 
 <Style name="feeds" filter-mode="first">
   <Rule>
-    <MinScaleDenominator>750000</MinScaleDenominator>
+    <MinScaleDenominator>3000000</MinScaleDenominator>
     <Filter>([status] = 1)</Filter>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.1" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
   </Rule>
   <Rule>
-    <MaxScaleDenominator>750000</MaxScaleDenominator>
+    <MaxScaleDenominator>3000000</MaxScaleDenominator>
     <Filter>([status] = 1)</Filter>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill="#4444ff" fill-opacity="0.1" />
+    <PolygonSymbolizer fill="#4444ff" fill-opacity="0.5" />
   </Rule>
   <Rule>
-    <MinScaleDenominator>750000</MinScaleDenominator>
+    <MinScaleDenominator>3000000</MinScaleDenominator>
     <Filter>([status] = 0)</Filter>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.1" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
   </Rule>
   <Rule>
-    <MaxScaleDenominator>750000</MaxScaleDenominator>
+    <MaxScaleDenominator>3000000</MaxScaleDenominator>
     <Filter>([status] = 0)</Filter>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill="#aabb33" fill-opacity="0.1" />
+    <PolygonSymbolizer fill="#aabb33" fill-opacity="0.5" />
   </Rule>
   <Rule>
-    <MinScaleDenominator>750000</MinScaleDenominator>
+    <MinScaleDenominator>3000000</MinScaleDenominator>
     <Filter>([status] = -1)</Filter>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.1" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
   </Rule>
   <Rule>
-    <MaxScaleDenominator>750000</MaxScaleDenominator>
+    <MaxScaleDenominator>3000000</MaxScaleDenominator>
     <Filter>([status] = -1)</Filter>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill="#ee0000" fill-opacity="0.1" />
+    <PolygonSymbolizer fill="#ee0000" fill-opacity="0.5" />
   </Rule>
   <Rule>
-    <MinScaleDenominator>750000</MinScaleDenominator>
+    <MinScaleDenominator>3000000</MinScaleDenominator>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.1" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
   </Rule>
   <Rule>
-    <MaxScaleDenominator>750000</MaxScaleDenominator>
+    <MaxScaleDenominator>3000000</MaxScaleDenominator>
     <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill-opacity="0.1" />
+    <PolygonSymbolizer fill-opacity="0.5" />
   </Rule>
 </Style>
 <Layer name="feeds"

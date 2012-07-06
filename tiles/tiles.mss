@@ -4,13 +4,13 @@ Map {
 
 #metros {
   line-width:0;
-  polygon-opacity:0.5;
-  polygon-fill:#ae8;
+  polygon-opacity:0.7;
+  polygon-fill:#1d0;
 }
   
 #feeds {
   line-width:0;
-  polygon-opacity:0.1;
+  polygon-opacity:0.5;
 }
   
 // expired
@@ -29,11 +29,12 @@ Map {
 }
 
 // hide below 10
-#metros[zoom > 10] {
+#metros[zoom > 7] {
   polygon-fill: rgba(0,0,0,0);
 }
 
 // hide above 10
-#feeds[zoom < 10] {
+#feeds[zoom <= 7] {
   polygon-fill: rgba(0,0,0,0);
 }
+  
