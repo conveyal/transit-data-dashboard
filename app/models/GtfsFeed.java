@@ -96,9 +96,10 @@ public class GtfsFeed extends Model {
     public GtfsFeed () {};
 
     public GtfsFeed (String agencyName, String agencyUrl, String country, 
-                     String dataExchangeId, String dataExchangeUrl, Date dateAdded,
-                     Date dateUpdated, String feedBaseUrl, String licenseUrl, boolean official,
-                     String state, String areaDescription, MultiPolygon the_geom) {
+                     String dataExchangeId, String dataExchangeUrl, Date dateAdded, 
+                     Date dateUpdated, Date expirationDate, String feedBaseUrl, String licenseUrl, 
+                     boolean official, String state, String areaDescription, 
+                     MultiPolygon the_geom) {
         this.agencyName = agencyName;
         this.areaDescription = areaDescription;
         this.country = country;
@@ -106,6 +107,7 @@ public class GtfsFeed extends Model {
         this.dataExchangeUrl = dataExchangeUrl;
         this.dateAdded = dateAdded;
         this.dateUpdated = dateUpdated;
+        this.expirationDate = expirationDate;
         this.feedBaseUrl = feedBaseUrl;
         this.official = official;
         this.licenseUrl = licenseUrl;
