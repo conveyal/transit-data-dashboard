@@ -196,6 +196,7 @@ public class Mapper extends Controller {
 
             if (largestAgency == null) {
                 rename[1] = "-Unchanged-";
+                renames.add(rename);
 
                 // no need to re set, already null
                 continue;
