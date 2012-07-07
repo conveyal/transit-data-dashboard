@@ -101,6 +101,7 @@ public class Mapper extends Controller {
         long agencyId;
         long metroId;
         long agencyCount = NtdAgency.count();
+        GtfsFeed feed;
 
         // TODO: how does this query behave when an agency touches multiple metros?
         String qs =
@@ -168,6 +169,7 @@ public class Mapper extends Controller {
         List<String[]> renames = new ArrayList<String[]>();
         String[] rename;
         NtdAgency largestAgency = null;
+        GtfsFeed feed;
 
         // TODO: more efficient, DB driven algorithm
         for (MetroArea area : areas) {
@@ -179,7 +181,6 @@ public class Mapper extends Controller {
 
                 // if there's one agency, it's the largest
                 if (largestAgency == null) {
-                    Logger.debug("setting agency");
                     largestAgency = agency;
                     continue;
                 }
@@ -201,8 +202,16 @@ public class Mapper extends Controller {
                 // no need to re set, already null
                 continue;
             }
+            
+            feed = (GtfsFeed) largestAgency.feeds.toArray()[0];
+            if (feed.country.toLowerCase().equals("us") && feed.state != null &&
+                !feed.state.equals("")) {
+                area.name = feed.areaDescription + ", " + feed.state.toUpperCase();
+            }
+            else {
+                area.name = feed.areaDescription;
+            }
 
-            area.name = ((GtfsFeed) largestAgency.feeds.toArray()[0]).areaDescription;
             rename[1] = area.name;
             area.save();
             
