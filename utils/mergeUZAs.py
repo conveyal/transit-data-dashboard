@@ -30,8 +30,11 @@ uzaAllocation = dict([(u, uzaAllocation[u]) for u in uzaAllocation
                        if len(uzaAllocation[u]) > 1])
 usedUzas = []
 
+# This gives us a list of uzas that are already shared by a single agency
 merged = uzaAllocation.values()
 
+# this loop merges agencies which have one or more UZA in common, making the
+# merged list longer
 changed = True
 iterations = 0
 while changed:
@@ -58,6 +61,8 @@ while changed:
     merged = [i for i in merged if i != None]
 
 # output
+
+# This function merges the names so they are human readable
 def mergeNames(area):
     cities = []
     states = []
