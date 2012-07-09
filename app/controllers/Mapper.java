@@ -11,7 +11,15 @@ import javax.persistence.Query;
 import models.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 import java.math.BigInteger;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.operation.overlay.OverlayOp;
+import utils.GeometryUtils;
 
 public class Mapper extends Controller {
     /**
@@ -179,6 +187,8 @@ public class Mapper extends Controller {
                     continue;
                 }
 
+                
+
                 // if there's one agency, it's the largest
                 if (largestAgency == null) {
                     largestAgency = agency;
@@ -187,7 +197,7 @@ public class Mapper extends Controller {
 
                 // don't bother if it doesn't have a feed, since that's where the name comes
                 // from
-                if (agency.ridership > largestAgency.ridership) {
+                if (agency.population > largestAgency.population) {
                     largestAgency = agency;
                 }
             }
@@ -199,7 +209,7 @@ public class Mapper extends Controller {
                 rename[1] = "-Unchanged-";
                 renames.add(rename);
 
-                // no need to re set, already null
+                // no need to re-set, already null
                 continue;
             }
             
@@ -222,7 +232,272 @@ public class Mapper extends Controller {
         }
 
         render(renames);
-    }       
+    }  
+
+    
+    /**
+     * Merge two metro areas. Agencies get saved in here, but neither metro area is saved/deleted
+     */
+    private static void mergeAreas (MetroArea mergeInto, MetroArea other) {
+        // first, bring in the other area's agencies
+        List<NtdAgency> otherAgencies = other.getAgencies();
+        Set<String> cities, states;
+        String[] thisSplit, otherSplit;
+        // we make a multipolygon with one member for the geometry
+        Polygon[] polygons;
+        Geometry result;
+        GeometryFactory factory;
+
+        for (NtdAgency agency : otherAgencies) {
+            agency.metroArea = mergeInto;
+            Logger.debug("Agency %s now points to MetroArea %s (intended %s)", 
+                         agency.id, agency.metroArea.id, mergeInto.id);
+            agency.save();
+        }
+
+        // now, combine geometries
+        
+        result = OverlayOp.overlayOp(mergeInto.the_geom, other.the_geom, OverlayOp.UNION);
+        
+        // sometimes it's a polygon, not sure why
+        if (result instanceof Polygon) {
+            // TODO: assumptions about SRID of other here
+            factory = GeometryUtils.getGeometryFactoryForSrid(mergeInto.the_geom.getSRID());
+            polygons = new Polygon[1];
+            polygons[0] = (Polygon) result;
+            result = factory.createMultiPolygon(polygons);
+        }
+        
+        mergeInto.the_geom = (MultiPolygon) result;
+
+        // finally, names
+        cities = new HashSet<String>();
+        states = new HashSet<String>();
+        
+        thisSplit = mergeInto.name.split(", ");
+        otherSplit = other.name.split(", ");
+
+        for (String city : thisSplit[0].split("-")) {
+            cities.add(city);
+        }
+
+        for (String city : otherSplit[0].split("-")) {
+            cities.add(city);
+        }
+
+        if (thisSplit.length >= 2) {
+            for (String state : thisSplit[1].split("-")) {
+                states.add(state);
+            }
+        }
+
+        if (otherSplit.length >= 2) {
+            for (String state : otherSplit[1].split("-")) {
+                states.add(state);
+            }
+        }
+
+        StringBuilder out = new StringBuilder(255);
+        
+        for (String city : cities) {
+            out.append(city);
+            out.append('-');
+        }
+
+        // delete last -
+        out.deleteCharAt(out.length() - 1);
+        out.append(", ");
+
+        for (String state : states) {
+            out.append(state);
+            out.append('-');
+        }
+
+        out.deleteCharAt(out.length() - 1);
+
+        // truncate if needed
+        if (out.length() >= 255)
+            out.setLength(255);
+        
+        mergeInto.name = out.toString();
+    }
+
+     
+    /**
+     * Assign agencies to metro areas by their UZA and then merge connected UZAs.
+     * @param commit If set to false, this transaction will not be committed. Useful for
+     *   doing a dry run since this mapper is pretty destructive.
+     */
+    public static void mapAgenciesByUzaAndMerge (boolean commit) {
+        List<NtdAgency> agencies = NtdAgency.findAll();
+        List<NtdAgency> noUzaAgencies = new ArrayList<NtdAgency>();
+        List<NtdAgency> unmappedAgencies = new ArrayList<NtdAgency>();
+        MetroArea area = null;
+        MetroArea toCheck = null;
+        MetroArea other;
+        MetroArea areaMergeInto;
+        List<MetroArea> allAreas;
+        boolean changed;
+        // init only the outer; inner is inited on each iteration
+        List<List<String>> toMerge = new ArrayList<List<String>>();
+        List<String> agencyUzas;
+        List<String> toDelete = null;
+        List<String> toAddTo = null;
+        List<String> resultingAreas = new ArrayList<String>();
+        Set<String> nullUzas = new HashSet<String>();
+        String currentUza;
+
+        if (!commit)
+            // prevent the changes in here from being committed
+            JPA.setRollbackOnly();
+
+        // The UZAs are merged in three passes. Here's how it works. In the first pass, each
+        // agency is assigned to a UZA that it is a member of. If an agency has multiple UZAs,
+        // one is selected. It doesn't matter which (as long as it's not null) because later all
+        // connected UZAs will be merged. The first pass also creates a list of lists of connected
+        // areas, which is just a list of all the UZAs of each agency. After the first iteration,
+        // we have a starting point, but there are still overlaps between the service areas of
+        // different agencies.
+
+        // The next step is a nested loop. It iterates over that list of lists, and for each list
+        // looks if any members of it are contained in other lists. If they are, it combines those
+        // two lists, deletes the second one, and restarts the loop. This continues until there are
+        // no overlaps between areas
+
+        // Finally, the resultant list of lists is iterated over, and for each area all of the 
+        // the UZAs are merged into the first one using the MetroArea.mergeWith method of the 
+        // first UZA.
+
+        // First, we map each one to its first UZA, which is fine because we merge all the
+        // UZAs later anyways. Also, make a list of UZAs which should be merged.
+        for (NtdAgency agency : agencies) {
+            // if this doesn't have a UZA, report it in the template
+            if (agency.uzaNames.size() == 0) {
+                noUzaAgencies.add(agency);
+                continue;
+            }
+
+            // Loop over all the UZAs and report which ones are null for user inspection
+            for (String uza : agency.uzaNames) {
+                toCheck = MetroArea.find("byName", uza).first();
+                if (toCheck == null)
+                    nullUzas.add(uza);
+                else
+                    // don't assign null areas unless we have to
+                    area = toCheck;
+            }
+
+            // if area is still null, warn the user that this won't have an area
+            if (area == null)
+                unmappedAgencies.add(agency);
+
+            // set the area
+            agency.metroArea = area;
+            agency.save();
+
+            // intern all the strings for fast comparisons later
+            // and put them into the list of lists for the reducer to chew on.
+            agencyUzas = new ArrayList<String>();
+            for (String uza : agency.uzaNames) {
+                agencyUzas.add(uza.intern());
+            }
+            toMerge.add(agencyUzas);
+        }
+
+        // now, merge the lists of UZAs (pass 2)
+        do {
+            changed = false;
+
+            for (List<String> mergeArea : toMerge) {
+                // find areas with common UZAs
+                for (List<String> otherMergeArea : toMerge) {
+
+                    // don't merge areas with themselves
+                    if (mergeArea == otherMergeArea) 
+                        continue;
+
+                    // for each of the UZAs in this area, see if there is overlap with the other
+                    // areas
+                    for (String uza : mergeArea) {
+                        if (otherMergeArea.contains(uza)) {
+                            // they need to be merged. mark them as such, and end the iteration
+                            // so they can be.
+                            toDelete = otherMergeArea;
+                            toAddTo = mergeArea;
+                            changed = true;
+                            break;    
+                        }
+                    }
+                }
+            }
+
+            // if one was marked for update
+            if (toDelete != null) {
+                for (String uza : toDelete) {
+                    if (!toAddTo.contains(uza)) {
+                        toAddTo.add(uza);
+                    }
+                }
+                        
+                // remove the merged object
+                toMerge.remove(toDelete);
+            }
+            toDelete = null;
+            toAddTo = null;
+
+            Logger.debug("Reduced to %s areas", toMerge.size());
+        } while (changed);
+
+        // now, actually merge the areas
+        for (List<String> connected : toMerge) {
+            // clear this out so it can be used to track state below
+            areaMergeInto = null;
+
+            // merge each one with the first one, or the first one that exists
+            // find one that isn't null. If this gets to the end of the list, the loop will
+            // terminate by itself
+            do {
+                currentUza = connected.get(0);
+                areaMergeInto = MetroArea.find("byName", currentUza).first();
+                connected.remove(0);
+
+                if (areaMergeInto == null) {
+                    // ignore but report
+                    nullUzas.add(currentUza);
+                    continue;
+                }
+                else {
+                    // we found one to use.
+                    break;
+                }
+            } while (areaMergeInto == null && connected.size() > 0);
+
+            // in this case, there were no existing agencies, so skip saving it &c.
+            if (areaMergeInto == null)
+                continue;
+            
+            // now, loop through the remaining UZAs and merge if not null.
+            for (String otherName : connected) {
+                // if it's null, ignore it but report it
+                other = MetroArea.find("byName", otherName).first();
+                if (other == null) {
+                    nullUzas.add(otherName);
+                    continue;
+                }
+
+                if (other == areaMergeInto)
+                    Logger.warn("Areas are equal!");
+
+                // otherwise, merge it and delete it
+                mergeAreas(areaMergeInto, other);
+                other.delete();
+            }
+            areaMergeInto.save();
+            resultingAreas.add(areaMergeInto.name);
+        }
+
+        render(resultingAreas, noUzaAgencies, nullUzas, unmappedAgencies, commit);
+    }
 }
             
             

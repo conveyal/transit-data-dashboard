@@ -1,0 +1,34 @@
+#{extends 'main.html' /}
+#{set title:'Metro Area Contraction' /}
+
+#{if !commit}
+  <h4><i>Not committed!</i></h4>
+#{/if}
+
+<h3>Resulting Metro Areas</h3>
+<ol>
+  #{list items:resultingAreas, as:'merge'}
+    <li>${merge}</li>
+  #{/list}
+</ol>
+
+<h3>Agencies with no UZA</h3>
+<ol>
+  #{list items:noUzaAgencies, as:'agency'}
+    <li>${agency}</li>
+  #{/list}
+</ol>
+
+<h3>Agencies with no valid UZA</h3>
+<ol>
+  #{list items:unmappedAgencies, as:'agency'}
+    <li>${agency}</li>
+  #{/list}
+</ol>
+
+<h3>Undefined UZAs</h3>
+<ol>
+  #{list items:nullUzas, as:'uza'}
+    <li>${uza}</li>
+  #{/list}
+</ol>
