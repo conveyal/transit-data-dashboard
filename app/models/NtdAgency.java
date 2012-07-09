@@ -24,6 +24,10 @@ public class NtdAgency extends Model {
      */
     public String ntdId;
 
+    /** This agency's UZA name(s) in the National Transit Database */
+    @ElementCollection
+    public List<String> uzaNames;
+
     /** Service area population */
     public int population;
 
@@ -58,11 +62,12 @@ public class NtdAgency extends Model {
     }
 
     public NtdAgency (String name, String url, String ntdId, int population,
-                      int ridership, int passengerMiles) {
+                      List<String> uzaNames, int ridership, int passengerMiles) {
         this.name = name;
         this.url = url;
         this.ntdId = ntdId;
         this.population = population;
+        this.uzaNames = uzaNames;
         this.ridership = ridership;
         this.passengerMiles = passengerMiles;
         feeds = new TreeSet<GtfsFeed>();

@@ -3,6 +3,7 @@ package controllers;
 import play.*;
 import play.mvc.*;
 import models.*;
+import java.util.List;
 
 public class NtdAgencies extends Controller {
     /**
@@ -17,8 +18,8 @@ public class NtdAgencies extends Controller {
      * @param passenger_miles the annual passenger miles of this agency
      */
     public static void create (String name, String url, String ntdId, int population,
-                               int ridership, int passenger_miles) {
-        new NtdAgency(name, url, ntdId, population, ridership, passenger_miles).save();
+                               List<String> uzaNames, int ridership, int passenger_miles) {
+        new NtdAgency(name, url, ntdId, population, uzaNames, ridership, passenger_miles).save();
         renderJSON("{\"status\": \"success\"}");
     }
 }
