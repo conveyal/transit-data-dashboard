@@ -5,7 +5,7 @@
 
 import csv
 from urllib2 import urlopen
-from urllib import urlencode
+from urllib import urlencode, quote_plus
 import json
 
 # a table row, with ntdId as index
@@ -71,13 +71,46 @@ for row in serviceReader:
             print 'Warning: invalid value "%s" for miles for agency %s for mode_cd %s' %\
                 (row['Passenger_Miles'], ntdData[ntdId]['name'], row['Mode_Cd'])
 
+# Third pass: assign UZAs
+uzaReader = csv.DictReader(open('Agency_UZAs.csv'))
+for row in uzaReader:
+    trsId = row['Trs_Id'].strip()
+    uzaName = row['UZA_Name'].strip()
+    
+    if uzaName == 'Non-UZA':
+        continue
+
+    if not ntdData.has_key(trsId):
+        print 'TRS ID %s is referenced in UZAs table but does not exist' % trsId
+        continue
+
+    if not ntdData[trsId].has_key('uzaNames'):
+        ntdData[trsId]['uzaNames'] = []
+
+    if uzaName not in ntdData[trsId]['uzaNames']:
+        ntdData[trsId]['uzaNames'].append(uzaName)
+
+# Fourth pass: upload
 for agency in ntdData.values():
+    # save out uzaNames and hand-encode them
+    if agency.has_key('uzaNames'):
+        uzaNames = agency['uzaNames']
+        del agency['uzaNames']
+
+    # an empty list; nothing will be sent to the server
+    else:
+        uzaNames = []
+
     # Fix Unicode issues
     for key in agency:
         # They'll be stringified in request anyhow
         agency[key] = str(agency[key]).encode('utf-8')
 
     data = urlencode(agency)
+    
+    # hand encode uzaNames
+    for name in uzaNames:
+        data += '&uzaNames=' + quote_plus(name)
 
     stat = urlopen('http://localhost:9000/api/ntdagencies/create', data)
     
