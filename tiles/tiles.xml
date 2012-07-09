@@ -12,88 +12,64 @@
 </Parameters>
 
 
-<Style name="metros" filter-mode="first">
+<Style name="feeds-labels" filter-mode="first">
   <Rule>
-    <MaxScaleDenominator>3000000</MaxScaleDenominator>
-    <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.7" />
-  </Rule>
-  <Rule>
-    <MinScaleDenominator>3000000</MinScaleDenominator>
-    <LineSymbolizer stroke-width="0" />
-    <PolygonSymbolizer fill-opacity="0.7" fill="#11dd00" />
+    <MaxScaleDenominator>750000</MaxScaleDenominator>
+    <TextSymbolizer face-name="Ubuntu Bold" placement="interior" halo-radius="1.5" ><![CDATA[[agencyname]]]></TextSymbolizer>
   </Rule>
 </Style>
-<Layer name="metros"
-  srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs">
-    <StyleName>metros</StyleName>
-    <Datasource>
-       <Parameter name="type"><![CDATA[postgis]]></Parameter>
-       <Parameter name="table"><![CDATA[dashboard.metroarea]]></Parameter>
-       <Parameter name="extent"><![CDATA[]]></Parameter>
-       <Parameter name="key_field"><![CDATA[id]]></Parameter>
-       <Parameter name="geometry_field"><![CDATA[the_geom]]></Parameter>
-       <Parameter name="host"><![CDATA[localhost]]></Parameter>
-       <Parameter name="dbname"><![CDATA[dashboard]]></Parameter>
-       <Parameter name="user"><![CDATA[dashboard]]></Parameter>
-       <Parameter name="password"><![CDATA[gtfsdata]]></Parameter>
-       <Parameter name="id"><![CDATA[metros]]></Parameter>
-       <Parameter name="project"><![CDATA[metros_agencies]]></Parameter>
-       <Parameter name="srs"><![CDATA[null]]></Parameter>
-    </Datasource>
-  </Layer>
-
 <Style name="feeds" filter-mode="first">
   <Rule>
     <MinScaleDenominator>3000000</MinScaleDenominator>
     <Filter>([status] = 1)</Filter>
-    <LineSymbolizer stroke-width="0" />
     <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
+    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
   </Rule>
   <Rule>
     <MaxScaleDenominator>3000000</MaxScaleDenominator>
     <Filter>([status] = 1)</Filter>
-    <LineSymbolizer stroke-width="0" />
     <PolygonSymbolizer fill="#4444ff" fill-opacity="0.5" />
+    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
   </Rule>
   <Rule>
     <MinScaleDenominator>3000000</MinScaleDenominator>
     <Filter>([status] = 0)</Filter>
-    <LineSymbolizer stroke-width="0" />
     <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
+    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
   </Rule>
   <Rule>
     <MaxScaleDenominator>3000000</MaxScaleDenominator>
     <Filter>([status] = 0)</Filter>
-    <LineSymbolizer stroke-width="0" />
     <PolygonSymbolizer fill="#aabb33" fill-opacity="0.5" />
+    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
   </Rule>
   <Rule>
     <MinScaleDenominator>3000000</MinScaleDenominator>
     <Filter>([status] = -1)</Filter>
-    <LineSymbolizer stroke-width="0" />
     <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
+    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
   </Rule>
   <Rule>
     <MaxScaleDenominator>3000000</MaxScaleDenominator>
     <Filter>([status] = -1)</Filter>
-    <LineSymbolizer stroke-width="0" />
     <PolygonSymbolizer fill="#ee0000" fill-opacity="0.5" />
+    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
   </Rule>
   <Rule>
     <MinScaleDenominator>3000000</MinScaleDenominator>
-    <LineSymbolizer stroke-width="0" />
     <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
+    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
   </Rule>
   <Rule>
     <MaxScaleDenominator>3000000</MaxScaleDenominator>
-    <LineSymbolizer stroke-width="0" />
     <PolygonSymbolizer fill-opacity="0.5" />
+    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
   </Rule>
 </Style>
 <Layer name="feeds"
   srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs">
     <StyleName>feeds</StyleName>
+    <StyleName>feeds-labels</StyleName>
     <Datasource>
        <Parameter name="type"><![CDATA[postgis]]></Parameter>
        <Parameter name="table"><![CDATA[(SELECT *, 
@@ -113,6 +89,45 @@ FROM dashboard.gtfsfeed) q]]></Parameter>
        <Parameter name="user"><![CDATA[dashboard]]></Parameter>
        <Parameter name="password"><![CDATA[gtfsdata]]></Parameter>
        <Parameter name="dbname"><![CDATA[dashboard]]></Parameter>
+    </Datasource>
+  </Layer>
+
+<Style name="metros-labels" filter-mode="first">
+  <Rule>
+    <MaxScaleDenominator>6500000</MaxScaleDenominator>
+    <MinScaleDenominator>750000</MinScaleDenominator>
+    <TextSymbolizer face-name="Ubuntu Bold" placement="interior" halo-radius="1.5" ><![CDATA[[name]]]></TextSymbolizer>
+  </Rule>
+</Style>
+<Style name="metros" filter-mode="first">
+  <Rule>
+    <MaxScaleDenominator>3000000</MaxScaleDenominator>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.7" />
+  </Rule>
+  <Rule>
+    <MinScaleDenominator>3000000</MinScaleDenominator>
+    <LineSymbolizer stroke-width="0" />
+    <PolygonSymbolizer fill-opacity="0.7" fill="#11dd00" />
+  </Rule>
+</Style>
+<Layer name="metros"
+  srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs">
+    <StyleName>metros</StyleName>
+    <StyleName>metros-labels</StyleName>
+    <Datasource>
+       <Parameter name="type"><![CDATA[postgis]]></Parameter>
+       <Parameter name="table"><![CDATA[dashboard.metroarea]]></Parameter>
+       <Parameter name="extent"><![CDATA[]]></Parameter>
+       <Parameter name="key_field"><![CDATA[id]]></Parameter>
+       <Parameter name="geometry_field"><![CDATA[the_geom]]></Parameter>
+       <Parameter name="host"><![CDATA[localhost]]></Parameter>
+       <Parameter name="dbname"><![CDATA[dashboard]]></Parameter>
+       <Parameter name="user"><![CDATA[dashboard]]></Parameter>
+       <Parameter name="password"><![CDATA[gtfsdata]]></Parameter>
+       <Parameter name="id"><![CDATA[metros]]></Parameter>
+       <Parameter name="project"><![CDATA[metros_agencies]]></Parameter>
+       <Parameter name="srs"><![CDATA[null]]></Parameter>
     </Datasource>
   </Layer>
 
