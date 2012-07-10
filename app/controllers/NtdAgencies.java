@@ -4,6 +4,10 @@ import play.*;
 import play.mvc.*;
 import models.*;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import com.google.gson.Gson;
 
 public class NtdAgencies extends Controller {
     /**
@@ -22,4 +26,30 @@ public class NtdAgencies extends Controller {
         new NtdAgency(name, url, ntdId, population, uzaNames, ridership, passenger_miles).save();
         renderJSON("{\"status\": \"success\"}");
     }
+
+    public static void agencies () {
+        /*        List<Map<String, Object>> agencies = new ArrayList<Map<String, Object>>();
+        Map<String, Object> current;
+
+        for (NtdAgency agency : NtdAgency.<NtdAgency>findAll()) {
+            current = new HashMap<String, Object>();
+            current.put("name", agency.name);
+            current.put("url", agency.url);
+            current.put("population", agency.population);
+            current.put("ridership", agency.ridership);
+            current.put("passengerMiles", agency.passengerMiles);
+
+            if (agency.feeds.size() > 0)
+                current.put("publicGtfs", true);
+            else
+                current.put("publicGtfs", false);
+                
+        }
+
+        Gson gson = new Gson();
+*/
+
+        renderJSON(NtdAgency.<NtdAgency>findAll());
+    }                      
+                        
 }
