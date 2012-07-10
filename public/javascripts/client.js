@@ -127,13 +127,13 @@ DataController.prototype.sortBy = function (field, desc) {
         tr.append(create('td').text(agency.metro));
 
         // ridership
-        tr.append(create('td').text(agency.ridership));
+        tr.append(create('td').text(DataController.formatNumber(agency.ridership)));
         
         // passenger miles
-        tr.append(create('td').text(agency.passengerMiles));
+        tr.append(create('td').text(DataController.formatNumber(agency.passengerMiles)));
 
         // population
-        tr.append(create('td').text(agency.population));
+        tr.append(create('td').text(DataController.formatNumber(agency.population)));
 
         // google transit (TODO: icons)
         tr.append(create('td').html(agency.googleGtfs ? 
@@ -165,6 +165,28 @@ DataController.prototype.addSortIndicator = function () {
         colHead.append('<span class="sortIndicator ui-icon ui-icon-triangle-1-n"></span>');
 }
 
+// Static Functions
+/**
+ * Format a large integer
+ */
+DataController.formatNumber = function (number) {
+    number = '' + number;
+    numLen = number.length;
+    output = '';
+
+    for (var i = 0; i < numLen; i++) {
+        // the position in a number group i.e. 123,452,932 is three groups
+        posInGroup = (numLen - i) % 3;
+
+        if (posInGroup == 0 && i != 0) {
+            output += ',';
+        }
+
+        output += number[i];
+    }
+
+    return output;
+}
 
 /**
  * A controller for the metro area map
