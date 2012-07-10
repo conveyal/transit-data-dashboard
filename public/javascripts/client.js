@@ -10,6 +10,11 @@ function DataController () {
         success: function (data) {
             console.log('received json');
             instance.data = data;
+            
+            // hide the next page button if need be
+            if (data.length < DataController.PAGE_SIZE)
+                $('#nextPage').fadeOut();
+
             instance.sortBy('metro');
         },
         error: function (xhr, textStatus) {
@@ -32,6 +37,42 @@ function DataController () {
 
         instance.sortBy(e.currentTarget.name, desc);
     });
+
+    // next page
+    $('#nextPage').click(function (e) {
+        e.preventDefault();
+
+        instance.page++;
+        
+        // remove link if need be
+        if (((instance.page + 1) * DataController.PAGE_SIZE) >= instance.data.length)
+            $('#nextPage').fadeOut();
+
+        // always will be a previous page
+        $('#prevPage').fadeIn();
+
+        // re-do sort/display for this screen
+        instance.sortBy(instance.sortedBy, instance.descending);
+    });
+
+    // next page
+    $('#prevPage').click(function (e) {
+        e.preventDefault();
+
+        instance.page--;
+        
+        // remove link if need be
+        if (instance.page == 0)
+            $('#prevPage').fadeOut();
+
+        // always will be a next page
+        $('#nextPage').fadeIn();
+
+        instance.sortBy(instance.sortedBy, instance.descending);
+    });
+
+    // hide initially
+    $('#prevPage').fadeOut();
 }
 
 // STATIC CONFIG
