@@ -146,9 +146,26 @@ DataController.prototype.sortBy = function (field, desc) {
         $('tbody#data').append(tr);
         
     });
+
+    // indicate sort direction
+    this.addSortIndicator();
+}
+
+// now, add the indicator showing the sort column and direction
+DataController.prototype.addSortIndicator = function () {
+    // get rid of old ones
+    $('.sortIndicator').remove();
+
+    var colHead = $('a.sortBtn[name=' + this.sortedBy + ']');
+
+    // add a descending icon
+    if (this.descending)
+        colHead.append('<span class="sortIndicator ui-icon ui-icon-triangle-1-s"></span>');
+    else
+        colHead.append('<span class="sortIndicator ui-icon ui-icon-triangle-1-n"></span>');
 }
         
-/* Convenience function to create a detached jQuery object */
+/* Convenience function to create a detached jQuery DOM object */
 function create (tag) {
     return $(document.createElement(tag));
 }
