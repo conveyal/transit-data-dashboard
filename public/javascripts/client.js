@@ -164,6 +164,43 @@ DataController.prototype.addSortIndicator = function () {
     else
         colHead.append('<span class="sortIndicator ui-icon ui-icon-triangle-1-n"></span>');
 }
+
+
+/**
+ * A controller for the metro area map
+ */
+function MapController () {
+    this.sizeMapArea();
+
+    this.map = new L.Map('map');
+
+    this.layers = {};
+
+    this.layers.osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data &copy; OpenStreetMap contributors, CC-BY-SA',
+        maxZoom: 18
+    });
+
+    this.layers.transit = new L.TileLayer('http://localhost:8001/{z}/{x}/{y}.png', {
+        attribution: 'GTFS data courtesy GTFS Data Exchange'
+    });
+
+    this.map.addLayer(this.layers.osm);
+    this.map.addLayer(this.layers.transit);
+    this.map.setView(new L.LatLng(40, -100), 4);
+}
+
+/**
+ * Make the map area as large as possible but no larger
+ */
+MapController.prototype.sizeMapArea = function () {
+    var parent = $('#map').parent();
+    
+    $('#map')
+        .css('width',  parent.innerWidth() + 'px')
+        .css('height', $('body').innerHeight() + 'px');
+}
+    
         
 /* Convenience function to create a detached jQuery DOM object */
 function create (tag) {
@@ -171,23 +208,7 @@ function create (tag) {
 }
 
 $(document).ready(function () {
-    /*
-    map = new L.Map('map');
-    var osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Map data &copy; OpenStreetMap contributors, CC-BY-SA',
-        maxZoom: 18
-    });
-
-    var gtfs = new L.TileLayer('http://localhost:8001/{z}/{x}/{y}.png', {
-        attribution: 'GTFS data courtesy GTFS Data Exchange'
-    });
-
-    map.addLayer(osm);
-    map.addLayer(gtfs);
-
-    map.setView(new L.LatLng(40, -100), 4);
-    */
-
+    mc = new MapController();
     dc = new DataController();
 });
 
