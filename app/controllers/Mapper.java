@@ -42,13 +42,13 @@ public class Mapper extends Controller {
                                        "a.name AS agencyname, f.agencyName as feedname, " +
                                        "a.url AS agencyurl, f.agencyUrl AS feedurl " + 
                                        "FROM GtfsFeed f INNER JOIN NtdAgency a " +
-                                       "ON (regexp_replace(f.agencyUrl, " + 
+                                       "ON (regexp_replace(LOWER(f.agencyUrl), " + 
                                        // that regular expression strips the protocol, 
                                        // strips pathinfo,
                                        // and strips www. to get a hopefully LCD domain name
                                        "'(?:https?://)?(?:www\\.)?([a-zA-Z0-9\\-_\\.]*)(?:/.*)?'," +
                                        "'\\1') = " + 
-                                       "regexp_replace(a.url," + 
+                                       "regexp_replace(LOWER(a.url)," + 
                                        "'(?:https?://)?(?:www\\.)?([a-zA-Z0-9\\-_\\.]*)(?:/.*)?'," +
                                        "'\\1'));"
                                        );
@@ -268,6 +268,9 @@ public class Mapper extends Controller {
             result = factory.createMultiPolygon(polygons);
         }
         
+        // somewhere this gets lost
+        result.setSRID(mergeInto.the_geom.getSRID());
+
         mergeInto.the_geom = (MultiPolygon) result;
 
         // finally, names
