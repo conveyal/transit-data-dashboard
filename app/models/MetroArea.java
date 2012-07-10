@@ -2,7 +2,6 @@ package models;
 
 import javax.persistence.*;
 import java.util.*;
-
 import play.db.jpa.*;
 import play.data.validation.*;
 import com.vividsolutions.jts.geom.MultiPolygon;
