@@ -136,10 +136,12 @@ DataController.prototype.sortBy = function (field, desc) {
         tr.append(create('td').text(agency.population));
 
         // google transit (TODO: icons)
-        tr.append(create('td').html(agency.googleGtfs ? '&times;' : ''));
+        tr.append(create('td').html(agency.googleGtfs ? 
+                                    '<span class="ui-icon ui-icon-check"></span>' : ''));
         
         // public gtfs
-        tr.append(create('td').html(agency.publicGtfs ? '&times;' : ''));
+        tr.append(create('td').html(agency.publicGtfs ? 
+                                    '<span class="ui-icon ui-icon-check"></span>' : ''));
 
         $('tbody#data').append(tr);
         

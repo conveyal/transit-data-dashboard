@@ -6,39 +6,61 @@
     <!--[if lte IE 8]>
         <link rel="stylesheet" href="javascripts/leaflet/leaflet.ie.css" />
     <![endif]-->
+    <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.8.21.custom.css" />
+    <link rel="stylesheet" href="stylesheets/main.css" />
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
 
     <script src="javascripts/leaflet/leaflet.js"></script>
-    <script src="javascripts/jquery-1.6.4.min.js"></script>
+    <script src="javascripts/jquery-1.7.2.min.js"></script>
     <script src="javascripts/client.js"></script>
+    <script src="js/jquery-ui-1.8.21.custom.min.js"></script>
   </head>
   <body>
-    <div class="navbar">
-      <span class="title">Transit Data Dashboard</span>
-      <a href="#mapTab">Map</a>
-      <a href="#dataTab">Data</a>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">Transit Data Dashboard</a>
+          <ul class="nav">
+            <li class="active"><a href="#mapTab" data-toggle="tab">Map</a></li>
+            <li><a href="#dataTab" data-toggle="tab">Data</a></li>
+          </ul>
+        </div>
+      </div>
     </div>
     
-    <div class="page">
-      <div class="tab tab-active" id="mapTab">
-        <div style="width: 800px; height: 600px" id="map"></div>
+    <div class="container">
+      <div class="row">
+        <div class="span12">
+
+          <div class="tab-content">
+            <div class="tab-pane active fade in" id="mapTab">
+              <div style="width: 800px; height: 600px" id="map">Map</div>
+            </div>
+            
+            <div class="tab-pane fade" id="dataTab">
+              <table>
+                <thead class="fixed-head">
+                  <tr>
+                    <td><a href="#" class="sortBtn" name="name">Agency</a></td>
+                    <td><a href="#" class="sortBtn" name="metro">Metro Area</a></td>
+                    <td><a href="#" class="sortBtn" name="ridership">Annual Ridership</a></td>
+                    <td><a href="#" class="sortBtn" name="passengerMiles">
+                        Annual Passenger Miles</a></td>
+                    <td><a href="#" class="sortBtn" name="population">
+                        Service Area Population</a></td>
+                    <td><a href="#" class="sortBtn" name="googleGtfs">Google Transit</a></td>
+                    <td><a href="#" class="sortBtn" name="publicGtfs">Public GTFS</a></td>
+                  </tr>
+                </thead>
+                <tbody id="data">
+                </tbody>
+              </table>
+              <a href="#" id="prevPage">Previous page</a> <a href="#" id="nextPage">Next page</a>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="tab" id="dataTab">
-        <table>
-          <thead>
-            <tr>
-              <td><a href="#" class="sortBtn" name="agency">Agency</a></td>
-              <td><a href="#" class="sortBtn" name="metro">Metro Area</a></td>
-              <td><a href="#" class="sortBtn" name="ridership">Annual Ridership</a></td>
-              <td><a href="#" class="sortBtn" name="passengerMiles">Annual Passenger Miles</a></td>
-              <td><a href="#" class="sortBtn" name="population">Service Area Population</a></td>
-              <td><a href="#" class="sortBtn" name="googleGtfs">Google Transit</a></td>
-              <td><a href="#" class="sortBtn" name="publicGtfs">Public GTFS</a></td>
-            </tr>
-          </thead>
-          <tbody id="data">
-          </tbody>
-        </table>
-        <a href="#" id="prevPage">Previous page</a> <a href="#" id="nextPage">Next page</a>
-    </div>
+
+      <script src="bootstrap/js/bootstrap.js"></script>
   </body>
 </html>
