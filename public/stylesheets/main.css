@@ -18,3 +18,8 @@ body {
 .clear {
     clear: both;
 }
+
+.tblRowEven .tblColOdd { background: #fff; }
+.tblRowEven .tblColEven { background: #ccc; }
+.tblRowOdd .tblColEven { background: #aaa }
+.tblRowOdd .tblColOdd { background: #ccc; }

@@ -129,6 +129,9 @@ DataController.prototype.sortBy = function (field, desc) {
     $.each(this.filteredData.slice(pageStart, pageEnd), function (ind, agency) {
         var tr = create('tr');
 
+        // alternate classes
+        tr.addClass(ind % 2 ? 'tblRowEven' : 'tblRowOdd');
+
         // name
         var url = agency.url;
 
@@ -138,7 +141,7 @@ DataController.prototype.sortBy = function (field, desc) {
         if (url.slice(0, 4) != 'http')
             url = 'http://' + url;
 
-        var name = create('td').append(
+        var name = create('td').addClass('tblColOdd').append(
             create('a')
                 .attr('href', url)
                 // use .text to prevent potential HTML entities in DB from causing issues
@@ -147,24 +150,29 @@ DataController.prototype.sortBy = function (field, desc) {
         tr.append(name);
 
         // metro
-        tr.append(create('td').text(agency.metro));
+        tr.append(create('td').text(agency.metro).addClass('tblColEven'));
 
         // ridership
-        tr.append(create('td').text(DataController.formatNumber(agency.ridership)));
+        tr.append(create('td').text(DataController.formatNumber(agency.ridership))
+                      .addClass('tblColOdd'));
         
         // passenger miles
-        tr.append(create('td').text(DataController.formatNumber(agency.passengerMiles)));
+        tr.append(create('td').text(DataController.formatNumber(agency.passengerMiles))
+                      .addClass('tblColEven'));
 
         // population
-        tr.append(create('td').text(DataController.formatNumber(agency.population)));
+        tr.append(create('td').text(DataController.formatNumber(agency.population))
+                      .addClass('tblColOdd'));
 
         // google transit (TODO: icons)
         tr.append(create('td').html(agency.googleGtfs ? 
-                                    '<span class="ui-icon ui-icon-check"></span>' : ''));
+                                    '<span class="ui-icon ui-icon-check"></span>' : '')
+                      .addClass('tblColEven'));
         
         // public gtfs
         tr.append(create('td').html(agency.publicGtfs ? 
-                                    '<span class="ui-icon ui-icon-check"></span>' : ''));
+                                    '<span class="ui-icon ui-icon-check"></span>' : '')
+                      .addClass('tblColOdd'));
 
         $('tbody#data').append(tr);
         
