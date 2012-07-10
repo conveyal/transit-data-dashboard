@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import com.google.gson.Gson;
+import proxies.NtdAgencyProxy;
 
 public class NtdAgencies extends Controller {
     /**
@@ -28,28 +29,13 @@ public class NtdAgencies extends Controller {
     }
 
     public static void agencies () {
-        /*        List<Map<String, Object>> agencies = new ArrayList<Map<String, Object>>();
-        Map<String, Object> current;
+        List<NtdAgencyProxy> agencies = new ArrayList<NtdAgencyProxy>();
 
         for (NtdAgency agency : NtdAgency.<NtdAgency>findAll()) {
-            current = new HashMap<String, Object>();
-            current.put("name", agency.name);
-            current.put("url", agency.url);
-            current.put("population", agency.population);
-            current.put("ridership", agency.ridership);
-            current.put("passengerMiles", agency.passengerMiles);
-
-            if (agency.feeds.size() > 0)
-                current.put("publicGtfs", true);
-            else
-                current.put("publicGtfs", false);
-                
+            agencies.add(new NtdAgencyProxy(agency));
         }
 
-        Gson gson = new Gson();
-*/
-
-        renderJSON(NtdAgency.<NtdAgency>findAll());
+        renderJSON(agencies);
     }                      
                         
 }
