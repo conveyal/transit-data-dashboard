@@ -16,62 +16,14 @@ Once you have a JSON file produced by the otp_gtfs tools, you can load it to the
  `loadFeedsToDashboard.py input.json`
 
 It loads to a server running on localhost:9000. It parses the JSON file, reformats it slightly for use in Dashboard, and then hits the API with a request to create a feed record for each feed in the file. 
+
 ### Agencies
 
 You'll need to get the latest `Agency_Information.xls` and `Service.xls` files from NTD. Save those as CSV, for instance using LibreOffice. The CSV dialect is not critical; the Python CSV module is very good at detecting the variant of CSV in use and adapting to it. For reference, I used LibreOffice 3.5.3.2 on Ubuntu 12.04. Save those two CSV files in the same directory and then run the `loadAgenciesFromNtd.py` in that same directory. It will create a record for each agency in the NTD data.
 
 ### Metro Areas
 
-Metro areas can come from a variety of sources; if you've got a PostGIS DB, then this is the place for you. The `loadAgenciesFromPostGIS.py` script takes a PostGIS table and loads it to the database; you'll likely want to modify it a bit for your specific data. 
-
-The data I loaded was all of the GTFS data dissolved where there are intersections.  following this procedure. I first used the `parseToGeoJSON.js` to convert the data to pure GeoJSON; that script runs in Node.js. That file has file names hard-wired in it; it starts with all.json and outputs all.geojson. I then opened all.geojson in [QGIS](http://qgis.org) and right-clicked on the layer to export as a Shapefile. Then I loaded the Shapefile to PostGIS using the `shp2pgsql-gui` program (I loaded to the table openplans_gtfs.undissolved_gtfs). I then ran the following SQL to dissolve the boundaries:
-
-```sql
--- speeds listed below are from an Athlon64 3200+ with 4GB of RAM
--- running Ubuntu 12.04 and Postgres 9.1.4, PostGIS 1.5
--- add the column to store the group. 45ms.
-ALTER TABLE openplans_gtfs.undissolved_gtfs ADD COLUMN area_group int4;
-
--- simplify the geometries for speedier searches, at the 6th decimal place to match previous truncation
-
-
--- create a unique group id for each group, based on the lowest gid of a member agency (15448ms)
-UPDATE openplans_gtfs.undissolved_gtfs
-SET area_group = (
- SELECT min(gtfs2.gid)
- FROM openplans_gtfs.undissolved_gtfs AS gtfs1,
-      openplans_gtfs.undissolved_gtfs AS gtfs2
- WHERE ST_Intersects(gtfs1.the_geom, gtfs2.the_geom) AND gtfs1.gid = undissolved_gtfs.gid
- )
-
--- re-run this until the db does not change; it expands each group by selecting the lowest group ID of a member group. I ran it 5 times. (~15s each).
-UPDATE openplans_gtfs.undissolved_gtfs
-SET area_group = (
-SELECT min(gtfs2.area_group)
-FROM openplans_gtfs.undissolved_gtfs AS gtfs1,
-     openplans_gtfs.undissolved_gtfs AS gtfs2
-WHERE ST_Intersects(gtfs1.the_geom, gtfs2.the_geom) AND gtfs1.gid = undissolved_gtfs.gid
-)
-
--- now, run this to merge nearby agencies. rerun as necessary. This is slower, which is why we don’t just use it all along. I ran it twice. 10452ms.
--- yes, it uses raw decimal degrees because doing it with geographies is very slow. When data is loaded to the DB, this will be fixed.
-UPDATE openplans_gtfs.undissolved_gtfs
-SET area_group = (
-SELECT min(gtfs2.area_group)
-FROM openplans_gtfs.undissolved_gtfs AS gtfs1,
-    openplans_gtfs.undissolved_gtfs AS gtfs2
-WHERE ST_DWithin(gtfs1.the_geom, gtfs2.the_geom, .04) AND gtfs1.gid = undissolved_gtfs.gid
-)
-
--- check how many groups there are
-SELECT count(DISTINCT area_group) FROM openplans_gtfs.undissolved_gtfs;
-
--- now, make a dissolved view (eventually this will be the urbanareas table). 203ms.
-CREATE VIEW openplans_gtfs.dissolved_gtfs AS
-SELECT area_group, ARRAY_AGG(name) AS agencies, ST_Union(the_geom) AS the_geom
-FROM openplans_gtfs.undissolved_gtfs
-GROUP BY area_group;
-```
+Metro areas come from NTD's UZAs, with geometries from the Census Bureau. The load process is like this: when you load agencies to the database, one of the columns that is loaded is the agency's UZAs (actually, it's not a column but a relation, but that's beside the point). Using the `UZAMetroAreaMerger` will merge metro areas that share agencies and map each constituent agency to the appropriate metro.
 
 ## Linking data
 
