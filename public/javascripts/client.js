@@ -3,6 +3,7 @@ function DataController () {
     this.data = null;
     // start on the first page
     this.page = 0;
+    this.filters = [];
 
     $.ajax({
         url: '/api/ntdagencies/agencies',
@@ -15,6 +16,8 @@ function DataController () {
             if (data.length < DataController.PAGE_SIZE)
                 $('#nextPage').fadeOut();
 
+            // there won't be any filters yet, but we still have to do this
+            instance.getFilteredData();
             instance.sortBy('metro');
         },
         error: function (xhr, textStatus) {
@@ -73,6 +76,18 @@ function DataController () {
 
     // hide initially
     $('#prevPage').fadeOut();
+
+    // filter input
+    // clear on first keypress
+    $('#filterForm input').one('keypress', function (e) {
+        $('#filterForm input').val(
+            $('#filterForm input').val().replace('New filter', '')
+        );
+    });
+
+    $('#filterForm').submit(function () {
+        instance.parseAndAddFilter($('#filterForm input').val());
+    });
 }
 
 // STATIC CONFIG
@@ -90,10 +105,10 @@ DataController.prototype.sortBy = function (field, desc) {
         }, 2000);
     }
 
-    // sort the data
-    this.data.sort(function (a, b) {
+    // sort and filter the data
+    this.filteredData.sort(function (a, b) {
         var retval = 0;
-
+        
         if (a[field] == b[field]) retval = 0;
         else if (a[field] < b[field]) retval = -1;
         else if (a[field] > b[field]) retval = 1;
@@ -111,7 +126,7 @@ DataController.prototype.sortBy = function (field, desc) {
     var pageStart = this.page * DataController.PAGE_SIZE;
     var pageEnd = pageStart + DataController.PAGE_SIZE;
 
-    $.each(this.data.slice(pageStart, pageEnd), function (ind, agency) {
+    $.each(this.filteredData.slice(pageStart, pageEnd), function (ind, agency) {
         var tr = create('tr');
 
         // name
@@ -172,6 +187,89 @@ DataController.prototype.addSortIndicator = function () {
     else
         colHead.append('<span class="sortIndicator ui-icon ui-icon-triangle-1-n"></span>');
 }
+
+/**
+ * Add a new filter
+ */
+DataController.prototype.parseAndAddFilter = function (filter) {
+    // OK to not use > -1, because we also want to exclude filters starting with =
+    if (filter.indexOf('=') > 0) {
+        var split = filter.split('=');
+        var lhs = split[0];
+        var rhs = split[1];
+
+        // if the column equals the value
+        this.filters.push([filter, function (agency) {
+            return agency[lhs] == rhs;
+        }]);
+
+    }
+    else {
+        // no need to redisplay/refilter
+        return;
+    }
+
+    // redisplay and refilter the data
+    this.getFilteredData();
+    this.sortBy(this.sortedBy, this.descending);    
+
+    // show the filters
+    this.showFilters();
+};
+    
+/** Set up the filters UI */    
+DataController.prototype.showFilters = function () {
+    var instance = this;
+
+    $('.filter').remove();
+    
+    $.each(this.filters, function (ind, filter) {
+        var link = $('<span class="filter">' + filter[0] + '</span>');
+        var close = $('<button>&times;</button>')
+            .click(function () {
+                instance.filters.pop(ind);
+                
+                // re filter
+                instance.getFilteredData();
+                instance.sortBy(instance.sortedBy, instance.descending);
+
+                instance.showFilters();
+
+            })
+            .appendTo(link);
+
+        $('#filters').append(link)
+    });
+};
+
+/**
+ * Return a filtered version of the data list
+ */
+DataController.prototype.getFilteredData = function () {
+    // has to be in a closure to have scope access
+    var instance = this;
+
+    this.filteredData = this.data.filter(function (agency) {
+        return instance.filterCallback(agency)
+    });
+};
+
+/**
+ * Return true if this agency is not filtered
+ */
+DataController.prototype.filterCallback = function (agency) {
+    var instance = this;
+    var filterLen = this.filters.length;
+
+    for (var i = 0; i < filterLen; i++) {
+        if (!instance.filters[i][1](agency))
+            // short circuit
+            return false;
+    }
+
+    // if we haven't returned by here, it passes muster
+    return true;
+};
 
 // Static Functions
 /**
