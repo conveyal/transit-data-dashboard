@@ -46,10 +46,10 @@ public class Mapper extends Controller {
                                        // that regular expression strips the protocol, 
                                        // strips pathinfo,
                                        // and strips www. to get a hopefully LCD domain name
-                                       "'(?:https?://)?(?:www\\.)?([a-zA-Z0-9\\-_\\.]*)(?:/.*)?'," +
+                                       "'(?:\\W*)(?:https?://)?(?:www\\.)?([a-zA-Z0-9\\-_\\.]*)(?:/.*)?(?:\\W*)'," +
                                        "'\\1') = " + 
                                        "regexp_replace(LOWER(a.url)," + 
-                                       "'(?:https?://)?(?:www\\.)?([a-zA-Z0-9\\-_\\.]*)(?:/.*)?'," +
+                                       "'(?:\\W*)(?:https?://)?(?:www\\.)?([a-zA-Z0-9\\-_\\.]*)(?:/.*)?(?:\\W*)'," +
                                        "'\\1'));"
                                        );
         
