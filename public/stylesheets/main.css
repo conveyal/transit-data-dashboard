@@ -6,3 +6,15 @@ body {
     padding-top: 60px;
     padding-bottom: 40px;
 }
+
+#prevPage {
+    float: left;
+}
+
+#nextPage {
+    float: right;
+}
+
+.clear {
+    clear: both;
+}
