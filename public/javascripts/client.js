@@ -115,9 +115,17 @@ DataController.prototype.sortBy = function (field, desc) {
         var tr = create('tr');
 
         // name
+        var url = agency.url;
+
+        // TODO: catch non-urls.
+
+        // this will catch https as well
+        if (url.slice(0, 4) != 'http')
+            url = 'http://' + url;
+
         var name = create('td').append(
             create('a')
-                .attr('href', agency.url)
+                .attr('href', url)
                 // use .text to prevent potential HTML entities in DB from causing issues
                 .text(agency.name)
         );
