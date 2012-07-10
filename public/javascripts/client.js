@@ -1,26 +1,135 @@
+function DataController () {
+    var instance = this;
+    this.data = null;
+    // start on the first page
+    this.page = 0;
+
+    $.ajax({
+        url: '/api/ntdagencies/agencies',
+        dataType: 'json',
+        success: function (data) {
+            console.log('received json');
+            instance.data = data;
+            instance.sortBy('metro');
+        },
+        error: function (xhr, textStatus) {
+            console.log('Error retrieving JSON: ', textStatus);
+        }
+    });
+
+    // set up the sort buttons
+    $('.sortBtn').click(function (e) {
+        // don't go to the top of the page
+        e.preventDefault();
+
+        // e.currentTarget is a DOM element not a jQ        
+        var field = e.currentTarget.name;
+        var desc = false;
+
+        // two clicks on the head sorts descending
+        if (instance.sortedBy == field && instance.descending == false)
+            desc = true;
+
+        instance.sortBy(e.currentTarget.name, desc);
+    });
+}
+
+// STATIC CONFIG
+DataController.PAGE_SIZE = 100;
+
+DataController.prototype.sortBy = function (field, desc) {
+    var instance = this;
+    this.sortedBy = field;
+    this.descending = desc;
+
+    // app has not initialized yet, try again in 2s
+    if (this.data == null) {
+        setTimout(function () {
+            instance.sortBy(field);
+        }, 2000);
+    }
+
+    // sort the data
+    this.data.sort(function (a, b) {
+        var retval = 0;
+
+        if (a[field] == b[field]) retval = 0;
+        else if (a[field] < b[field]) retval = -1;
+        else if (a[field] > b[field]) retval = 1;
+        
+        if (desc)
+            return -1 * retval;
+        else
+            return retval;
+    });
+
+    // clear old data
+    $('tbody#data tr').remove();
+
+    // pagination
+    var pageStart = this.page * DataController.PAGE_SIZE;
+    var pageEnd = pageStart + DataController.PAGE_SIZE;
+
+    $.each(this.data.slice(pageStart, pageEnd), function (ind, agency) {
+        var tr = create('tr');
+
+        // name
+        var name = create('td').append(
+            create('a')
+                .attr('href', agency.url)
+                // use .text to prevent potential HTML entities in DB from causing issues
+                .text(agency.name)
+        );
+        tr.append(name);
+
+        // metro
+        tr.append(create('td').text(agency.metro));
+
+        // ridership
+        tr.append(create('td').text(agency.ridership));
+        
+        // passenger miles
+        tr.append(create('td').text(agency.passengerMiles));
+
+        // population
+        tr.append(create('td').text(agency.population));
+
+        // google transit (TODO: icons)
+        tr.append(create('td').html(agency.googleGtfs ? '&times;' : ''));
+        
+        // public gtfs
+        tr.append(create('td').html(agency.publicGtfs ? '&times;' : ''));
+
+        $('tbody#data').append(tr);
+        
+    });
+}
+        
+/* Convenience function to create a detached jQuery object */
+function create (tag) {
+    return $(document.createElement(tag));
+}
+
 $(document).ready(function () {
+    /*
     map = new L.Map('map');
     var osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Map data &copy; OpenStreetMap contributors, CC-BY-SA, transit data courtesy' +
-            ' GTFS Data Exchange',
+        attribution: 'Map data &copy; OpenStreetMap contributors, CC-BY-SA',
         maxZoom: 18
     });
 
+    var gtfs = new L.TileLayer('http://localhost:8001/{z}/{x}/{y}.png', {
+        attribution: 'GTFS data courtesy GTFS Data Exchange'
+    });
+
     map.addLayer(osm);
+    map.addLayer(gtfs);
 
     map.setView(new L.LatLng(40, -100), 4);
+    */
 
-    $.ajax({
-        url: '/api/metroareas/getAll',
-        dataType: 'json',
-        success: function (data) {
-            console.log('received geojson');
-            var geojson = new L.GeoJSON(data);
-            map.addLayer(geojson);
-        },
-        error: function (xhr, textStatus) {
-            console.log(textStatus);
-        }
-    });
+    dc = new DataController();
 });
+
+
     
