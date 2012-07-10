@@ -19,11 +19,11 @@ It loads to a server running on localhost:9000. It parses the JSON file, reforma
 
 ### Agencies
 
-You'll need to get the latest `Agency_Information.xls` and `Service.xls` files from NTD. Save those as CSV, for instance using LibreOffice. The CSV dialect is not critical; the Python CSV module is very good at detecting the variant of CSV in use and adapting to it. For reference, I used LibreOffice 3.5.3.2 on Ubuntu 12.04. Save those two CSV files in the same directory and then run the `loadAgenciesFromNtd.py` in that same directory. It will create a record for each agency in the NTD data.
+You'll need to get the latest `Agency_Information.xls`, `Service.xls` and `Agency_UZA.xls` files from NTD. Save those as CSV, for instance using LibreOffice. The CSV dialect is not critical; the Python CSV module is very good at detecting the variant of CSV in use and adapting to it. For reference, I used LibreOffice 3.5.3.2 on Ubuntu 12.04. Save those two CSV files in the same directory and then run the `loadAgenciesFromNtd.py` in that same directory. It will create a record for each agency in the NTD data.
 
 ### Metro Areas
 
-Metro areas come from NTD's UZAs, with geometries from the Census Bureau. The load process is like this: when you load agencies to the database, one of the columns that is loaded is the agency's UZAs (actually, it's not a column but a relation, but that's beside the point). Using the `UZAMetroAreaMerger` will merge metro areas that share agencies and map each constituent agency to the appropriate metro.
+Metro areas come from NTD's UZAs, with geometries from the Census Bureau. The load process is like this: when you load agencies to the database, one of the columns that is loaded is the agency's UZAs (actually, it's not a column but a relation, but that's beside the point). Using the `mapAgenciesByUZAAndMerge` will merge metro areas that share agencies and map each constituent agency to the appropriate metro. Running `autoNameMetroAreas` after that will clean up the names.
 
 ## Linking data
 
@@ -48,3 +48,25 @@ DANGER! Clears all agency to metro area mappings, regardless of how they were cr
 `autoNameMetroAreas` - `/api/mapper/autoNameMetroAreas`:
 
 Attempt to auto name metro areas based on the feeds in them. DANGER! Will overwrite any already-defined names.
+
+`mapAgenciesByUZAAndMerge` - `/api/mapper/mapAgenciesByUZAAndMerge`
+
+Assign transit agencies to metro areas by their UZAs, then merge metro areas that share agencies. You must pass a ?commit=true or ?commit=false to this mapper; it is destructive and, since it is mapping based on free form text, a bit tricky. It is recommended that it be run with ?commit=false and its output reviewed before being run with ?commit=true
+
+## Serving map tiles
+
+You need to install [TileLite](https://bitbucket.org/springmeyer/tilelite/wiki/Home) to serve the map tiles. Then, you can run `liteserv.py -p 8001 path/to/app/dir/tiles/tiles.xml`. Currently, the web map assumes it will find TileLite on localhost:8001.
+
+## Using the web interface
+
+Once you've loaded and linked your data, you can use the dashboard. Load up [http://localhost:9000/public/] in your browser. There you will see the map on the first tab, showing the extent of your metro areas. On the next tab, the data tab, you will see a list of all the NtdAgencies you have loaded. You can sort them by clicking the column heads (click a second time to sort descending). You may also filter your data, by typing a filter expression in the filter text box and pressing enter. Filters have a column name on the left hand side, and operator and a value on the right. There may be no whitespace between column names, operators and right-hand sides, however whitespace may be placed in the right-hand side if one wants to match it. Here are the current column names:
+
+* name
+* metro
+* ridership
+* passengerMiles
+* population
+* googleGtfs
+* publicGtfs
+
+If you want to match one of the boolean columns, use 0 for false and 1 for true.
