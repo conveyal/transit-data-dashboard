@@ -215,6 +215,41 @@ DataController.prototype.parseAndAddFilter = function (filter) {
         }]);
 
     }
+
+    else if (filter.indexOf('~') > 0) {
+        var split = filter.split('~');
+        
+        var lhs = split[0];
+        // case insensitive
+        var rhs = split[1].toLowerCase();
+
+        this.filters.push([filter, function (agency) {
+            return agency[lhs].toLowerCase().indexOf(rhs) > -1;
+        }]);
+    }
+
+    else if (filter.indexOf('>') > 0) {
+        var split = filter.split('>');
+        
+        var lhs = split[0];
+        var rhs = split[1];
+
+        this.filters.push([filter, function (agency) {
+            return agency[lhs] > rhs;
+        }]);
+    }
+
+    else if (filter.indexOf('<') > 0) {
+        var split = filter.split('<');
+        
+        var lhs = split[0];
+        var rhs = split[1];
+
+        this.filters.push([filter, function (agency) {
+            return agency[lhs] < rhs;
+        }]);
+    }
+
     else {
         // no need to redisplay/refilter
         return;
@@ -238,7 +273,8 @@ DataController.prototype.showFilters = function () {
         var link = $('<span class="filter">' + filter[0] + '</span>');
         var close = $('<button>&times;</button>')
             .click(function () {
-                instance.filters.pop(ind);
+                console.log('pop ' + ind);
+                instance.filters.splice(ind, 1);
                 
                 // re filter
                 instance.getFilteredData();
