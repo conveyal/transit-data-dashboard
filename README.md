@@ -69,4 +69,9 @@ Once you've loaded and linked your data, you can use the dashboard. Load up [htt
 * googleGtfs
 * publicGtfs
 
-If you want to match one of the boolean columns, use 0 for false and 1 for true.
+If you want to match one of the boolean columns, use 0 for false and 1 for true. These are the operators currently implemented:
+
+* `=` Must be exactly equal to, e.g. `publicGtfs=0` or `metro=San Francisco Bay Area, CA`
+* `>` Must be greater than, e.g. `ridership>15000000`
+* `<` Must be less than, e.g. `ridership<150000000`
+* `~` Must contain (case insensitive), e.g. `name~San francisco`
