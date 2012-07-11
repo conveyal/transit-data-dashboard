@@ -170,25 +170,35 @@ public class Mapper extends Controller {
     }
 
     /**
+     * Delete all metro areas that have no agencies
+     */
+    public static void removeMetroAreasWithNoAgencies () {
+        List<MetroArea> areas;
+        
+        areas = MetroArea.find("SELECT m FROM MetroArea m WHERE " +
+                               "(SELECT count(*) FROM NtdAgency a WHERE a.metroArea.id = m.id) = 0")
+            .fetch();
+
+        for (MetroArea area : areas) {
+            area.delete();
+        }
+
+        render(areas);
+    }
+
+    /**
      * Name metro areas based on area description of largest agency by ridership
      */
     public static void autoNameMetroAreas () {
         List<MetroArea> areas = MetroArea.findAll();
         List<String[]> renames = new ArrayList<String[]>();
-        String[] rename;
+        String[] rename, uzaNames;
         NtdAgency largestAgency = null;
         GtfsFeed feed;
 
         // TODO: more efficient, DB driven algorithm
         for (MetroArea area : areas) {
             for (NtdAgency agency : area.getAgencies()) {
-                if (agency.feeds.size() == 0) {
-                    Logger.debug("Agency has no feeds");
-                    continue;
-                }
-
-                
-
                 // if there's one agency, it's the largest
                 if (largestAgency == null) {
                     largestAgency = agency;
@@ -213,14 +223,9 @@ public class Mapper extends Controller {
                 continue;
             }
             
-            feed = (GtfsFeed) largestAgency.feeds.toArray()[0];
-            if (feed.country.toLowerCase().equals("us") && feed.state != null &&
-                !feed.state.equals("")) {
-                area.name = feed.areaDescription + ", " + feed.state.toUpperCase();
-            }
-            else {
-                area.name = feed.areaDescription;
-            }
+            uzaNames = new String[largestAgency.uzaNames.size()];
+            largestAgency.uzaNames.toArray(uzaNames);
+            area.name = mergeAreaNames(255, uzaNames);
 
             rename[1] = area.name;
             area.save();
@@ -234,6 +239,53 @@ public class Mapper extends Controller {
         render(renames);
     }  
 
+    /**
+     * Merge UZA names
+     * @param names The names to merge
+     * @param maxLength The maximum length of the resulting string
+     */
+    private static String mergeAreaNames (int maxLength, String... names) {
+        String[] thisSplit;
+        Set<String> cities = new HashSet<String>();
+        Set<String> states = new HashSet<String>();
+        StringBuilder out;
+
+        for (String name : names) {
+            thisSplit = name.split(", ");
+
+            for (String city : thisSplit[0].split("-")) {
+                cities.add(city);
+            }
+
+            for (String state : thisSplit[1].split("-")) {
+                states.add(state);
+            }
+        }
+
+        out = new StringBuilder(maxLength);
+
+        for (String city : cities) {
+            out.append(city);
+            out.append('-');
+        }
+
+        // delete last -
+        out.deleteCharAt(out.length() - 1);
+        out.append(", ");
+
+        for (String state : states) {
+            out.append(state);
+            out.append('-');
+        }
+
+        out.deleteCharAt(out.length() - 1);
+
+        // truncate if needed
+        if (out.length() >= maxLength)
+            out.setLength(maxLength);
+
+        return out.toString();
+    }
     
     /**
      * Merge two metro areas. Agencies get saved in here, but neither metro area is saved/deleted
@@ -241,8 +293,6 @@ public class Mapper extends Controller {
     private static void mergeAreas (MetroArea mergeInto, MetroArea other) {
         // first, bring in the other area's agencies
         List<NtdAgency> otherAgencies = other.getAgencies();
-        Set<String> cities, states;
-        String[] thisSplit, otherSplit;
         // we make a multipolygon with one member for the geometry
         Polygon[] polygons;
         Geometry result;
@@ -272,57 +322,8 @@ public class Mapper extends Controller {
         result.setSRID(mergeInto.the_geom.getSRID());
 
         mergeInto.the_geom = (MultiPolygon) result;
-
-        // finally, names
-        cities = new HashSet<String>();
-        states = new HashSet<String>();
         
-        thisSplit = mergeInto.name.split(", ");
-        otherSplit = other.name.split(", ");
-
-        for (String city : thisSplit[0].split("-")) {
-            cities.add(city);
-        }
-
-        for (String city : otherSplit[0].split("-")) {
-            cities.add(city);
-        }
-
-        if (thisSplit.length >= 2) {
-            for (String state : thisSplit[1].split("-")) {
-                states.add(state);
-            }
-        }
-
-        if (otherSplit.length >= 2) {
-            for (String state : otherSplit[1].split("-")) {
-                states.add(state);
-            }
-        }
-
-        StringBuilder out = new StringBuilder(255);
-        
-        for (String city : cities) {
-            out.append(city);
-            out.append('-');
-        }
-
-        // delete last -
-        out.deleteCharAt(out.length() - 1);
-        out.append(", ");
-
-        for (String state : states) {
-            out.append(state);
-            out.append('-');
-        }
-
-        out.deleteCharAt(out.length() - 1);
-
-        // truncate if needed
-        if (out.length() >= 255)
-            out.setLength(255);
-        
-        mergeInto.name = out.toString();
+        mergeInto.name = mergeAreaNames(255, mergeInto.name, other.name);
     }
 
      
