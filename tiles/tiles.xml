@@ -23,7 +23,7 @@
     <MinScaleDenominator>3000000</MinScaleDenominator>
     <Filter>([status] = 1)</Filter>
     <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
-    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
+    <LineSymbolizer stroke-width="0" stroke="#000000" />
   </Rule>
   <Rule>
     <MaxScaleDenominator>3000000</MaxScaleDenominator>
@@ -35,7 +35,7 @@
     <MinScaleDenominator>3000000</MinScaleDenominator>
     <Filter>([status] = 0)</Filter>
     <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
-    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
+    <LineSymbolizer stroke-width="0" stroke="#000000" />
   </Rule>
   <Rule>
     <MaxScaleDenominator>3000000</MaxScaleDenominator>
@@ -47,7 +47,7 @@
     <MinScaleDenominator>3000000</MinScaleDenominator>
     <Filter>([status] = -1)</Filter>
     <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
-    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
+    <LineSymbolizer stroke-width="0" stroke="#000000" />
   </Rule>
   <Rule>
     <MaxScaleDenominator>3000000</MaxScaleDenominator>
@@ -58,7 +58,7 @@
   <Rule>
     <MinScaleDenominator>3000000</MinScaleDenominator>
     <PolygonSymbolizer fill="rgba(0, 0, 0, 0)" fill-opacity="0.5" />
-    <LineSymbolizer stroke-width="0.5" stroke="#000000" />
+    <LineSymbolizer stroke-width="0" stroke="#000000" />
   </Rule>
   <Rule>
     <MaxScaleDenominator>3000000</MaxScaleDenominator>
@@ -96,6 +96,7 @@ FROM dashboard.gtfsfeed) q]]></Parameter>
   <Rule>
     <MaxScaleDenominator>6500000</MaxScaleDenominator>
     <MinScaleDenominator>750000</MinScaleDenominator>
+    <Filter>([has_agencies] = true)</Filter>
     <TextSymbolizer face-name="Ubuntu Bold" placement="interior" halo-radius="1.5" ><![CDATA[[name]]]></TextSymbolizer>
   </Rule>
 </Style>
@@ -117,7 +118,13 @@ FROM dashboard.gtfsfeed) q]]></Parameter>
     <StyleName>metros-labels</StyleName>
     <Datasource>
        <Parameter name="type"><![CDATA[postgis]]></Parameter>
-       <Parameter name="table"><![CDATA[dashboard.metroarea]]></Parameter>
+       <Parameter name="table"><![CDATA[(SELECT *, 
+CASE
+  WHEN (SELECT count(*) FROM dashboard.NtdAgency a WHERE a.MetroArea_id = m.id) > 0
+    THEN true
+  ELSE false
+END AS has_agencies
+FROM dashboard.metroarea m) Metros]]></Parameter>
        <Parameter name="extent"><![CDATA[]]></Parameter>
        <Parameter name="key_field"><![CDATA[id]]></Parameter>
        <Parameter name="geometry_field"><![CDATA[the_geom]]></Parameter>

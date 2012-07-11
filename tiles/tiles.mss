@@ -26,6 +26,7 @@ Map {
 // hide above 10
 #feeds[zoom <= 7] {
   polygon-fill: rgba(0,0,0,0);
+  line-width: 0;
 }
 
 // feed labels at or above zoom 9
@@ -49,7 +50,8 @@ Map {
 }
 
 // metro area labels between zoom 6 and 9
-#metros::labels[zoom >= 7][zoom < 10] {
+// but only for metros with agencies
+#metros::labels[zoom >= 7][zoom < 10][has_agencies = true] {
   text-name: "[name]";
   text-face-name: "Ubuntu Bold";
   text-placement: interior;
