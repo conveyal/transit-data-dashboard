@@ -2,6 +2,7 @@ package controllers;
 
 import play.*;
 import play.mvc.*;
+import play.db.jpa.JPA;
 import models.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import com.google.gson.Gson;
 import proxies.NtdAgencyProxy;
+import javax.persistence.Query;
 
 public class NtdAgencies extends Controller {
     /**
@@ -30,9 +32,41 @@ public class NtdAgencies extends Controller {
 
     public static void agencies () {
         List<NtdAgencyProxy> agencies = new ArrayList<NtdAgencyProxy>();
+        List<Object[]> results;
+        NtdAgencyProxy current;
+        
+        // TODO: google gtfs
+        String qs =
+            "SELECT a.name, a.url, m.name AS metroname, a.population, a.ridership, " +
+            "a.passengerMiles, " +
+            "CASE "+
+            "  WHEN f.publicGtfs THEN true " +
+            "  ELSE false " +
+            "END AS publicGtfs, " +
+            "FALSE AS googleGtfs " +
+            "FROM (NtdAgency a " +
+            "  LEFT JOIN MetroArea m ON (m.id = a.MetroArea_id)) " +
+            "  LEFT JOIN (SELECT j.NtdAgency_id, count(*) > 0 AS publicGtfs " + 
+            "               FROM NtdAgency_GtfsFeed j " +
+            "             GROUP BY j.NtdAgency_id) f ON (a.id = f.NtdAgency_id)";
 
-        for (NtdAgency agency : NtdAgency.<NtdAgency>findAll()) {
-            agencies.add(new NtdAgencyProxy(agency));
+        Query q = JPA.em().createNativeQuery(qs);
+        
+        results = q.getResultList();
+
+        for (Object[] result : results) {
+            current = new NtdAgencyProxy(
+                (String) result[0], // name
+                (String) result[1], // url
+                (String) result[2], // Metro name
+                ((Integer) result[3]).intValue(), // population
+                ((Integer) result[4]).intValue(), // ridership
+                ((Integer) result[5]).intValue(), // passenger miles
+                ((Boolean) result[6]).booleanValue(), // public GTFS
+                ((Boolean) result[7]).booleanValue() // google GTFS
+                                         );
+
+            agencies.add(current);
         }
 
         renderJSON(agencies);
