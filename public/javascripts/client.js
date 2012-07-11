@@ -224,6 +224,7 @@ DataController.prototype.parseAndAddFilter = function (filter) {
         var rhs = split[1].toLowerCase();
 
         this.filters.push([filter, function (agency) {
+            if (agency[lhs] == undefined) return false;
             return agency[lhs].toLowerCase().indexOf(rhs) > -1;
         }]);
     }
@@ -273,8 +274,16 @@ DataController.prototype.showFilters = function () {
         var link = $('<span class="filter">' + filter[0] + '</span>');
         var close = $('<button>&times;</button>')
             .click(function () {
-                console.log('pop ' + ind);
-                instance.filters.splice(ind, 1);
+                // find this filter again
+                $.each(instance.filters, function (ind, data) {
+                    if (data[0] == filter[0]) {
+                        // remove it
+                        instance.filters.splice(ind, 1);
+                        // end the iteration; if there are duplicate filters this should
+                        // only remove one of them (although it may not remove the correct one)
+                        return false;
+                    }
+                });
                 
                 // re filter
                 instance.getFilteredData();
