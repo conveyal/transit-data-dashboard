@@ -85,7 +85,8 @@ function DataController () {
         );
     });
 
-    $('#filterForm').submit(function () {
+    $('#filterForm').submit(function (e) {
+        e.preventDefault();
         instance.parseAndAddFilter($('#filterForm input').val());
     });
 }
@@ -125,6 +126,8 @@ DataController.prototype.sortBy = function (field, desc) {
     // pagination
     var pageStart = this.page * DataController.PAGE_SIZE;
     var pageEnd = pageStart + DataController.PAGE_SIZE;
+
+    $('#pageNum').text(this.page + 1);
 
     $.each(this.filteredData.slice(pageStart, pageEnd), function (ind, agency) {
         var tr = create('tr');
