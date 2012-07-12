@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Map Feeds to Agencies</title>
+    <link rel="stylesheet" href="../css/ui-lightness/jquery-ui-1.8.21.custom.css" />
+    <link rel="stylesheet" href="../stylesheets/main.css" />
+    <link rel="stylesheet" href="../bootstrap/css/bootstrap.min.css" />
+
+    <script src="../javascripts/jquery-1.7.2.min.js"></script>
+    <script src="javascripts/mapfeeds.js"></script>
+    <script src="../js/jquery-ui-1.8.21.custom.min.js"></script>
+  </head>
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">Transit Data Dashboard</a>
+          <h4>Administration</h4>
+        </div>
+      </div>
+    </div>
+    
+    <div class="container">
+      <div class="row">
+        <div class="span12">
+          <p><span id="status"></span>&nbsp;</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- left agency column -->
+        <div class="span6">
+          <h3>Agencies</h3>
+          <label for="agencyFilter">Filter</label>
+          <input type="text" class="filter" id="agencyFilter" />
+        </div>
+
+        <!-- right feed column -->
+        <div class="span6">
+          <h3>Feeds</h3>
+          <label for="feedFilter">Filter</label>
+          <input type="text" class="filter" id="feedFilter" />
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- left agency column -->
+        <div class="span6">
+          &nbsp;
+          <table id="agencies">
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- right feed column -->
+        <div class="span6">
+          &nbsp;
+          <table id="feeds">
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="row">
+        <div class="span12">
+          <button id="connect" class="btn">Connect</button>
+        </div>
+    </div>
+    <script src="../bootstrap/js/bootstrap.js"></script>
+  </body>
+</html>

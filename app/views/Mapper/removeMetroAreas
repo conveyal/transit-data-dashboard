@@ -1,0 +1,9 @@
+#{extends 'main.html' /}
+#{set title:'Area Removal' /}
+
+<h3>Removed Areas</h3>
+<ol>
+  #{list items:areas, as:'merge'}
+    <li>${merge}</li>
+  #{/list}
+</ol>

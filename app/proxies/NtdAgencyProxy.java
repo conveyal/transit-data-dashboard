@@ -15,9 +15,10 @@ public class NtdAgencyProxy {
     public int passengerMiles;
     public boolean publicGtfs;
     public boolean googleGtfs;
+    public long id;
 
     public NtdAgencyProxy (String name, String url, String metro, int population, int ridership,
-                           int passengerMiles, boolean publicGtfs, boolean googleGtfs) {
+                           int passengerMiles, boolean publicGtfs, boolean googleGtfs, long id) {
         this.name = name;
         this.url = url;
         this.metro = metro;
@@ -26,6 +27,7 @@ public class NtdAgencyProxy {
         this.passengerMiles = passengerMiles;
         this.publicGtfs = publicGtfs;
         this.googleGtfs = googleGtfs;
+        this.id = id;
     }
 
     /**

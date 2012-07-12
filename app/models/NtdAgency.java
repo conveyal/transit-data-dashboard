@@ -37,6 +37,9 @@ public class NtdAgency extends Model {
     /** Annual passenger miles */
     public int passengerMiles;
 
+    /** Does this agency provide GTFS to Google? */
+    public boolean googleGtfs;
+
     // TODO: geometry
 
     @ManyToOne

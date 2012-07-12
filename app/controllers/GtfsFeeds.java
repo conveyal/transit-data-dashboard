@@ -3,11 +3,14 @@ package controllers;
 import play.*;
 import play.mvc.*;
 import models.*;
+import proxies.GtfsFeedProxy;
+import utils.GeometryUtils;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.io.ParseException;
-import utils.GeometryUtils;
 import java.util.Date;
 import play.data.binding.As;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GtfsFeeds extends Controller {
     /**
@@ -59,5 +62,16 @@ public class GtfsFeeds extends Controller {
                                      the_geom);
         feed.save();
         renderJSON("{\"status\": \"success\"}");
+    }
+
+    public static void feeds () {
+        List<GtfsFeedProxy> feeds = new ArrayList<GtfsFeedProxy>();
+
+        for (GtfsFeed feed : GtfsFeed.<GtfsFeed>findAll()) {
+            feeds.add(new GtfsFeedProxy(feed));
+        }
+
+        // this is fairly quick b/c there are no joins
+        renderJSON(feeds);
     }
 }

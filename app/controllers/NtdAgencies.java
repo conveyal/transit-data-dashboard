@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.math.BigInteger;
 import com.google.gson.Gson;
 import proxies.NtdAgencyProxy;
 import javax.persistence.Query;
@@ -43,7 +44,8 @@ public class NtdAgencies extends Controller {
             "  WHEN f.publicGtfs THEN true " +
             "  ELSE false " +
             "END AS publicGtfs, " +
-            "FALSE AS googleGtfs " +
+            "FALSE AS googleGtfs, " +
+            "a.id " +
             "FROM (NtdAgency a " +
             "  LEFT JOIN MetroArea m ON (m.id = a.MetroArea_id)) " +
             "  LEFT JOIN (SELECT j.NtdAgency_id, count(*) > 0 AS publicGtfs " + 
@@ -63,7 +65,8 @@ public class NtdAgencies extends Controller {
                 ((Integer) result[4]).intValue(), // ridership
                 ((Integer) result[5]).intValue(), // passenger miles
                 ((Boolean) result[6]).booleanValue(), // public GTFS
-                ((Boolean) result[7]).booleanValue() // google GTFS
+                ((Boolean) result[7]).booleanValue(), // google GTFS
+                ((BigInteger) result[8]).longValue() // id
                                          );
 
             agencies.add(current);

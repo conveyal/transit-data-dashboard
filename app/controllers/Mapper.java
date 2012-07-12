@@ -257,8 +257,10 @@ public class Mapper extends Controller {
                 cities.add(city);
             }
 
-            for (String state : thisSplit[1].split("-")) {
-                states.add(state);
+            if (thisSplit.length >= 2) {
+                for (String state : thisSplit[1].split("-")) {
+                    states.add(state);
+                }
             }
         }
 
@@ -375,6 +377,9 @@ public class Mapper extends Controller {
         // First, we map each one to its first UZA, which is fine because we merge all the
         // UZAs later anyways. Also, make a list of UZAs which should be merged.
         for (NtdAgency agency : agencies) {
+            // make sure that UZAs don't leak between iterations
+            area = null;
+
             // if this doesn't have a UZA, report it in the template
             if (agency.uzaNames.size() == 0) {
                 noUzaAgencies.add(agency);
@@ -501,6 +506,43 @@ public class Mapper extends Controller {
         }
 
         render(resultingAreas, noUzaAgencies, nullUzas, unmappedAgencies, commit);
+    }
+
+    /**
+     * Manually map feeds to agencies. This will connect each feed specified with each agency
+     * specified. All feeds specified will be connected to all agencies specified.
+     * @param feed The feeds to map
+     * @param agency The agencies to map
+     */
+    public static void connectFeedsAndAgencies (long[] feed, long[] agency) {
+        List<NtdAgency> agencies = new ArrayList<NtdAgency>();
+        List<GtfsFeed> feeds = new ArrayList<GtfsFeed>();
+        NtdAgency currentAgency;
+        GtfsFeed currentFeed;
+
+        for (long agencyId : agency) {
+            currentAgency = NtdAgency.findById(agencyId);
+            if (currentAgency != null)
+                agencies.add(currentAgency);
+            else
+                Logger.warn("Agency %s does not exist", agencyId);
+        }
+
+        for (long feedId : feed) {
+            currentFeed = GtfsFeed.findById(feedId);
+            if (currentFeed != null)
+                feeds.add(currentFeed);
+            else
+                Logger.warn("Feed %s does not exist", feedId);
+        }
+
+        // now, link them
+        for (NtdAgency linkAgency : agencies) {
+            for (GtfsFeed linkFeed : feeds) {
+                linkAgency.feeds.add(linkFeed);
+            }
+            linkAgency.save();
+        }
     }
 }
             
