@@ -23,3 +23,7 @@ body {
 .tblRowEven .tblColEven { background: #ccc; }
 .tblRowOdd .tblColEven { background: #aaa }
 .tblRowOdd .tblColOdd { background: #ccc; }
+
+/* keep the icons on the same line */
+#filters a span.ui-icon { float: left }
+.ui-icon-blank { background-position: 100px 100px }

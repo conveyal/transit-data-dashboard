@@ -3,7 +3,7 @@ function DataController () {
     this.data = null;
     // start on the first page
     this.page = 0;
-    this.filters = [];
+    this.filters = {};
 
     $.ajax({
         url: '/api/ntdagencies/agencies',
@@ -80,17 +80,34 @@ function DataController () {
     // hide initially
     $('#prevPage').fadeOut();
 
-    // filter input
-    // clear on first keypress
-    $('#filterForm input').one('keypress', function (e) {
-        $('#filterForm input').val(
-            $('#filterForm input').val().replace('New filter', '')
-        );
-    });
+    $('#filters li a').click(function (e) {
+        var filter = e.currentTarget.name;
+        var opposite = e.currentTarget.getAttribute('opposite');
 
-    $('#filterForm').submit(function (e) {
-        e.preventDefault();
-        instance.parseAndAddFilter($('#filterForm input').val());
+        if (instance.filters[filter]) {
+            instance.filters[filter] = false;
+            $(e.currentTarget).find('.ui-icon').removeClass('ui-icon-check')
+                .addClass('ui-icon-blank')
+                .text('Disabled filter');
+        }
+        else {
+            instance.filters[filter] = true;
+            $(e.currentTarget).find('.ui-icon').addClass('ui-icon-check')
+                .removeClass('ui-icon-blank')
+                .text('Enabled filter');
+        }
+
+        if (opposite != null) {
+            $('#filters li').find('[name="' + opposite + '"]')
+                .find('.ui-icon').removeClass('ui-icon-check')
+                .addClass('ui-icon-blank')
+                .text('Disabled filter');
+
+            instance.filters[opposite] = false;
+        }
+
+        instance.getFilteredData();
+        instance.sortBy(instance.sortedBy, instance.descending);
     });
 }
 
@@ -317,16 +334,20 @@ DataController.prototype.getFilteredData = function () {
  * Return true if this agency is not filtered
  */
 DataController.prototype.filterCallback = function (agency) {
-    var instance = this;
-    var filterLen = this.filters.length;
-
-    for (var i = 0; i < filterLen; i++) {
-        if (!instance.filters[i][1](agency))
-            // short circuit
+    // various filters
+    if (this.filters.publicGtfs) {
+        if (!agency.publicGtfs) {
             return false;
+        }
     }
 
-    // if we haven't returned by here, it passes muster
+    if (this.filters.noPublicGtfs) {
+        if (agency.publicGtfs) {
+            return false;
+        }
+    }
+    
+    // if we're here it passes muster
     return true;
 };
 

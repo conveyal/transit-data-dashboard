@@ -39,11 +39,29 @@
             
             <div class="tab-pane fade" id="dataTab">
 
-              <form id="filterForm">
-                <input type="text" value="New filter" />
-              </form>
-
-              <div id="filters"></div>
+              <ul class="nav nav-pills">
+                <li class="dropdown">
+                  <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    Filters
+                    <b class="caret"></b>
+                  </a>
+                  <ul class="dropdown-menu" id="filters">
+                    <!-- the opposite= attribute tells the code to un-toggle that if this is toggled -->
+                    <li>
+                      <a href="#" name="publicGtfs" opposite="noPublicGtfs">
+                        <span class="ui-icon ui-icon-blank"></span>Public GTFS
+                      </a>
+                    </li>
+                    
+                    <li>
+                      <a href="#" name="noPublicGtfs" opposite="publicGtfs">
+                        <span class="ui-icon ui-icon-blank"></span>No Public GTFS
+                      </a>
+                    </li>
+                  </ul>
+                  <div class="clear"></div>
+                </li>
+              </ul>
 
               <table>
                 <thead class="fixed-head">
