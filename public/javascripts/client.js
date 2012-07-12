@@ -11,6 +11,9 @@ function DataController () {
         success: function (data) {
             console.log('received json');
             instance.data = data;
+
+            // lose the loading text
+            $('#loading').remove();
             
             // hide the next page button if need be
             if (data.length < DataController.PAGE_SIZE)
