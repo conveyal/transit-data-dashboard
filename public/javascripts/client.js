@@ -360,7 +360,7 @@ function MapController () {
 
     this.layers = {};
 
-    this.layers.osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    this.layers.osm = new L.TileLayer('http://{s}.tiles.mapbox.com/v3/openplans.map-g4j0dszr/{z}/{x}/{y}.png', {
         attribution: 'Map data &copy; OpenStreetMap contributors, CC-BY-SA',
         maxZoom: 18
     });
