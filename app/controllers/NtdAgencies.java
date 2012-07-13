@@ -49,12 +49,14 @@ public class NtdAgencies extends Controller {
         // TODO: google gtfs
         String qs =
             "SELECT a.name, a.url, m.name AS metroname, a.population, a.ridership, " +
-            "a.passengerMiles, " +
+            "a.passengerMiles, " + 
             "CASE "+
             "  WHEN f.publicGtfs THEN true " +
             "  ELSE false " +
             "END AS publicGtfs, " +
             "FALSE AS googleGtfs, " +
+            "Y(ST_Transform(ST_Centroid(m.the_geom), 4326)) AS lat," +
+            "X(ST_Transform(ST_Centroid(m.the_geom), 4326)) AS lon, " +
             "a.id " +
             "FROM (NtdAgency a " +
             "  LEFT JOIN MetroArea m ON (m.id = a.MetroArea_id)) " +
@@ -76,7 +78,9 @@ public class NtdAgencies extends Controller {
                 ((Integer) result[5]).intValue(), // passenger miles
                 ((Boolean) result[6]).booleanValue(), // public GTFS
                 ((Boolean) result[7]).booleanValue(), // google GTFS
-                ((BigInteger) result[8]).longValue() // id
+                (Double) result[8], // lat
+                (Double) result[9], // lon
+                ((BigInteger) result[10]).longValue() // id
                                          );
 
             agencies.add(current);

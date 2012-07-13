@@ -15,6 +15,10 @@ public class NtdAgencyProxy implements Proxy {
     public int passengerMiles;
     public boolean publicGtfs;
     public boolean googleGtfs;
+    /** WGS84 latitude, a Double so that it is nullable */
+    public Double lat;
+    /** WGS84 longitude */
+    public Double lon;
     public long id;
 
     /**
@@ -23,7 +27,8 @@ public class NtdAgencyProxy implements Proxy {
     public String[] toHeader () {
         String[] retval =  {"Name", "URL", "Metro Area", "Service Area Population", 
                             "Annual Unlinked Passenger Trips", "Annual Passenger Miles",
-                            "Public GTFS", "Google Maps"};
+                            "Public GTFS", "Google Maps", "Metro Area Latitude", 
+                            "Metro Area Longitude"};
         return retval;
     }
 
@@ -32,12 +37,14 @@ public class NtdAgencyProxy implements Proxy {
      */
     public String[] toRow () {
         String[] retval = {name, url, metro, "" + population, "" + ridership, "" + passengerMiles,
-                           (publicGtfs ? "Yes" : "No"), (googleGtfs ? "Yes" : "No")};
+                           (publicGtfs ? "Yes" : "No"), (googleGtfs ? "Yes" : "No"), "" + lat, 
+                           "" + lon};
         return retval;
     }
 
     public NtdAgencyProxy (String name, String url, String metro, int population, int ridership,
-                           int passengerMiles, boolean publicGtfs, boolean googleGtfs, long id) {
+                           int passengerMiles, boolean publicGtfs, boolean googleGtfs,
+                           Double lat, Double lon,  long id) {
         this.name = name;
         this.url = url;
         this.metro = metro;
@@ -46,6 +53,8 @@ public class NtdAgencyProxy implements Proxy {
         this.passengerMiles = passengerMiles;
         this.publicGtfs = publicGtfs;
         this.googleGtfs = googleGtfs;
+        this.lat = lat;
+        this.lon = lon;            
         this.id = id;
     }
 
