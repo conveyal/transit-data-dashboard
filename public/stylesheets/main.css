@@ -24,9 +24,9 @@ body {
 }
 
 .tblRowEven .tblColOdd { background: #fff; }
-.tblRowEven .tblColEven { background: #ccc; }
-.tblRowOdd .tblColEven { background: #aaa }
-.tblRowOdd .tblColOdd { background: #ccc; }
+.tblRowEven .tblColEven { background: #e5e5e5; }
+.tblRowOdd .tblColEven { background: #ccc; }
+.tblRowOdd .tblColOdd { background: #e5e5e5; }
 
 /* keep the icons on the same line */
 #filters a span.ui-icon { float: left }
