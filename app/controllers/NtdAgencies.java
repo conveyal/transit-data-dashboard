@@ -4,13 +4,15 @@ import play.*;
 import play.mvc.*;
 import play.db.jpa.JPA;
 import models.*;
+import proxies.NtdAgencyProxy;
+import proxies.Proxy;
+import utils.DataDumpFormat;
+import utils.DataUtils;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.math.BigInteger;
-import com.google.gson.Gson;
-import proxies.NtdAgencyProxy;
 import javax.persistence.Query;
 
 public class NtdAgencies extends Controller {
@@ -31,10 +33,18 @@ public class NtdAgencies extends Controller {
         renderJSON("{\"status\": \"success\"}");
     }
 
-    public static void agencies () {
-        List<NtdAgencyProxy> agencies = new ArrayList<NtdAgencyProxy>();
+    /**
+     * Return a list of agencies
+     * @param as JSON or CSV
+     */
+    public static void agencies (DataDumpFormat as) {
+        List<Proxy> agencies = new ArrayList<Proxy>();
         List<Object[]> results;
         NtdAgencyProxy current;
+
+        // send JSON by default
+        if (as == null)
+            as = DataDumpFormat.JSON;
         
         // TODO: google gtfs
         String qs =
@@ -72,7 +82,17 @@ public class NtdAgencies extends Controller {
             agencies.add(current);
         }
 
-        renderJSON(agencies);
-    }                      
-                        
+        if (as == DataDumpFormat.CSV) {
+            // http://stackoverflow.com/questions/398237
+            response.setContentTypeIfNotSet("text/csv");
+            response.setHeader("Content-Disposition", 
+                               "attachment;filename=TransitDataDashboard.csv");
+            renderText(DataUtils.encodeCsv(agencies));
+        } 
+        else if (as == DataDumpFormat.JSON) {
+            response.setHeader("Content-Disposition",
+                               "attachment;filename=TransitDataDashboard.json");
+            renderJSON(agencies);
+        }
+    }
 }

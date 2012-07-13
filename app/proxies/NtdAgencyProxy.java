@@ -5,7 +5,7 @@ import models.NtdAgency;
 /**
  * Proxy class for serialization of an NtdAgency
  */
-public class NtdAgencyProxy {
+public class NtdAgencyProxy implements Proxy {
     public String name;
     public String url;
     // a String since it has to be serialized
@@ -16,6 +16,25 @@ public class NtdAgencyProxy {
     public boolean publicGtfs;
     public boolean googleGtfs;
     public long id;
+
+    /**
+     * Create a header row for a csv file
+     */
+    public String[] toHeader () {
+        String[] retval =  {"Name", "URL", "Metro Area", "Service Area Population", 
+                            "Annual Unlinked Passenger Trips", "Annual Passenger Miles",
+                            "Public GTFS", "Google Maps"};
+        return retval;
+    }
+
+    /**
+     * Create a row for the CSV file from this proxy
+     */
+    public String[] toRow () {
+        String[] retval = {name, url, metro, "" + population, "" + ridership, "" + passengerMiles,
+                           (publicGtfs ? "Yes" : "No"), (googleGtfs ? "Yes" : "No")};
+        return retval;
+    }
 
     public NtdAgencyProxy (String name, String url, String metro, int population, int ridership,
                            int passengerMiles, boolean publicGtfs, boolean googleGtfs, long id) {
