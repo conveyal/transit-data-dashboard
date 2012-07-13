@@ -44,42 +44,6 @@ function DataController () {
         instance.sortBy(e.currentTarget.name, desc);
     });
 
-    // next page
-    $('#nextPage').click(function (e) {
-        e.preventDefault();
-
-        instance.page++;
-        
-        // remove link if need be
-        if (((instance.page + 1) * DataController.PAGE_SIZE) >= instance.data.length)
-            $('#nextPage').fadeOut();
-
-        // always will be a previous page
-        $('#prevPage').fadeIn();
-
-        // re-do sort/display for this screen
-        instance.sortBy(instance.sortedBy, instance.descending);
-    });
-
-    // next page
-    $('#prevPage').click(function (e) {
-        e.preventDefault();
-
-        instance.page--;
-        
-        // remove link if need be
-        if (instance.page == 0)
-            $('#prevPage').fadeOut();
-
-        // always will be a next page
-        $('#nextPage').fadeIn();
-
-        instance.sortBy(instance.sortedBy, instance.descending);
-    });
-
-    // hide initially
-    $('#prevPage').fadeOut();
-
     $('#filters li a').click(function (e) {
         var filter = e.currentTarget.name;
         var opposite = e.currentTarget.getAttribute('opposite');
@@ -125,6 +89,12 @@ DataController.prototype.sortBy = function (field, desc) {
             instance.sortBy(field);
         }, 2000);
     }
+
+    // reset page number if too high
+    var lastPage = Math.ceil(this.filteredData.length / DataController.PAGE_SIZE);
+    if (this.page > lastPage)
+        // - 1 to convert to 0-based
+        this.page = lastPage - 1;
 
     // sort and filter the data
     this.filteredData.sort(function (a, b) {
@@ -205,6 +175,7 @@ DataController.prototype.sortBy = function (field, desc) {
 
     // indicate sort direction
     this.addSortIndicator();
+    this.setUpPagination();
 }
 
 // now, add the indicator showing the sort column and direction
@@ -253,6 +224,35 @@ DataController.prototype.filterCallback = function (agency) {
     // if we're here it passes muster
     return true;
 };
+
+/**
+ * Set up proper pagination
+ */
+DataController.prototype.setUpPagination = function () {
+    var instance = this;
+
+    $('#page ul li').remove();
+    
+    // calculate the number of pages
+    var numPages = Math.ceil(this.filteredData.length / DataController.PAGE_SIZE);
+    
+    for (var i = 0; i < numPages; i++) {
+        var li = create('li');
+        var a = $('<a href="#">' + (i + 1) + '</a>')
+            .data('pagenumber', i)
+            .click(function () {
+                instance.page = $(this).data('pagenumber');
+                instance.sortBy(instance.sortedBy, instance.descending);
+            });
+
+        if (i == instance.page)
+            li.addClass('active');
+
+        li.append(a);
+        $('#page ul').append(li);
+    }
+};
+                
 
 // Static Functions
 /**
