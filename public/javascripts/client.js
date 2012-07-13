@@ -79,6 +79,8 @@ function DataController (mapController) {
     $('#agencyClose').click(function (e) {
         e.preventDefault();
         
+        $('.tabButton').fadeIn();
+
         $('#agencyInfo').hide('drop');
         $('#tabs').fadeIn();
     });
@@ -230,7 +232,9 @@ DataController.prototype.getFilteredData = function () {
     // has to be in a closure to have scope access
     var instance = this;
 
-    this.filteredData = this.data.filter(function (agency) {
+    // use the jQuery function not array.filter for browser that don't implement
+    // that part of the spec (IE 8)
+    this.filteredData = $.grep(this.data, function (agency) {
         return instance.filterCallback(agency)
     });
 };
@@ -323,6 +327,8 @@ DataController.prototype.showAgency = function (id) {
         data: {id: id},
         dataType: 'json',
         success: function (agency) {
+            $('.tabButton').fadeOut();
+
             $('#agencyName').text(agency.name);
 
             $('#agencyDownload').attr('href', '/api/ntdagencies/agency?id=' + agency.id);
