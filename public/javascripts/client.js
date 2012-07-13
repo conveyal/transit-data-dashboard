@@ -220,9 +220,9 @@ DataController.prototype.addSortIndicator = function () {
 
     // add a descending icon
     if (this.descending)
-        colHead.append('<span class="sortIndicator ui-icon ui-icon-triangle-1-s"></span>');
+        colHead.append('<i class="sortIndicator ui-icon ui-icon-triangle-1-s"></i>');
     else
-        colHead.append('<span class="sortIndicator ui-icon ui-icon-triangle-1-n"></span>');
+        colHead.append('<i class="sortIndicator ui-icon ui-icon-triangle-1-n"></i>');
 }
 
 /**
@@ -393,7 +393,7 @@ DataController.prototype.showAgency = function (id) {
 
             if (agency.feeds.length == 0)
                 $('#agencyFeeds')
-                    .append('<span class="feedFields">No public GTFS available.</span>');
+                    .append('<span class="feedFields">No public GTFS feed available.</span>');
 
 
             $('#tabs').hide();

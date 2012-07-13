@@ -14,13 +14,9 @@ body {
     padding-bottom: 40px;
 }
 
-#prevPage {
-    float: left;
-}
+.sortIndicator { float: left; }
 
-#nextPage {
-    float: right;
-}
+th { text-align: left; }
 
 .clear {
     clear: both;
