@@ -7,7 +7,7 @@ function DataController (mapController) {
     this.mapController = mapController;
 
     $.ajax({
-        url: '/api/ntdagencies/agencies',
+        url: 'api/ntdagencies/agencies',
         dataType: 'json',
         success: function (data) {
             console.log('received json');
@@ -323,7 +323,7 @@ DataController.validUrl = function (url) {
 
 DataController.prototype.showAgency = function (id) {
     $.ajax({
-        url: '/api/ntdagencies/agency',
+        url: 'api/ntdagencies/agency',
         data: {id: id},
         dataType: 'json',
         success: function (agency) {
@@ -331,7 +331,7 @@ DataController.prototype.showAgency = function (id) {
 
             $('#agencyName').text(agency.name);
 
-            $('#agencyDownload').attr('href', '/api/ntdagencies/agency?id=' + agency.id);
+            $('#agencyDownload').attr('href', 'api/ntdagencies/agency?id=' + agency.id);
 
             $('#agencyUrl').html('<a href="http://' + DataController.validUrl(agency.url) + '">' + 
                                  agency.url + '</a>');
