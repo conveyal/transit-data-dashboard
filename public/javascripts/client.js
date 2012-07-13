@@ -189,12 +189,14 @@ DataController.prototype.sortBy = function (field, desc) {
 
         // google transit (TODO: icons)
         tr.append(create('td').html(agency.googleGtfs ? 
-                                    '<span class="ui-icon ui-icon-check"></span>' : '')
+                                    '<span class="ui-icon ui-icon-check">Yes</span>' : 
+                                    '<span class="ui-icon ui-icon-blank">No</span>')
                       .addClass('tblColEven'));
         
         // public gtfs
         tr.append(create('td').html(agency.publicGtfs ? 
-                                    '<span class="ui-icon ui-icon-check"></span>' : '')
+                                    '<span class="ui-icon ui-icon-check">Yes</span>' :
+                                    '<span class="ui-icon ui-icon-blank">No</span>')
                       .addClass('tblColOdd'));
 
         $('tbody#data').append(tr);
