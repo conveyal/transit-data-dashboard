@@ -2,4 +2,4 @@
 
 require:
     - play
-    - play -> crud
+    - net.sf.opencsv -> opencsv 2.3
