@@ -4,7 +4,8 @@
 
 # Ignore favicon requests
 GET     /favicon.ico                            404
-
+GET     /api/ntdagencies/agency/{id}            NtdAgencies.agency
+GET     /api/ntdagencies/agencies/{as}          NtdAgencies.agencies
 *       /api/{controller}/{action}              {controller}.{action}   
 
 # Home page
