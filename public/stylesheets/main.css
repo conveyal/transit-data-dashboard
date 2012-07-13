@@ -1,4 +1,11 @@
-.fixed-head {
+.hidden508 {
+    position: absolute;
+    /* transparent white */
+    color: #fff;
+    opacity: 0;
+    /* IE 8 */
+    filter: opacity(0.0);
+    z-index: -1;
 }
 
 /* Avoid navbar, from bootstrap example */
@@ -7,19 +14,28 @@ body {
     padding-bottom: 40px;
 }
 
-#prevPage {
-    float: left;
-}
+.sortIndicator { float: left; }
 
-#nextPage {
-    float: right;
-}
+th { text-align: left; }
 
 .clear {
     clear: both;
 }
 
 .tblRowEven .tblColOdd { background: #fff; }
-.tblRowEven .tblColEven { background: #ccc; }
-.tblRowOdd .tblColEven { background: #aaa }
-.tblRowOdd .tblColOdd { background: #ccc; }
+.tblRowEven .tblColEven { background: #e5e5e5; }
+.tblRowOdd .tblColEven { background: #ccc; }
+.tblRowOdd .tblColOdd { background: #e5e5e5; }
+
+/* keep the icons on the same line */
+#filters a span.ui-icon { float: left }
+.ui-icon-blank { background-position: 100px 100px }
+
+table { margin: 1em }
+table tr td, table tr th { padding-right: 2em }
+
+.hidden { display: none } 
+
+/* colors copied from Bootstrap's form validation, except we're not using red/green together */
+.feedExpired { color: #B94A48; font-weight: bold }
+.feedToExpire { color: #C09853; font-weight: bold }

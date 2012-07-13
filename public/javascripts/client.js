@@ -1,16 +1,19 @@
-function DataController () {
+function DataController (mapController) {
     var instance = this;
     this.data = null;
     // start on the first page
     this.page = 0;
-    this.filters = [];
+    this.filters = {};
+    this.mapController = mapController;
 
     $.ajax({
-        url: '../api/ntdagencies/agencies',
+        url: 'api/ntdagencies/agencies/JSON',
         dataType: 'json',
         success: function (data) {
-            console.log('received json');
             instance.data = data;
+
+            // lose the loading text
+            $('#loading').remove();
             
             // hide the next page button if need be
             if (data.length < DataController.PAGE_SIZE)
@@ -18,10 +21,10 @@ function DataController () {
 
             // there won't be any filters yet, but we still have to do this
             instance.getFilteredData();
-            instance.sortBy('metro');
+            instance.sortBy('metro', false);
         },
         error: function (xhr, textStatus) {
-            console.log('Error retrieving JSON: ', textStatus);
+            //console.log('Error retrieving JSON: ', textStatus);
         }
     });
 
@@ -41,54 +44,46 @@ function DataController () {
         instance.sortBy(e.currentTarget.name, desc);
     });
 
-    // next page
-    $('#nextPage').click(function (e) {
-        e.preventDefault();
+    $('#filters li a').click(function (e) {
+        var filter = e.currentTarget.name;
+        var opposite = e.currentTarget.getAttribute('opposite');
 
-        instance.page++;
-        
-        // remove link if need be
-        if (((instance.page + 1) * DataController.PAGE_SIZE) >= instance.data.length)
-            $('#nextPage').fadeOut();
+        if (instance.filters[filter]) {
+            instance.filters[filter] = false;
+            $(e.currentTarget).find('.ui-icon').removeClass('ui-icon-check')
+                .addClass('ui-icon-blank')
+                .text('Disabled filter');
+        }
+        else {
+            instance.filters[filter] = true;
+            $(e.currentTarget).find('.ui-icon').addClass('ui-icon-check')
+                .removeClass('ui-icon-blank')
+                .text('Enabled filter');
+        }
 
-        // always will be a previous page
-        $('#prevPage').fadeIn();
+        if (opposite != null) {
+            $('#filters li').find('[name="' + opposite + '"]')
+                .find('.ui-icon').removeClass('ui-icon-check')
+                .addClass('ui-icon-blank')
+                .text('Disabled filter');
 
-        // re-do sort/display for this screen
+            instance.filters[opposite] = false;
+        }
+
+        instance.getFilteredData();
         instance.sortBy(instance.sortedBy, instance.descending);
     });
 
-    // next page
-    $('#prevPage').click(function (e) {
+    // hide a shown agency upon request
+    $('#agencyClose').click(function (e) {
         e.preventDefault();
-
-        instance.page--;
         
-        // remove link if need be
-        if (instance.page == 0)
-            $('#prevPage').fadeOut();
+        $('.tabButton').fadeIn();
 
-        // always will be a next page
-        $('#nextPage').fadeIn();
-
-        instance.sortBy(instance.sortedBy, instance.descending);
+        $('#agencyInfo').hide('drop');
+        $('#tabs').fadeIn();
     });
-
-    // hide initially
-    $('#prevPage').fadeOut();
-
-    // filter input
-    // clear on first keypress
-    $('#filterForm input').one('keypress', function (e) {
-        $('#filterForm input').val(
-            $('#filterForm input').val().replace('New filter', '')
-        );
-    });
-
-    $('#filterForm').submit(function (e) {
-        e.preventDefault();
-        instance.parseAndAddFilter($('#filterForm input').val());
-    });
+        
 }
 
 // STATIC CONFIG
@@ -102,17 +97,26 @@ DataController.prototype.sortBy = function (field, desc) {
     // app has not initialized yet, try again in 2s
     if (this.data == null) {
         setTimout(function () {
-            instance.sortBy(field);
+            instance.sortBy(field, desc);
         }, 2000);
     }
+
+    // reset page number if too high
+    var lastPage = Math.ceil(this.filteredData.length / DataController.PAGE_SIZE);
+    if (this.page > lastPage)
+        // - 1 to convert to 0-based
+        this.page = lastPage - 1;
 
     // sort and filter the data
     this.filteredData.sort(function (a, b) {
         var retval = 0;
         
-        if (a[field] == b[field]) retval = 0;
-        else if (a[field] < b[field]) retval = -1;
-        else if (a[field] > b[field]) retval = 1;
+        var aField = (a[field] != undefined ? a[field] : '');
+        var bField = (b[field] != undefined ? b[field] : '');
+
+        if (aField == bField) retval = 0;
+        else if (aField < bField) retval = -1;
+        else if (aField > bField) retval = 1;
         
         if (desc)
             return -1 * retval;
@@ -135,25 +139,41 @@ DataController.prototype.sortBy = function (field, desc) {
         // alternate classes
         tr.addClass(ind % 2 ? 'tblRowEven' : 'tblRowOdd');
 
-        // name
-        var url = agency.url;
-
-        // TODO: catch non-urls.
-
-        // this will catch https as well
-        if (url.slice(0, 4) != 'http')
-            url = 'http://' + url;
-
         var name = create('td').addClass('tblColOdd').append(
             create('a')
-                .attr('href', url)
+                .attr('href', '#')
                 // use .text to prevent potential HTML entities in DB from causing issues
                 .text(agency.name)
+                .data('id', agency.id)
+                .click(function (e) {
+                    e.preventDefault();
+                    
+                    instance.showAgency($(this).data('id'));
+                })
         );
         tr.append(name);
 
         // metro
-        tr.append(create('td').text(agency.metro).addClass('tblColEven'));
+        var metro = create('td').addClass('tblColEven');
+        var metroLink = create('a')
+            .attr('href', '#')
+            .text(agency.metro)
+            .data('lat', agency.lat)
+            .data('lon', agency.lon)
+            .click(function (e) {
+                e.preventDefault();
+                
+                var a = $(this);
+                // switch to the map tab
+                $('#mapTabToggle').click();
+                
+                // we need to wait until the click has propagated before doing this
+                setTimeout(function () {
+                    instance.mapController.zoomTo(a.data('lat'), a.data('lon'), 10);
+                }, 1000);
+            });
+
+        metro.append(metroLink).appendTo(tr);
 
         // ridership
         tr.append(create('td').text(DataController.formatNumber(agency.ridership))
@@ -169,12 +189,14 @@ DataController.prototype.sortBy = function (field, desc) {
 
         // google transit (TODO: icons)
         tr.append(create('td').html(agency.googleGtfs ? 
-                                    '<span class="ui-icon ui-icon-check"></span>' : '')
+                                    '<span class="ui-icon ui-icon-check">Yes</span>' : 
+                                    '<span class="ui-icon ui-icon-blank">No</span>')
                       .addClass('tblColEven'));
         
         // public gtfs
         tr.append(create('td').html(agency.publicGtfs ? 
-                                    '<span class="ui-icon ui-icon-check"></span>' : '')
+                                    '<span class="ui-icon ui-icon-check">Yes</span>' :
+                                    '<span class="ui-icon ui-icon-blank">No</span>')
                       .addClass('tblColOdd'));
 
         $('tbody#data').append(tr);
@@ -183,6 +205,7 @@ DataController.prototype.sortBy = function (field, desc) {
 
     // indicate sort direction
     this.addSortIndicator();
+    this.setUpPagination();
 }
 
 // now, add the indicator showing the sort column and direction
@@ -194,109 +217,10 @@ DataController.prototype.addSortIndicator = function () {
 
     // add a descending icon
     if (this.descending)
-        colHead.append('<span class="sortIndicator ui-icon ui-icon-triangle-1-s"></span>');
+        colHead.append('<i class="sortIndicator ui-icon ui-icon-triangle-1-s"></i>');
     else
-        colHead.append('<span class="sortIndicator ui-icon ui-icon-triangle-1-n"></span>');
+        colHead.append('<i class="sortIndicator ui-icon ui-icon-triangle-1-n"></i>');
 }
-
-/**
- * Add a new filter
- */
-DataController.prototype.parseAndAddFilter = function (filter) {
-    // OK to not use > -1, because we also want to exclude filters starting with =
-    if (filter.indexOf('=') > 0) {
-        var split = filter.split('=');
-        var lhs = split[0];
-        var rhs = split[1];
-
-        // if the column equals the value
-        this.filters.push([filter, function (agency) {
-            return agency[lhs] == rhs;
-        }]);
-
-    }
-
-    else if (filter.indexOf('~') > 0) {
-        var split = filter.split('~');
-        
-        var lhs = split[0];
-        // case insensitive
-        var rhs = split[1].toLowerCase();
-
-        this.filters.push([filter, function (agency) {
-            if (agency[lhs] == undefined) return false;
-            return agency[lhs].toLowerCase().indexOf(rhs) > -1;
-        }]);
-    }
-
-    else if (filter.indexOf('>') > 0) {
-        var split = filter.split('>');
-        
-        var lhs = split[0];
-        var rhs = split[1];
-
-        this.filters.push([filter, function (agency) {
-            return agency[lhs] > rhs;
-        }]);
-    }
-
-    else if (filter.indexOf('<') > 0) {
-        var split = filter.split('<');
-        
-        var lhs = split[0];
-        var rhs = split[1];
-
-        this.filters.push([filter, function (agency) {
-            return agency[lhs] < rhs;
-        }]);
-    }
-
-    else {
-        // no need to redisplay/refilter
-        return;
-    }
-
-    // redisplay and refilter the data
-    this.getFilteredData();
-    this.sortBy(this.sortedBy, this.descending);    
-
-    // show the filters
-    this.showFilters();
-};
-    
-/** Set up the filters UI */    
-DataController.prototype.showFilters = function () {
-    var instance = this;
-
-    $('.filter').remove();
-    
-    $.each(this.filters, function (ind, filter) {
-        var link = $('<span class="filter">' + filter[0] + '</span>');
-        var close = $('<button>&times;</button>')
-            .click(function () {
-                // find this filter again
-                $.each(instance.filters, function (ind, data) {
-                    if (data[0] == filter[0]) {
-                        // remove it
-                        instance.filters.splice(ind, 1);
-                        // end the iteration; if there are duplicate filters this should
-                        // only remove one of them (although it may not remove the correct one)
-                        return false;
-                    }
-                });
-                
-                // re filter
-                instance.getFilteredData();
-                instance.sortBy(instance.sortedBy, instance.descending);
-
-                instance.showFilters();
-
-            })
-            .appendTo(link);
-
-        $('#filters').append(link)
-    });
-};
 
 /**
  * Return a filtered version of the data list
@@ -305,7 +229,9 @@ DataController.prototype.getFilteredData = function () {
     // has to be in a closure to have scope access
     var instance = this;
 
-    this.filteredData = this.data.filter(function (agency) {
+    // use the jQuery function not array.filter for browser that don't implement
+    // that part of the spec (IE 8)
+    this.filteredData = $.grep(this.data, function (agency) {
         return instance.filterCallback(agency)
     });
 };
@@ -314,18 +240,51 @@ DataController.prototype.getFilteredData = function () {
  * Return true if this agency is not filtered
  */
 DataController.prototype.filterCallback = function (agency) {
-    var instance = this;
-    var filterLen = this.filters.length;
-
-    for (var i = 0; i < filterLen; i++) {
-        if (!instance.filters[i][1](agency))
-            // short circuit
+    // various filters
+    if (this.filters.publicGtfs) {
+        if (!agency.publicGtfs) {
             return false;
+        }
     }
 
-    // if we haven't returned by here, it passes muster
+    if (this.filters.noPublicGtfs) {
+        if (agency.publicGtfs) {
+            return false;
+        }
+    }
+    
+    // if we're here it passes muster
     return true;
 };
+
+/**
+ * Set up proper pagination
+ */
+DataController.prototype.setUpPagination = function () {
+    var instance = this;
+
+    $('#page ul li').remove();
+    
+    // calculate the number of pages
+    var numPages = Math.ceil(this.filteredData.length / DataController.PAGE_SIZE);
+    
+    for (var i = 0; i < numPages; i++) {
+        var li = create('li');
+        var a = $('<a href="#">' + (i + 1) + '</a>')
+            .data('pagenumber', i)
+            .click(function () {
+                instance.page = $(this).data('pagenumber');
+                instance.sortBy(instance.sortedBy, instance.descending);
+            });
+
+        if (i == instance.page)
+            li.addClass('active');
+
+        li.append(a);
+        $('#page ul').append(li);
+    }
+};
+                
 
 // Static Functions
 /**
@@ -351,16 +310,107 @@ DataController.formatNumber = function (number) {
 }
 
 /**
+ * Make a URL valid by adding a protocol if needed
+ */
+DataController.validUrl = function (url) {
+    if (url.indexOf('://') == -1)
+        url = 'http://' + url;
+    return url;
+};
+
+DataController.prototype.showAgency = function (id) {
+    $.ajax({
+        url: 'api/ntdagencies/agency/' + id,
+        dataType: 'json',
+        success: function (agency) {
+            $('.tabButton').fadeOut();
+
+            $('#agencyName').text(agency.name);
+
+            $('#agencyDownload').attr('href', 'api/ntdagencies/agency/' + agency.id);
+
+            $('#agencyUrl').html('<a href="http://' + DataController.validUrl(agency.url) + '">' + 
+                                 agency.url + '</a>');
+            $('#agencyNtdId').text(agency.ntdId);
+            $('#agencyRidership').text(DataController.formatNumber(agency.ridership));
+            $('#agencyPassengerMiles').text(DataController.formatNumber(agency.passengerMiles));
+            $('#agencyPopulation').text(DataController.formatNumber(agency.population));
+            
+            // and the feeds
+            $('.feedFields').remove();
+            $.each(agency.feeds, function (ind, feed) {
+                // color-code the feed by expiration status
+                var status;
+                var now = new Date();
+                var later = new Date();
+                var expires = new Date(Date.parse(feed.expires));
+                // if it expires in under 2 months
+                later.setMonth(later.getMonth() + 2);
+                if (expires < now)
+                    status = 'feedExpired';
+                else if (expires < later)
+                    status = 'feedToExpire';
+                else
+                    // just black, don't use red and green together.
+                    status = 'feedOk';
+
+                var expireText = ['January', 'February', 'March', 'April', 'May', 'June',
+                                  'July', 'August', 'September', 'October', 'November', 
+                                  'December'][expires.getMonth()] + ' ' + expires.getDate() +
+                    ', ' + expires.getFullYear();
+
+                $('#agencyFeeds').append(
+                    '<li class="feedFields"><table>' +
+                        '<tr>' +
+                          '<th>Agency Name</th>' +
+                          '<td>' + feed.agencyName + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                          '<th>Agency URL</th>' +
+                          '<td><a href="' + DataController.validUrl(feed.agencyUrl) + '">' + 
+                             feed.agencyUrl + '</a></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                          '<th>Feed Base URL</th>' +
+                          '<td><a href="' + DataController.validUrl(feed.feedBaseUrl) + '">' + 
+                             feed.feedBaseUrl + '</a></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                          '<th>Expires on</th>' +
+                          '<td class="' + status + '">' + expireText + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                          '<th>Official</th>' +
+                          '<td>' + (feed.official ? 'Yes' : 'No') + '</td>' +
+                        '</tr>' +
+                     '</table></li>'
+                );
+            });
+
+            if (agency.feeds.length == 0)
+                $('#agencyFeeds')
+                    .append('<span class="feedFields">No public GTFS feed available.</span>');
+
+
+            $('#tabs').hide();
+            $('#agencyInfo').show('drop');
+        }
+    });
+};
+
+/**
  * A controller for the metro area map
  */
 function MapController () {
+    var instance = this;
+
     this.sizeMapArea();
 
     this.map = new L.Map('map');
 
     this.layers = {};
 
-    this.layers.osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    this.layers.osm = new L.TileLayer('http://{s}.tiles.mapbox.com/v3/openplans.map-g4j0dszr/{z}/{x}/{y}.png', {
         attribution: 'Map data &copy; OpenStreetMap contributors, CC-BY-SA',
         maxZoom: 18
     });
@@ -371,7 +421,12 @@ function MapController () {
 
     this.map.addLayer(this.layers.osm);
     this.map.addLayer(this.layers.transit);
-    this.map.setView(new L.LatLng(40, -100), 4);
+    this.zoomTo(40, -100, 4);
+
+    // https://groups.google.com/forum/?fromgroups#!topic/leaflet-js/2QN0diKp5UY
+    $('#mapTab').on('shown', function () {
+        instance.sizeMapArea();
+    });
 }
 
 /**
@@ -383,8 +438,21 @@ MapController.prototype.sizeMapArea = function () {
     $('#map')
         .css('width',  parent.innerWidth() + 'px')
         .css('height', $('body').innerHeight() + 'px');
-}
+
+    if (this.map != undefined) {
+        this.map.invalidateSize();
+    }
+};
     
+/**
+ * Zoom the map to specific place
+ * @param {Number} lat Center the map here
+ * @param {Number} lon and here
+ * @param {Number} zoom The zoom level
+ */
+MapController.prototype.zoomTo = function (lat, lng, zoom) {
+    this.map.setView(new L.LatLng(lat, lng), zoom);
+};
         
 /* Convenience function to create a detached jQuery DOM object */
 function create (tag) {
@@ -393,7 +461,7 @@ function create (tag) {
 
 $(document).ready(function () {
     mc = new MapController();
-    dc = new DataController();
+    dc = new DataController(mc);
 });
 
 
