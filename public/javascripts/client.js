@@ -1,9 +1,10 @@
-function DataController () {
+function DataController (mapController) {
     var instance = this;
     this.data = null;
     // start on the first page
     this.page = 0;
     this.filters = {};
+    this.mapController = mapController;
 
     $.ajax({
         url: '/api/ntdagencies/agencies',
@@ -143,7 +144,26 @@ DataController.prototype.sortBy = function (field, desc) {
         tr.append(name);
 
         // metro
-        tr.append(create('td').text(agency.metro).addClass('tblColEven'));
+        var metro = create('td').addClass('tblColEven');
+        var metroLink = create('a')
+            .attr('href', '#')
+            .text(agency.metro)
+            .data('lat', agency.lat)
+            .data('lon', agency.lon)
+            .click(function (e) {
+                e.preventDefault();
+                
+                var a = $(this);
+                // switch to the map tab
+                $('#mapTabToggle').click();
+                
+                // we need to wait until the click has propagated before doing this
+                setTimeout(function () {
+                    instance.mapController.zoomTo(a.data('lat'), a.data('lon'), 10);
+                }, 1000);
+            });
+
+        metro.append(metroLink).appendTo(tr);
 
         // ridership
         tr.append(create('td').text(DataController.formatNumber(agency.ridership))
@@ -281,6 +301,8 @@ DataController.formatNumber = function (number) {
  * A controller for the metro area map
  */
 function MapController () {
+    var instance = this;
+
     this.sizeMapArea();
 
     this.map = new L.Map('map');
@@ -298,7 +320,12 @@ function MapController () {
 
     this.map.addLayer(this.layers.osm);
     this.map.addLayer(this.layers.transit);
-    this.map.setView(new L.LatLng(40, -100), 4);
+    this.zoomTo(40, -100, 4);
+
+    // https://groups.google.com/forum/?fromgroups#!topic/leaflet-js/2QN0diKp5UY
+    $('#mapTab').on('shown', function () {
+        instance.sizeMapArea();
+    });
 }
 
 /**
@@ -310,8 +337,21 @@ MapController.prototype.sizeMapArea = function () {
     $('#map')
         .css('width',  parent.innerWidth() + 'px')
         .css('height', $('body').innerHeight() + 'px');
-}
+
+    if (this.map != undefined) {
+        this.map.invalidateSize();
+    }
+};
     
+/**
+ * Zoom the map to specific place
+ * @param {Number} lat Center the map here
+ * @param {Number} lon and here
+ * @param {Number} zoom The zoom level
+ */
+MapController.prototype.zoomTo = function (lat, lng, zoom) {
+    this.map.setView(new L.LatLng(lat, lng), zoom);
+};
         
 /* Convenience function to create a detached jQuery DOM object */
 function create (tag) {
@@ -320,7 +360,7 @@ function create (tag) {
 
 $(document).ready(function () {
     mc = new MapController();
-    dc = new DataController();
+    dc = new DataController(mc);
 });
 
 
