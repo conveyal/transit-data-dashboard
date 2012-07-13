@@ -74,6 +74,15 @@ function DataController (mapController) {
         instance.getFilteredData();
         instance.sortBy(instance.sortedBy, instance.descending);
     });
+
+    // hide a shown agency upon request
+    $('#agencyClose').click(function (e) {
+        e.preventDefault();
+        
+        $('#agencyInfo').hide('drop');
+        $('#tabs').fadeIn();
+    });
+        
 }
 
 // STATIC CONFIG
@@ -126,20 +135,17 @@ DataController.prototype.sortBy = function (field, desc) {
         // alternate classes
         tr.addClass(ind % 2 ? 'tblRowEven' : 'tblRowOdd');
 
-        // name
-        var url = agency.url;
-
-        // TODO: catch non-urls.
-
-        // this will catch https as well
-        if (url.slice(0, 4) != 'http')
-            url = 'http://' + url;
-
         var name = create('td').addClass('tblColOdd').append(
             create('a')
-                .attr('href', url)
+                .attr('href', '#')
                 // use .text to prevent potential HTML entities in DB from causing issues
                 .text(agency.name)
+                .data('id', agency.id)
+                .click(function (e) {
+                    e.preventDefault();
+                    
+                    instance.showAgency($(this).data('id'));
+                })
         );
         tr.append(name);
 
@@ -296,6 +302,74 @@ DataController.formatNumber = function (number) {
 
     return output;
 }
+
+/**
+ * Make a URL valid by adding a protocol if needed
+ */
+DataController.validUrl = function (url) {
+    if (url.indexOf('://') == -1)
+        url = 'http://' + url;
+    return url;
+};
+
+DataController.prototype.showAgency = function (id) {
+    $.ajax({
+        url: '/api/ntdagencies/agency',
+        data: {id: id},
+        dataType: 'json',
+        success: function (agency) {
+            $('#agencyName').text(agency.name);
+
+            $('#agencyDownload').attr('href', '/api/ntdagencies/agency?id=' + agency.id);
+
+            $('#agencyUrl').html('<a href="http://' + DataController.validUrl(agency.url) + '">' + 
+                                 agency.url + '</a>');
+            $('#agencyNtdId').text(agency.ntdId);
+            $('#agencyRidership').text(DataController.formatNumber(agency.ridership));
+            $('#agencyPassengerMiles').text(DataController.formatNumber(agency.passengerMiles));
+            $('#agencyPopulation').text(DataController.formatNumber(agency.population));
+            
+            // and the feeds
+            $('.feedFields').remove();
+            $.each(agency.feeds, function (ind, feed) {
+                $('#agencyFeeds').append(
+                    '<li class="feedFields"><table>' +
+                        '<tr>' +
+                          '<td>Agency Name</td>' +
+                          '<td>' + feed.agencyName + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                          '<td>Agency URL</td>' +
+                          '<td><a href="' + DataController.validUrl(feed.agencyUrl) + '">' + 
+                             feed.agencyUrl + '</a></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                          '<td>Feed Base URL</td>' +
+                          '<td><a href="' + DataController.validUrl(feed.feedBaseUrl) + '">' + 
+                             feed.feedBaseUrl + '</a></td>' +
+                        '</tr>' +
+                        '<tr>' +
+                          '<td>Expires on</td>' +
+                          '<td>' + feed.expires + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                          '<td>Official</td>' +
+                          '<td>' + (feed.official ? 'Yes' : 'No') + '</td>' +
+                        '</tr>' +
+                     '</table></li>'
+                );
+            });
+
+            if (agency.feeds.length == 0)
+                $('#agencyFeeds')
+                    .append('<span class="feedFields">No public GTFS available</span>');
+
+
+            $('#tabs').hide();
+            $('#agencyInfo').show('drop');
+        }
+    });
+};
 
 /**
  * A controller for the metro area map

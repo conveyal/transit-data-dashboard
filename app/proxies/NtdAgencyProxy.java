@@ -1,6 +1,9 @@
 package proxies;
 
 import models.NtdAgency;
+import models.GtfsFeed;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Proxy class for serialization of an NtdAgency
@@ -20,6 +23,11 @@ public class NtdAgencyProxy implements Proxy {
     /** WGS84 longitude */
     public Double lon;
     public long id;
+
+    // these are not always initialized; they are only initialized when returning a single agency
+    // otherwise it's too DB intensive
+    public List<GtfsFeedProxy> feeds = null;
+    public String ntdId = null;
 
     /**
      * Create a header row for a csv file
@@ -44,7 +52,7 @@ public class NtdAgencyProxy implements Proxy {
 
     public NtdAgencyProxy (String name, String url, String metro, int population, int ridership,
                            int passengerMiles, boolean publicGtfs, boolean googleGtfs,
-                           Double lat, Double lon,  long id) {
+                           Double lat, Double lon, long id) {
         this.name = name;
         this.url = url;
         this.metro = metro;
@@ -54,7 +62,7 @@ public class NtdAgencyProxy implements Proxy {
         this.publicGtfs = publicGtfs;
         this.googleGtfs = googleGtfs;
         this.lat = lat;
-        this.lon = lon;            
+        this.lon = lon;
         this.id = id;
     }
 
@@ -81,5 +89,15 @@ public class NtdAgencyProxy implements Proxy {
 
         // TODO: parse google gtfs
         googleGtfs = false;
+
+        id = agency.id;
+
+        ntdId = agency.ntdId;
+
+        feeds = new ArrayList<GtfsFeedProxy>();
+
+        for (GtfsFeed feed : agency.feeds) {
+            feeds.add(new GtfsFeedProxy(feed));
+        }
     }
 }

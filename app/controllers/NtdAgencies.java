@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.math.BigInteger;
 import javax.persistence.Query;
+import com.google.gson.Gson;
 
 public class NtdAgencies extends Controller {
     /**
@@ -98,5 +99,16 @@ public class NtdAgencies extends Controller {
                                "attachment;filename=TransitDataDashboard.json");
             renderJSON(agencies);
         }
+    }
+    
+    /**
+     * Get the full agency definition for this agency. Hard on the DB.
+     */
+    public static void agency (long id) {
+        NtdAgency agency = NtdAgency.findById(id);
+
+        response.setHeader("Content-Disposition",
+                           "attachment;filename=agency.json");
+        renderJSON(new NtdAgencyProxy(agency));
     }
 }

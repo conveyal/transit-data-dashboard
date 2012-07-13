@@ -29,7 +29,7 @@
     </div>
     
     <div class="container">
-      <div class="row">
+      <div class="row" id="tabs">
         <div class="span12">
 
           <div class="tab-content">
@@ -133,6 +133,56 @@
         </div>
       </div>
 
-      <script src="bootstrap/js/bootstrap.js"></script>
+      <div class="row hidden" id="agencyInfo">
+        <div class="span12">
+          <ul class="nav nav-pills">
+            <li class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                Download Data
+                <span class="hidden508">(dropdown menu)</span>
+                <b class="caret"></b>
+              </a>
+
+              <ul class="dropdown-menu">
+                <span class="hidden508">Begin dropdown menu</span>
+                <li><a href="#" id="agencyDownload">JSON</a></li>
+                <span class="hidden508">End dropdown menu</span>
+              </ul>
+            </li>
+          </ul>
+
+          <h3 id="agencyName"></h3>
+          <table>
+            <tr>
+              <td>URL</td>
+              <td id="agencyUrl"></td>
+            </tr>
+            <tr>
+              <td title="ID in the National Transportation Dataset">NTD ID</td>
+              <td id="agencyNtdId"></td>
+            </tr>
+            <tr>
+              <td>Annual unlinked trips</td>
+              <td id="agencyRidership"></td>
+            </tr>
+            <tr>
+              <td>Annual passenger miles</td>
+              <td id="agencyPassengerMiles"></td>
+            </tr>
+            <tr>
+              <td>Service area population</td>
+              <td id="agencyPopulation">
+            </tr>
+          </table>
+
+          <h4>GTFS Feeds:</h4>
+          <ol id="agencyFeeds"></ol>
+
+          <a href="#" id="agencyClose">&larr; Back to table</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="bootstrap/js/bootstrap.js"></script>
   </body>
 </html>
