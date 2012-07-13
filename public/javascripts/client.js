@@ -332,28 +332,48 @@ DataController.prototype.showAgency = function (id) {
             // and the feeds
             $('.feedFields').remove();
             $.each(agency.feeds, function (ind, feed) {
+                // color-code the feed by expiration status
+                var status;
+                var now = new Date();
+                var later = new Date();
+                var expires = new Date(Date.parse(feed.expires));
+                // if it expires in under 2 months
+                later.setMonth(later.getMonth() + 2);
+                if (expires < now)
+                    status = 'feedExpired';
+                else if (expires < later)
+                    status = 'feedToExpire';
+                else
+                    // just black, don't use red and green together.
+                    status = 'feedOk';
+
+                var expireText = ['January', 'February', 'March', 'April', 'May', 'June',
+                                  'July', 'August', 'September', 'October', 'November', 
+                                  'December'][expires.getMonth()] + ' ' + expires.getDate() +
+                    ', ' + expires.getFullYear();
+
                 $('#agencyFeeds').append(
                     '<li class="feedFields"><table>' +
                         '<tr>' +
-                          '<td>Agency Name</td>' +
+                          '<th>Agency Name</th>' +
                           '<td>' + feed.agencyName + '</td>' +
                         '</tr>' +
                         '<tr>' +
-                          '<td>Agency URL</td>' +
+                          '<th>Agency URL</th>' +
                           '<td><a href="' + DataController.validUrl(feed.agencyUrl) + '">' + 
                              feed.agencyUrl + '</a></td>' +
                         '</tr>' +
                         '<tr>' +
-                          '<td>Feed Base URL</td>' +
+                          '<th>Feed Base URL</th>' +
                           '<td><a href="' + DataController.validUrl(feed.feedBaseUrl) + '">' + 
                              feed.feedBaseUrl + '</a></td>' +
                         '</tr>' +
                         '<tr>' +
-                          '<td>Expires on</td>' +
-                          '<td>' + feed.expires + '</td>' +
+                          '<th>Expires on</th>' +
+                          '<td class="' + status + '">' + expireText + '</td>' +
                         '</tr>' +
                         '<tr>' +
-                          '<td>Official</td>' +
+                          '<th>Official</th>' +
                           '<td>' + (feed.official ? 'Yes' : 'No') + '</td>' +
                         '</tr>' +
                      '</table></li>'
@@ -362,7 +382,7 @@ DataController.prototype.showAgency = function (id) {
 
             if (agency.feeds.length == 0)
                 $('#agencyFeeds')
-                    .append('<span class="feedFields">No public GTFS available</span>');
+                    .append('<span class="feedFields">No public GTFS available.</span>');
 
 
             $('#tabs').hide();

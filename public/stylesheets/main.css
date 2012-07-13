@@ -33,6 +33,10 @@ body {
 .ui-icon-blank { background-position: 100px 100px }
 
 table { margin: 1em }
-table tr td { padding-right: 2em }
+table tr td, table tr th { padding-right: 2em }
 
 .hidden { display: none } 
+
+/* colors copied from Bootstrap's form validation, except we're not using red/green together */
+.feedExpired { color: #B94A48; font-weight: bold }
+.feedToExpire { color: #C09853; font-weight: bold }
