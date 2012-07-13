@@ -320,8 +320,7 @@ DataController.validUrl = function (url) {
 
 DataController.prototype.showAgency = function (id) {
     $.ajax({
-        url: 'api/ntdagencies/agency',
-        data: {id: id},
+        url: 'api/ntdagencies/agency/' + id,
         dataType: 'json',
         success: function (agency) {
             $('.tabButton').fadeOut();
