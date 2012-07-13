@@ -10,7 +10,6 @@ function DataController (mapController) {
         url: 'api/ntdagencies/agencies/JSON',
         dataType: 'json',
         success: function (data) {
-            console.log('received json');
             instance.data = data;
 
             // lose the loading text
@@ -25,7 +24,7 @@ function DataController (mapController) {
             instance.sortBy('metro', false);
         },
         error: function (xhr, textStatus) {
-            console.log('Error retrieving JSON: ', textStatus);
+            //console.log('Error retrieving JSON: ', textStatus);
         }
     });
 
@@ -107,8 +106,6 @@ DataController.prototype.sortBy = function (field, desc) {
     if (this.page > lastPage)
         // - 1 to convert to 0-based
         this.page = lastPage - 1;
-
-    console.log(this.filteredData.length);
 
     // sort and filter the data
     this.filteredData.sort(function (a, b) {
