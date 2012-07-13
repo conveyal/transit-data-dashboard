@@ -22,7 +22,7 @@ function DataController (mapController) {
 
             // there won't be any filters yet, but we still have to do this
             instance.getFilteredData();
-            instance.sortBy('metro');
+            instance.sortBy('metro', false);
         },
         error: function (xhr, textStatus) {
             console.log('Error retrieving JSON: ', textStatus);
@@ -96,7 +96,7 @@ DataController.prototype.sortBy = function (field, desc) {
     // app has not initialized yet, try again in 2s
     if (this.data == null) {
         setTimout(function () {
-            instance.sortBy(field);
+            instance.sortBy(field, desc);
         }, 2000);
     }
 
@@ -106,13 +106,18 @@ DataController.prototype.sortBy = function (field, desc) {
         // - 1 to convert to 0-based
         this.page = lastPage - 1;
 
+    console.log(this.filteredData.length);
+
     // sort and filter the data
     this.filteredData.sort(function (a, b) {
         var retval = 0;
         
-        if (a[field] == b[field]) retval = 0;
-        else if (a[field] < b[field]) retval = -1;
-        else if (a[field] > b[field]) retval = 1;
+        var aField = (a[field] != undefined ? a[field] : '');
+        var bField = (b[field] != undefined ? b[field] : '');
+
+        if (aField == bField) retval = 0;
+        else if (aField < bField) retval = -1;
+        else if (aField > bField) retval = 1;
         
         if (desc)
             return -1 * retval;
