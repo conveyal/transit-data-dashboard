@@ -17,6 +17,8 @@ data = json.load(infile)
 
 def toCountry(c):
     "Convert to a international country code"
+    if c == None: return None
+
     if c == 'United States':
         return 'us'
     elif c == 'Canada':
@@ -60,6 +62,8 @@ states['south carolina'] = 'sc'
 states['washington dc'] = 'dc'
 
 def toState(state):
+    if state == None: return None
+
     state = state.lower()
     if states.has_key(state):
         return states[state]
@@ -68,6 +72,8 @@ def toState(state):
         return None
     
 def to8601(ts):
+    if ts == None: return None
+
     dt = datetime.utcfromtimestamp(ts)
     return dt.isoformat() + 'Z'
 
@@ -76,10 +82,27 @@ def toEWKT(gj):
     mp = geojson.MultiPolygon(gj['coordinates'])
     return 'SRID=4326;' + asShape(mp).wkt
     
+def confirmOrWarn(info, key, default):
+    if not info.has_key(key):
+        print "Agency %s has no key %s, setting to %s" % (info['name'], key, default)
+        info[key] = default
+
 for feed in data:
     i = feed['info']
 
-    generation_date = datetime(2012, 07, 05, 12, 0, 0)
+    confirmOrWarn(i, 'url', None)
+    confirmOrWarn(i, 'country', None)
+    confirmOrWarn(i, 'state', None)
+    confirmOrWarn(i, 'dataexchange_id', None)
+    confirmOrWarn(i, 'dataexchange_url', None)
+    confirmOrWarn(i, 'date_added', None)
+    confirmOrWarn(i, 'date_last_updated', None)
+    confirmOrWarn(i, 'feed_baseurl', None)
+    confirmOrWarn(i, 'license_url', None)
+    confirmOrWarn(i, 'is_official', None)
+    confirmOrWarn(i, 'area', None)
+
+    generation_date = datetime(2012, 07, 15, 12, 0, 0)
 
     post = dict(
         agency_name = i['name'],
