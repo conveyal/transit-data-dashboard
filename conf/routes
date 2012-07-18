@@ -11,3 +11,5 @@ GET     /api/ntdagencies/agencies/{as}          NtdAgencies.agencies
 # Home page
 GET     /                                    staticDir:public
 
+# Home page alias
+GET    /public/                               staticDir:public
