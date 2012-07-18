@@ -55,7 +55,7 @@ public class NtdAgencies extends Controller {
             "  WHEN f.publicGtfs THEN true " +
             "  ELSE false " +
             "END AS publicGtfs, " +
-            "FALSE AS googleGtfs, " +
+            "googleGtfs, " +
             "Y(ST_Transform(ST_Centroid(m.the_geom), 4326)) AS lat," +
             "X(ST_Transform(ST_Centroid(m.the_geom), 4326)) AS lon, " +
             "a.id " +

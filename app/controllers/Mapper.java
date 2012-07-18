@@ -9,6 +9,7 @@ import play.mvc.*;
 import play.db.jpa.JPA;
 import javax.persistence.Query;
 import models.*;
+import proxies.NtdAgencyProxy;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
@@ -543,6 +544,52 @@ public class Mapper extends Controller {
             }
             linkAgency.save();
         }
+    }
+
+    /**
+     * Make a best-guess for what agency is referenced by a name based on its location and name.
+     */
+    public static void setGoogleGtfsFromParse (String name, double lat, double lon) {
+        long metroId;
+        MetroArea metro;
+        List<Object> results;
+        List<NtdAgencyProxy> agencies = new ArrayList<NtdAgencyProxy>();
+        NtdAgency agency;
+
+        // First, get the MetroArea
+        String qs = "SELECT id FROM MetroArea m " + 
+            "WHERE ST_Within(ST_Transform(" +
+              "ST_GeomFromEWKT(CONCAT('SRID=4326;POINT(', ?, ' ', ?, ')'))" +
+            ", 4269), m.the_geom)";
+        Query q = JPA.em().createNativeQuery(qs);
+        q.setParameter(1, "" + lon);
+        q.setParameter(2, "" + lat);
+
+        metroId = ((BigInteger) q.getSingleResult()).longValue();
+
+        metro = MetroArea.findById(metroId);
+        
+        Logger.debug("Found metro %s", metro.name);        
+        
+        // find matching agencies
+        qs = "SELECT a.id FROM ntdagency a " +
+            "WHERE to_tsvector(CONCAT(a.name, ' ', " + 
+            "regexp_replace(a.url, '\\.|https?://|/|_|\\-', ' ', 'g'))) " +
+            "@@ plainto_tsquery(?) " +
+            "AND a.metroArea_id = ?";
+
+        q = JPA.em().createNativeQuery(qs);
+        q.setParameter(1, name);
+        q.setParameter(2, metroId);
+
+        for (Object result : q.getResultList()) {
+            agency = NtdAgency.findById(((BigInteger) result).longValue());
+            agency.googleGtfs = true;
+            agency.save();
+            agencies.add(new NtdAgencyProxy(agency));
+        }
+
+        renderJSON(agencies);
     }
 }
             
