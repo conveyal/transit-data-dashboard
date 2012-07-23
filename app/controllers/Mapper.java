@@ -8,6 +8,7 @@ import play.*;
 import play.mvc.*;
 import play.db.jpa.JPA;
 import javax.persistence.Query;
+import javax.persistence.NoResultException;
 import models.*;
 import proxies.NtdAgencyProxy;
 import java.util.List;
@@ -565,7 +566,12 @@ public class Mapper extends Controller {
         q.setParameter(1, "" + lon);
         q.setParameter(2, "" + lat);
 
-        metroId = ((BigInteger) q.getSingleResult()).longValue();
+        try {
+            metroId = ((BigInteger) q.getSingleResult()).longValue();
+        } catch (NoResultException e) {
+            renderJSON("[]");
+            return; // so Java won't warn about metroId be used unitialized.
+        }
 
         metro = MetroArea.findById(metroId);
         
