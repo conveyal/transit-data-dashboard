@@ -1,0 +1,8 @@
+{
+    "name": "loadGoogleData"
+    , "version": "0.0.1"
+    , "private": true
+    , "dependencies": {
+        "jquery": ">= 1.6.3"
+    }
+}
