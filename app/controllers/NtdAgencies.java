@@ -111,41 +111,4 @@ public class NtdAgencies extends Controller {
                            "attachment;filename=agency.json");
         renderJSON(new NtdAgencyProxy(agency));
     }
-    
-    /**
-     * Get the number of votes for each agency. Easy on the DB.
-     */
-    public static void getAllVotes () {
-    	String qs = "SELECT a.id, a.votes FROM NtdAgency a";
-    	Query q = JPA.em().createQuery(qs);
-    	List<Object[]> results = q.getResultList();
-    	Map<Long, Integer> toReturn = new HashMap<Long, Integer>();
-    	Integer votes;
-    	
-    	for (Object[] result : results) {
-    		votes = (Integer) result[1];
-    		if (votes > 0)
-    			toReturn.put((Long) result[0], votes);
-    	}
-    	
-    	renderJSON(toReturn);
-    }
-    
-    /**
-     * Register a vote for an agency
-     */
-    public static void voteForAgency (long agencyId) {
-    	NtdAgency agency = NtdAgency.findById(agencyId);
-    	
-    	if (agency == null)
-    		renderJSON("{\"status\":\"failure\",\"reason\":\"no such agency\"}");
-    	
-    	if (!agency.vote())
-    		renderJSON("{\"status\":\"failure\",\"reason\":\"agency has feeds\"}");
-    	
-    	agency.save();
-    	
-    	renderJSON("{\"status\":\"success\"}");
-    }
-     
 }
