@@ -410,17 +410,17 @@ function MapController () {
 
     this.layers = {};
 
-    this.layers.osm = new L.TileLayer('http://{s}.tiles.mapbox.com/v3/openplans.map-g4j0dszr/{z}/{x}/{y}.png', {
+    this.layers.osm = new L.TileLayer('http://{s}.tiles.mapbox.com/v3/openplans.map-g4j0dszr,openplans.gtfs_coverage/{z}/{x}/{y}.png', {
         attribution: 'Map data &copy; OpenStreetMap contributors, CC-BY-SA',
         maxZoom: 18
     });
 
-    this.layers.transit = new L.TileLayer('http://localhost:8001/{z}/{x}/{y}.png', {
-        attribution: 'GTFS data courtesy GTFS Data Exchange'
-    });
+    //this.layers.transit = new L.TileLayer('http://localhost:8001/{z}/{x}/{y}.png', {
+    //    attribution: 'GTFS data courtesy GTFS Data Exchange'
+    //});
 
     this.map.addLayer(this.layers.osm);
-    this.map.addLayer(this.layers.transit);
+    //this.map.addLayer(this.layers.transit);
     this.zoomTo(40, -100, 4);
 
     // https://groups.google.com/forum/?fromgroups#!topic/leaflet-js/2QN0diKp5UY
