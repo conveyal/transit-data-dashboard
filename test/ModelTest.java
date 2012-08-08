@@ -31,6 +31,8 @@ public class ModelTest extends UnitTest {
             "00099",
             // population
             1000,
+            // uzaNames
+            new ArrayList<String>(),
             // ridership
             1000000,
             // passenger miles
@@ -50,6 +52,7 @@ public class ModelTest extends UnitTest {
             "http://example.net/my-test-agency", // data exchange url
             new Date(), // date added
             new Date(), // date modified
+            null,
             "http://valid-gtfs.example.org/dev", // feed base url
             "http://valid-gtfs.example.org/lic", // license url
             true, // official
@@ -249,8 +252,8 @@ public class ModelTest extends UnitTest {
 
     @Test
     public void testArgumentedConstructors () {
-        NtdAgency agency = new NtdAgency("The Funicular", "http://example.net", "09999", 100000,
-                                         590000, 4000000);
+        NtdAgency agency = new NtdAgency("The Funicular", "http://example.net", "09999", 100000, 
+        				new ArrayList<String>(), 590000, 4000000);
 
         agency.save();
         
