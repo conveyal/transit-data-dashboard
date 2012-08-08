@@ -1,31 +1,54 @@
 function DataController (mapController) {
     var instance = this;
     this.data = null;
+    this.voteData = null;
+    this.votedForAgencies = [];
     // start on the first page
     this.page = 0;
     this.filters = {};
     this.mapController = mapController;
 
+    // the reason for two API calls is that agencies change infrequently
+    // and can be cached, while votes change frequently but can be cheaply
+    // retrieved from the DB
+    var agenciesdf = //new $.Deferred();
     $.ajax({
         url: 'api/ntdagencies/agencies/JSON',
         dataType: 'json',
         success: function (data) {
-            instance.data = data;
-
-            // lose the loading text
-            $('#loading').remove();
-            
-            // hide the next page button if need be
-            if (data.length < DataController.PAGE_SIZE)
-                $('#nextPage').fadeOut();
-
-            // there won't be any filters yet, but we still have to do this
-            instance.getFilteredData();
-            instance.sortBy('metro', false);
-        },
-        error: function (xhr, textStatus) {
-            //console.log('Error retrieving JSON: ', textStatus);
-        }
+        	instance.data = data;
+        	//agenciesdf.resolve();
+        }        	
+    });
+    
+    var votesdf = //new $.Deferred();
+    $.ajax({
+    	url: DataController.API_LOCATION + '/getvotes/' +
+    		DataController.VOTE_NAMESPACE,
+    	dataType: 'json',
+    	success: function (data) {
+    		instance.voteData = data;
+    		//votesdf.resolve();
+    	}
+    });
+    
+    $.when(votesdf, agenciesdf).done(function () {
+     	// do the join
+    	var agencyLen = instance.data.length;
+    	var agency;
+    	for (var i = 0; i < agencyLen; i++) {
+    		agency = instance.data[i];
+    		agency.votes = instance.voteData[agency.id];
+    		if (agency.votes == undefined) 
+    			agency.votes = 0;
+    	}
+    	
+    	// there won't be any filters yet, but we still have to do this
+    	instance.getFilteredData();
+    	instance.sortBy('metro', false);
+    	
+    	// lose the loading text
+    	$('#loading').remove();
     });
 
     // set up the sort buttons
@@ -88,6 +111,10 @@ function DataController (mapController) {
 
 // STATIC CONFIG
 DataController.PAGE_SIZE = 100;
+
+// The location of the vote API.
+DataController.API_LOCATION = "http://localhost:9200";
+DataController.VOTE_NAMESPACE = "gtfsDataDashboard";
 
 DataController.prototype.sortBy = function (field, desc) {
     var instance = this;
@@ -198,7 +225,44 @@ DataController.prototype.sortBy = function (field, desc) {
                                     '<span class="ui-icon ui-icon-check">Yes</span>' :
                                     '<span class="ui-icon ui-icon-blank">No</span>')
                       .addClass('tblColOdd'));
+        
+        // votes
+        var votes = create('td').addClass('tblColEven');
+        
+        // we only do votes on agencies with no public gtfs
+        if (!agency.publicGtfs) {
+        	votes.append('<span class="numVotes">' + agency.votes + '</span>');
+        	// and the upvote button
+        	var upvote = create('a').attr('href', '#')
+        		.addClass('ui-icon')
+        		.addClass('ui-icon-arrowthick-1-n')
+        		.attr('title', 'Vote for this agency to release their data!')
+        		.data('id', agency.id)
+        		.click(function (e) {
+        			e.preventDefault();
+        			
+        			var id = $(this).data('id');
+        			
+        			// prevent multiple voting
+        			if (instance.votedForAgencies.indexOf(id) == -1) {
+        				instance.votedForAgencies.push(id);
+        				
+        				$.ajax({
+        					url: DataController.API_LOCATION + "/upvote/" +
+        						DataController.VOTE_NAMESPACE + "/" + id,
+        				});
+        			
+        				// make them think it happened right away, even if it didn't, to prevent
+        				// repeated clicks
+        				var numVotes = $(this).parent().find('.numVotes');
+        				numVotes.text(Number(numVotes.text()) + 1);
+        			}
+        		});
+        	votes.append(upvote);
+        }
 
+        tr.append(votes);
+        
         $('tbody#data').append(tr);
         
     });

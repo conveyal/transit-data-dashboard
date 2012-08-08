@@ -1,33 +1,51 @@
-03 Jul 2012 08:04:09,574 INFO  ~ Starting /home/matthewc/openplans/gtfs_analysis/gtfscoverage
-03 Jul 2012 08:04:09,588 INFO  ~ Module crud is available (/usr/local/play-1.2.4/modules/crud)
-03 Jul 2012 08:04:11,707 WARN  ~ You're running Play! in DEV mode
-03 Jul 2012 08:04:12,082 INFO  ~ Listening for HTTP on port 9000 (Waiting a first request to start) ...
-03 Jul 2012 08:04:30,707 ERROR ~ 
-
-@6b0181mmh
-Internal Server Error (500) for request GET /@tests
-
-Compilation error (In /test/ModelTest.java around line 26)
-The file /test/ModelTest.java could not be compiled. Error raised is : metroArea cannot be resolved or is not a field
-
-play.exceptions.CompilationException: metroArea cannot be resolved or is not a field
-	at play.classloading.ApplicationCompiler$2.acceptResult(ApplicationCompiler.java:246)
-	at org.eclipse.jdt.internal.compiler.Compiler.handleInternalException(Compiler.java:676)
-	at org.eclipse.jdt.internal.compiler.Compiler.compile(Compiler.java:520)
-	at play.classloading.ApplicationCompiler.compile(ApplicationCompiler.java:282)
-	at play.classloading.ApplicationClassloader.getAllClasses(ApplicationClassloader.java:424)
-	at play.classloading.ApplicationClassloader.getAssignableClasses(ApplicationClassloader.java:453)
-	at play.classloading.ApplicationClassloader$getAssignableClasses.call(Unknown Source)
-	at {module:crud}/app/views/tags/crud/types.tag.(line:3)
-	at play.templates.GroovyTemplate.internalRender(GroovyTemplate.java:232)
-	at play.templates.GroovyTemplate$ExecutableTemplate.invokeTag(GroovyTemplate.java:379)
-	at {module:crud}/conf/routes.(line:4)
-	at play.templates.GroovyTemplate.internalRender(GroovyTemplate.java:232)
-	at play.templates.Template.render(Template.java:26)
-	at play.templates.GroovyTemplate.render(GroovyTemplate.java:187)
-	at play.mvc.Router.parse(Router.java:162)
-	at play.mvc.Router.parse(Router.java:190)
-	at play.mvc.Router.parse(Router.java:164)
-	at play.mvc.Router.load(Router.java:48)
-	at play.mvc.Router.detectChanges(Router.java:219)
-	at Invocation.HTTP Request(Play!)
+08 Aug 2012 12:24:55,782 INFO  ~ Starting /home/matthewc/openplans/gtfs_analysis/gtfscoverage/.
+08 Aug 2012 12:24:55,795 INFO  ~ Module crud is available (/usr/local/play-1.2.4/modules/crud)
+08 Aug 2012 12:24:57,604 WARN  ~ You're running Play! in DEV mode
+08 Aug 2012 12:25:04,636 INFO  ~ Connected to jdbc:postgresql:dashboard
+08 Aug 2012 12:25:05,658 INFO  ~ Initializing HBSpatialExtension
+08 Aug 2012 12:25:05,661 INFO  ~ Attempting to load Hibernate Spatial Provider org.hibernatespatial.postgis.DialectProvider
+08 Aug 2012 12:25:05,664 INFO  ~ Checking for default configuration file.
+08 Aug 2012 12:25:05,669 INFO  ~ No configuration file hibernate-spatial.cfg.xml on the classpath.
+08 Aug 2012 12:25:06,892 ERROR ~ Unsuccessful: create table test_dashboard.GtfsFeed (id int8 not null, agencyName varchar(255), agencyUrl varchar(255), areaDescription varchar(255), country varchar(255), dataExchangeId varchar(255), dataExchangeUrl varchar(255), dateAdded timestamp, dateUpdated timestamp, expirationDate timestamp, feedBaseUrl varchar(255), licenseUrl varchar(255), official bool not null, state varchar(255), the_geom geometry, trips int4 not null, tripsPerCalendar int4 not null, primary key (id))
+08 Aug 2012 12:25:06,893 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,901 ERROR ~ Unsuccessful: create table test_dashboard.MetroArea (id int8 not null, name varchar(255), the_geom geometry, primary key (id))
+08 Aug 2012 12:25:06,901 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,907 ERROR ~ Unsuccessful: create table test_dashboard.NtdAgency (id int8 not null, googleGtfs bool not null, name varchar(255), ntdId varchar(255), passengerMiles int4 not null, population int4 not null, ridership int4 not null, url varchar(255), metroArea_id int8, primary key (id))
+08 Aug 2012 12:25:06,910 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,913 ERROR ~ Unsuccessful: create table test_dashboard.NtdAgency_GtfsFeed (NtdAgency_id int8 not null, feeds_id int8 not null, primary key (NtdAgency_id, feeds_id))
+08 Aug 2012 12:25:06,919 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,924 ERROR ~ Unsuccessful: create table test_dashboard.NtdAgency_uzaNames (NtdAgency_id int8 not null, uzaNames varchar(255))
+08 Aug 2012 12:25:06,925 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,927 ERROR ~ Unsuccessful: create table test_dashboard.VoteCounter (id int8 not null, agency bytea, votes int4 not null, primary key (id))
+08 Aug 2012 12:25:06,927 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,930 ERROR ~ Unsuccessful: alter table test_dashboard.NtdAgency add constraint FK5D9754E34CB8ED76 foreign key (metroArea_id) references test_dashboard.MetroArea
+08 Aug 2012 12:25:06,930 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,933 ERROR ~ Unsuccessful: alter table test_dashboard.NtdAgency_GtfsFeed add constraint FK34362F34866DF056 foreign key (NtdAgency_id) references test_dashboard.NtdAgency
+08 Aug 2012 12:25:06,933 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,941 ERROR ~ Unsuccessful: alter table test_dashboard.NtdAgency_GtfsFeed add constraint FK34362F34888C161 foreign key (feeds_id) references test_dashboard.GtfsFeed
+08 Aug 2012 12:25:06,941 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,951 ERROR ~ Unsuccessful: alter table test_dashboard.NtdAgency_uzaNames add constraint FK118C6628866DF056 foreign key (NtdAgency_id) references test_dashboard.NtdAgency
+08 Aug 2012 12:25:06,951 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:06,954 ERROR ~ Unsuccessful: create sequence test_dashboard.hibernate_sequence
+08 Aug 2012 12:25:06,954 ERROR ~ ERROR: schema "test_dashboard" does not exist
+08 Aug 2012 12:25:07,203 INFO  ~ Application 'gtfscoverage' is now started !
+08 Aug 2012 12:25:11,027 DEBUG ~ select nextval ('test_dashboard.hibernate_sequence')
+08 Aug 2012 12:25:11,066 WARN  ~ SQL Error: 0, SQLState: 3F000
+08 Aug 2012 12:25:11,071 ERROR ~ ERROR: schema "test_dashboard" does not exist
+  Position: 17
+08 Aug 2012 12:25:12,053 DEBUG ~ select nextval ('test_dashboard.hibernate_sequence')
+08 Aug 2012 12:25:12,070 WARN  ~ SQL Error: 0, SQLState: 3F000
+08 Aug 2012 12:25:12,070 ERROR ~ ERROR: schema "test_dashboard" does not exist
+  Position: 17
+08 Aug 2012 12:25:13,045 DEBUG ~ select nextval ('test_dashboard.hibernate_sequence')
+08 Aug 2012 12:25:13,058 WARN  ~ SQL Error: 0, SQLState: 3F000
+08 Aug 2012 12:25:13,059 ERROR ~ ERROR: schema "test_dashboard" does not exist
+  Position: 17
+08 Aug 2012 12:25:14,026 DEBUG ~ select nextval ('test_dashboard.hibernate_sequence')
+08 Aug 2012 12:25:14,037 WARN  ~ SQL Error: 0, SQLState: 3F000
+08 Aug 2012 12:25:14,039 ERROR ~ ERROR: schema "test_dashboard" does not exist
+  Position: 17
+08 Aug 2012 12:25:15,247 DEBUG ~ select nextval ('test_dashboard.hibernate_sequence')
+08 Aug 2012 12:25:15,276 WARN  ~ SQL Error: 0, SQLState: 3F000
+08 Aug 2012 12:25:15,276 ERROR ~ ERROR: schema "test_dashboard" does not exist
+  Position: 17
