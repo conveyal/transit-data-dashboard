@@ -39,7 +39,10 @@ public class NtdAgency extends Model {
 
     /** Does this agency provide GTFS to Google? */
     public boolean googleGtfs;
-
+    
+    /** How many votes has this agency received? */
+    public int votes;
+    
     // TODO: geometry
 
     @ManyToOne
@@ -59,9 +62,22 @@ public class NtdAgency extends Model {
             return url;
     }
 
+    /**
+     * Register a vote for this agency.
+     */
+    public boolean vote () {
+    	// ignore votes for agencies that already have feeds
+    	if (this.feeds.size() != 0)
+    		return false;
+    	
+    	votes += 1;
+    	return true;
+    }
+    
     // TODO: argumented constructors
     public NtdAgency () {
         feeds = new TreeSet<GtfsFeed>();
+        votes = 0;
     }
 
     public NtdAgency (String name, String url, String ntdId, int population,
@@ -74,5 +90,6 @@ public class NtdAgency extends Model {
         this.ridership = ridership;
         this.passengerMiles = passengerMiles;
         feeds = new TreeSet<GtfsFeed>();
+        votes = 0;
     }      
 }
