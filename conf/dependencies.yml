@@ -1,5 +1,5 @@
 # Application dependencies
 
 require:
-    - play
+    - play -> spring 1.0.3
     - net.sf.opencsv -> opencsv 2.3
