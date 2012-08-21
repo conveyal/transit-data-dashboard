@@ -52,9 +52,15 @@ public class GtfsDataExchangeUpdater implements Updater {
 			
 			// FIXME remove
 			if (dataExchangeId.equals("mts")) continue;
-			
+			if (dataExchangeId.equals("amtrak-sunset-limited-unofficial-feed")) continue;
+			if (dataExchangeId.equals("tac-transportation")) continue;
+						
 			// find the feed
-			GtfsFeed originalFeed = GtfsFeed.find("byDataExchangeId", dataExchangeId).first();
+			// make sure we get the latest one so that date comparisons work
+			// TODO: This shouldn't depend on how JPA lays out relationships
+			GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? and supersededBy_id IS NULL", 
+						dataExchangeId)
+					.first();
 			
 			String url = XPath.selectText("@href", link);
 			

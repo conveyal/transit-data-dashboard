@@ -17,6 +17,7 @@
 		<property name="hooks">
 			<list>
 				<bean class="updaters.LoggingUpdaterHook" />
+				<bean class="updaters.DeploymentPlanGeneratorHook" />
 			</list>
 		</property>
 	</bean>
