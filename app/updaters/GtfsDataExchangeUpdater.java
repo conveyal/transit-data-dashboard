@@ -50,6 +50,9 @@ public class GtfsDataExchangeUpdater implements Updater {
 			String dataExchangeId = XPath.selectText("@title", link)
 					.split("_")[0];
 			
+			// FIXME remove
+			if (dataExchangeId.equals("mts")) continue;
+			
 			// find the feed
 			GtfsFeed originalFeed = GtfsFeed.find("byDataExchangeId", dataExchangeId).first();
 			
@@ -92,8 +95,19 @@ public class GtfsDataExchangeUpdater implements Updater {
 			else
 				newFeed = new GtfsFeed();
 			
-			// set the changed data
-			// TODO: feed stats
+			// Calculate feed stats
+			FeedStatsCalculator stats;
+			try {
+				stats = new FeedStatsCalculator(storer.getFeed(feedId));
+			} catch (Exception e) {
+				// TODO be more descriptive
+				Logger.error("Error calculating feed stats for feed %s", url);
+				e.printStackTrace();
+				continue;
+			}
+			
+			newFeed.expirationDate = stats.getEndDate();
+			newFeed.startDate = stats.getStartDate();
 			newFeed.dateUpdated = dateUpdated;
 			newFeed.downloadUrl = url;
 			newFeed.storedId = feedId;

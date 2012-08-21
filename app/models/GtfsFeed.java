@@ -98,6 +98,11 @@ public class GtfsFeed extends Model implements Cloneable {
      */
 	public String storedId;
 
+	/**
+	 * The date this schedule becomes valid.
+	 */
+	public Date startDate;
+
     /**
      * Get the agencies this feed refers to.
      */
