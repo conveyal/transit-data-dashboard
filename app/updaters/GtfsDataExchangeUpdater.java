@@ -25,6 +25,8 @@ import org.w3c.dom.Node;
  * @author mattwigway
  */
 public class GtfsDataExchangeUpdater implements Updater {
+	public FeedStorer storer;
+	
 	public Set<MetroArea> update () {
 		Set<MetroArea> updated = new HashSet<MetroArea>();
 		
@@ -76,6 +78,13 @@ public class GtfsDataExchangeUpdater implements Updater {
 				}
 			}
 			
+			// Download the feed
+			String feedId = storer.storeFeed(url);
+			if (feedId == null) {
+				Logger.error("Could not retrieve feed %s", url);
+				continue;
+			}
+			
 			GtfsFeed newFeed;
 			// copy over all the data.
 			if (originalFeed != null)
@@ -87,7 +96,7 @@ public class GtfsDataExchangeUpdater implements Updater {
 			// TODO: feed stats
 			newFeed.dateUpdated = dateUpdated;
 			newFeed.downloadUrl = url;
-			
+			newFeed.storedId = feedId;
 			newFeed.save();
 			
 			if (originalFeed != null) {

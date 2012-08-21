@@ -94,6 +94,11 @@ public class GtfsFeed extends Model implements Cloneable {
 	public GtfsFeed supersededBy;
 
     /**
+     * The ID of this file in storage. Exact contents is storage backend dependent.
+     */
+	public String storedId;
+
+    /**
      * Get the agencies this feed refers to.
      */
     public List<NtdAgency> getAgencies () {
@@ -129,6 +134,8 @@ public class GtfsFeed extends Model implements Cloneable {
         this.agencyUrl = agencyUrl;
         this.the_geom = the_geom;
         this.supersededBy = null;
+        this.storedId = null;
+        this.downloadUrl = null;
     }
     
     public GtfsFeed clone () {
@@ -152,6 +159,7 @@ public class GtfsFeed extends Model implements Cloneable {
     	ret.the_geom = this.the_geom;
     	ret.trips = this.trips;
     	ret.tripsPerCalendar = this.tripsPerCalendar;
+    	ret.storedId = this.storedId;
     	return ret;
     			
     }

@@ -4,7 +4,13 @@
 	<bean id="updaters" class="updaters.UpdaterFactory">
 		<property name="updaters">
 			<list>
-				<bean class="updaters.GtfsDataExchangeUpdater" />
+				<bean class="updaters.GtfsDataExchangeUpdater">
+					<property name="storer">
+						<bean class="updaters.FileFeedStorer">
+							<property name="path" value="/extra/matthewc/gtfs-data" />
+						</bean>
+					</property>
+				</bean>
 			</list>
 		</property>
 		
