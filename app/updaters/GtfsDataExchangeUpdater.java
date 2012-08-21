@@ -1,0 +1,101 @@
+package updaters;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import play.Logger;
+import play.libs.WS;
+import play.libs.WS.HttpResponse;
+import play.libs.XPath;
+import models.GtfsFeed;
+import models.MetroArea;
+import models.NtdAgency;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+/**
+ * This class reads the RSS from GTFS Data Exchange and updates the database with that information.
+ * It also handles hooks, calling them with the feeds that have changed.
+ * @author mattwigway
+ */
+public class GtfsDataExchangeUpdater implements Updater {
+	public Set<MetroArea> update () {
+		Set<MetroArea> updated = new HashSet<MetroArea>();
+		
+		// First, fetch the RSS feed
+		HttpResponse res = WS.url("http://www.gtfs-data-exchange.com/feed").get();
+		int status = res.getStatus(); 
+		if (status != 200) {
+			Logger.error("Error fetching GTFS changes from Data Exchange: HTTP status %s", status);
+			return null;
+		}
+		
+		DateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		
+		Document rss = res.getXml();
+		for (Node entry : XPath.selectNodes("//entry", rss)) {
+			Node link = XPath.selectNode("link[@rel = 'enclosure']", entry);
+			
+			// now, parse out the data exchange ID
+			// The data exchange ID matches /[a-z\-]/; an underscore indicates the start
+			// of the date.
+			String dataExchangeId = XPath.selectText("@title", link)
+					.split("_")[0];
+			
+			// find the feed
+			GtfsFeed originalFeed = GtfsFeed.find("byDataExchangeId", dataExchangeId).first();
+			
+			String url = XPath.selectText("@href", link);
+			
+			String dateUpdatedStr = XPath.selectText("updated", entry);
+			// Java does not like the Z on the end
+			dateUpdatedStr = dateUpdatedStr.replace("Z", "-0000");
+			Date dateUpdated;
+			
+			try {
+				dateUpdated = isoDate.parse(dateUpdatedStr);
+			} catch (ParseException e) {
+				Logger.error("Unable to parse date %s", dateUpdatedStr);
+				continue;
+			}
+			
+			if (originalFeed != null && dateUpdated.equals(originalFeed.dateUpdated)) {
+				// We've reached the end of what we need to do
+				break;
+			}
+			
+			if (originalFeed != null) {
+				for (NtdAgency agency : originalFeed.getAgencies()) {
+					updated.add(agency.metroArea);
+				}
+			}
+			
+			GtfsFeed newFeed;
+			// copy over all the data.
+			if (originalFeed != null)
+				newFeed = originalFeed.clone();
+			else
+				newFeed = new GtfsFeed();
+			
+			// set the changed data
+			// TODO: feed stats
+			newFeed.dateUpdated = dateUpdated;
+			newFeed.downloadUrl = url;
+			
+			newFeed.save();
+			
+			if (originalFeed != null) {
+				originalFeed.supersededBy = newFeed;
+				originalFeed.save();
+			}
+		}
+		
+		return updated;
+	}
+}

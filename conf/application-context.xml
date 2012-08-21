@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springsource.org/dtd/spring-beans-2.0.dtd">
+<beans>
+	<bean id="updaters" class="updaters.UpdaterFactory">
+		<property name="updaters">
+			<list>
+				<bean class="updaters.GtfsDataExchangeUpdater" />
+			</list>
+		</property>
+		
+		<property name="hooks">
+			<list>
+				<bean class="updaters.LoggingUpdaterHook" />
+			</list>
+		</property>
+	</bean>
+</beans>

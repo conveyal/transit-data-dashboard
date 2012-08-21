@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 import java.math.BigInteger;
+
+import jobs.UpdateGtfs;
+
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -596,6 +599,11 @@ public class Mapper extends Controller {
         }
 
         renderJSON(agencies);
+    }
+    
+    public static void fetchGtfs () {
+    	new UpdateGtfs().now();
+    	renderJSON("{\"status\":\"running\"}");
     }
 }
             

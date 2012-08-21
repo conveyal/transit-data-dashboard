@@ -3,13 +3,14 @@ package models;
 import javax.persistence.*;
 import java.util.*;
 
+import play.Logger;
 import play.db.jpa.*;
 import play.data.validation.*;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import org.hibernate.annotations.Type;
 
 @Entity
-public class GtfsFeed extends Model {
+public class GtfsFeed extends Model implements Cloneable {
 
     /** The name of this agency, customer-facing */
     @Required
@@ -42,6 +43,13 @@ public class GtfsFeed extends Model {
      */
     @URL
     public String feedBaseUrl;
+    
+    /**
+     * This is the URL to download this feed. Generally it's a GTFS Data Exchange
+     * file URL.
+     */
+    @URL
+    public String downloadUrl;
 
     /** Is this feed a feed officially provided by the transit agency? */
     @Required
@@ -80,6 +88,12 @@ public class GtfsFeed extends Model {
     public MultiPolygon the_geom;
 
     /**
+     * Was this feed superseded?
+     */
+    @OneToOne
+	public GtfsFeed supersededBy;
+
+    /**
      * Get the agencies this feed refers to.
      */
     public List<NtdAgency> getAgencies () {
@@ -114,5 +128,31 @@ public class GtfsFeed extends Model {
         this.state = state;
         this.agencyUrl = agencyUrl;
         this.the_geom = the_geom;
-    }            
+        this.supersededBy = null;
+    }
+    
+    public GtfsFeed clone () {
+    	// can't just clone, because of IDs &c; JPA gives us the 'detached entity passed to persist'
+    	GtfsFeed ret = new GtfsFeed();
+    	ret.agencyName = this.agencyName;
+    	ret.agencyUrl = this.agencyUrl;
+    	ret.areaDescription = this.areaDescription;
+    	ret.country = this.country;
+    	ret.dataExchangeId = this.dataExchangeId;
+    	ret.dataExchangeUrl = this.dataExchangeUrl;
+    	ret.dateAdded = this.dateAdded;
+    	ret.dateUpdated = this.dateUpdated;
+    	ret.downloadUrl = this.downloadUrl;
+    	ret.expirationDate = this.expirationDate;
+    	ret.feedBaseUrl = this.feedBaseUrl;
+    	ret.licenseUrl = this.licenseUrl;
+    	ret.official = this.official;
+    	ret.state = this.state;
+    	ret.supersededBy = this.supersededBy;
+    	ret.the_geom = this.the_geom;
+    	ret.trips = this.trips;
+    	ret.tripsPerCalendar = this.tripsPerCalendar;
+    	return ret;
+    			
+    }
 }
