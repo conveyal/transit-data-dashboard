@@ -206,12 +206,17 @@ public class FeedStatsCalculator {
 			}
 			
 			// Make a coordinate for each stop, and add it to the MultiPoint
+			double lon, lat;
 			while ((row = stops.readNext()) != null )	{
+				lon = Double.parseDouble(row[lonCol]);
+				lat = Double.parseDouble(row[latCol]);
+				
+				// ignore stops near 0,0 island
+				if (Math.abs(lon) < 1 && Math.abs(lat) <1)
+					continue;
+				
 				stopsGeom.add(
-						new Coordinate(
-										Double.parseDouble(row[lonCol]),
-										Double.parseDouble(row[latCol])
-								)
+						new Coordinate(lon, lat)
 						);
 			}
 			
