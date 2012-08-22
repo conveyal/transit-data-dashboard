@@ -6,12 +6,25 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
+import models.GtfsFeed;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPoint;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.algorithm.ConvexHull;
+
 import play.Logger;
+import utils.GeometryUtils;
 
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -25,6 +38,7 @@ public class FeedStatsCalculator {
 	
 	private Date startDate;
 	private Date endDate;
+	private MultiPolygon the_geom;
 	
 	public Date getStartDate() {
 		return startDate;
@@ -41,6 +55,16 @@ public class FeedStatsCalculator {
 		this.startDate = null;
 		this.endDate = null;
 		calculateStartAndEnd();
+		calculateGeometry();
+	}
+	
+	/**
+	 * Apply the calculated feed stats to the appropriate fields of the given GtfsFeed
+	 */
+	public void apply (GtfsFeed feed) {
+		feed.startDate = this.startDate;
+		feed.expirationDate = this.endDate;
+		feed.the_geom = this.the_geom;
 	}
 	
 	private void calculateStartAndEnd () throws Exception {
@@ -152,6 +176,57 @@ public class FeedStatsCalculator {
 						endDate = date;
 				}
 			}
+		}
+	}
+	
+	private void calculateGeometry () throws Exception {
+		ZipEntry stops_txt = this.gtfs.getEntry("stops.txt");
+		if (stops_txt != null) {
+			CSVReader stops = getReaderForZipEntry(stops_txt);
+			// Get coordinates for each stop, then convex-hull them.
+			List<Coordinate> stopsGeom = new ArrayList<Coordinate>();
+			
+			String[] cols = stops.readNext();
+			String[] row;
+			
+			int lonCol = -1, latCol = -1;
+			
+			// find the columns
+			for (int i = 0; i < cols.length; i++) {
+				if (cols[i].toLowerCase().equals("stop_lon"))
+					lonCol = i;
+				else if (cols[i].toLowerCase().equals("stop_lat"))
+					latCol = i;
+			}
+			
+			if (lonCol == -1 || latCol == -1) {
+				Logger.error("Missing stop_lat or stop_lon!");
+				stops.close();
+				throw new ParseException("Missing stop_lat or stop_lon!", 0);
+			}
+			
+			// Make a coordinate for each stop, and add it to the MultiPoint
+			while ((row = stops.readNext()) != null )	{
+				stopsGeom.add(
+						new Coordinate(
+										Double.parseDouble(row[lonCol]),
+										Double.parseDouble(row[latCol])
+								)
+						);
+			}
+			
+			GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
+			Coordinate[] coords = new Coordinate[stopsGeom.size()];
+			stopsGeom.toArray(coords);
+			Geometry geom = new ConvexHull(coords, gf).getConvexHull();
+			
+			if (geom instanceof Polygon) {
+				Polygon[] poly = new Polygon[] {(Polygon) geom};
+				geom = gf.createMultiPolygon(poly);
+			}
+			
+			this.the_geom = (MultiPolygon) geom;
+				
 		}
 	}
 	

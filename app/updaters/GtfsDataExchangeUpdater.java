@@ -118,8 +118,8 @@ public class GtfsDataExchangeUpdater implements Updater {
 				continue;
 			}
 			
-			newFeed.expirationDate = stats.getEndDate();
-			newFeed.startDate = stats.getStartDate();
+			// save the stats
+			stats.apply(newFeed);
 			newFeed.dateUpdated = dateUpdated;
 			newFeed.downloadUrl = url;
 			newFeed.storedId = feedId;
