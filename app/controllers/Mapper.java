@@ -24,6 +24,8 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.operation.overlay.OverlayOp;
+
+import updaters.DeploymentPlan;
 import utils.GeometryUtils;
 
 public class Mapper extends Controller {
@@ -604,6 +606,11 @@ public class Mapper extends Controller {
     public static void fetchGtfs () {
     	new UpdateGtfs().now();
     	renderJSON("{\"status\":\"running\"}");
+    }
+    
+    public static void createDeploymentPlan (MetroArea metroArea) {
+    	DeploymentPlan dp = new DeploymentPlan(metroArea);
+    	renderJSON(dp.toJson());
     }
 }
             

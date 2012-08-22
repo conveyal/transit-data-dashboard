@@ -107,14 +107,52 @@ public class FeedStatsCalculator {
 				// service pattern starts on a Saturday move it to the following Monday
 				
 				// expand the range on either end
-				if (!startAlreadySet && startDate != null && currentStart.compareTo(startDate) < 0)
+				if (startDate == null || 
+						(!startAlreadySet && currentStart.compareTo(startDate) < 0))
 					startDate = currentStart;
 				
-				if (!endAlreadySet && endDate != null && currentEnd.compareTo(endDate) > 0)
+				if (endDate == null ||
+						(!endAlreadySet && currentEnd.compareTo(endDate) > 0))
 					endDate = currentEnd;
 			}
 			calendar.close();
-		}		
+		}
+		
+		ZipEntry calendar_dates_txt = this.gtfs.getEntry("calendar_dates.txt");
+		if (calendar_dates_txt != null) {
+			CSVReader dates = getReaderForZipEntry(calendar_dates_txt);
+			
+			String[] cols = dates.readNext();
+			String[] row;
+			Date date;
+			
+			int dateCol = -1, excTypeCol = -1;
+			
+			for (int i = 0; i < cols.length; i++) {
+				if (cols[i].toLowerCase().equals("date"))
+					dateCol = i;
+				else if (cols[i].toLowerCase().equals("exception_type"))
+					excTypeCol = i;
+			}
+			
+			if (dateCol == -1 || excTypeCol == -1) {
+				dates.close();
+				Logger.error("bad calendar_dates.txt");
+				throw new ParseException("bad calendar_dates.txt", 0);
+			}
+			
+			while ((row = dates.readNext()) != null) {
+				if (row[excTypeCol].equals("1")) {
+					// service will run
+					date = gtfsDateFormat.parse(row[dateCol]);
+					// this is before the start date
+					if (startDate == null || date.compareTo(startDate) < 0)
+						startDate = date;
+					else if (endDate == null || date.compareTo(endDate) > 0)
+						endDate = date;
+				}
+			}
+		}
 	}
 	
 	private CSVReader getReaderForZipEntry(ZipEntry entry) throws IOException {

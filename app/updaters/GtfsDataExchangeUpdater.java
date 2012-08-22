@@ -31,7 +31,7 @@ public class GtfsDataExchangeUpdater implements Updater {
 		Set<MetroArea> updated = new HashSet<MetroArea>();
 		
 		// First, fetch the RSS feed
-		HttpResponse res = WS.url("http://www.gtfs-data-exchange.com/feed").get();
+		HttpResponse res = WS.url("http://localhost:8000/feed").get();
 		int status = res.getStatus(); 
 		if (status != 200) {
 			Logger.error("Error fetching GTFS changes from Data Exchange: HTTP status %s", status);
@@ -46,11 +46,14 @@ public class GtfsDataExchangeUpdater implements Updater {
 			
 			// now, parse out the data exchange ID
 			// The data exchange ID matches /[a-z\-]/; an underscore indicates the start
-			// of the date.
+			// of the date. Some agencies append -archiver; sometimes, we just don't know.
+			// Fetching the meta will eventually be necessary.
 			String dataExchangeId = XPath.selectText("@title", link)
 					.split("_")[0];
+			dataExchangeId = dataExchangeId.replace("-archiver", "");
 			
 			// FIXME remove
+			if (dataExchangeId.equals("adelaide-metro")) break;
 			if (dataExchangeId.equals("mts")) continue;
 			if (dataExchangeId.equals("amtrak-sunset-limited-unofficial-feed")) continue;
 			if (dataExchangeId.equals("tac-transportation")) continue;
@@ -98,8 +101,11 @@ public class GtfsDataExchangeUpdater implements Updater {
 			// copy over all the data.
 			if (originalFeed != null)
 				newFeed = originalFeed.clone();
-			else
+			else {
 				newFeed = new GtfsFeed();
+				newFeed.dataExchangeId = dataExchangeId;
+			}
+
 			
 			// Calculate feed stats
 			FeedStatsCalculator stats;

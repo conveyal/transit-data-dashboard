@@ -1,5 +1,6 @@
 package updaters;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -26,8 +27,10 @@ import models.NtdAgency;
 public class DeploymentPlan {
 	private Date startDate;
 	private Date endDate;
+	private MetroArea area;
 	private static TimeZone gmt = TimeZone.getTimeZone("GMT");
-	private Calendar calendar = Calendar.getInstance(gmt);
+	private SimpleDateFormat isoDate;
+	private Calendar calendar;
 	private FeedDescriptor[] feeds;
 	
 	/**
@@ -35,7 +38,7 @@ public class DeploymentPlan {
 	 * @param area
 	 */
 	public DeploymentPlan(MetroArea area) {
-		this(area, new Date());
+		this(area, new Date(112, 7, 15));
 	}
 	
 	/**
@@ -44,8 +47,8 @@ public class DeploymentPlan {
 	 * @param date
 	 */
 	public DeploymentPlan(MetroArea area, Date date) {
-		this(area, date, 
-				Integer.parseInt(Play.configuration.getProperty("dashboard.planwindow", "14")));
+		this(area, date, 90);
+				//Integer.parseInt(Play.configuration.getProperty("dashboard.planwindow", "14")));
 	}
 	
 	/**
@@ -55,12 +58,14 @@ public class DeploymentPlan {
 	 * @param window The number of days this plan should attempt to find valid trip plans.
 	 */
 	public DeploymentPlan(MetroArea area, Date date, int window) {
+		this.area = area;
+		this.calendar = Calendar.getInstance(gmt);
+		this.isoDate = new SimpleDateFormat("yyyy-MM-dd");
 		this.startDate = date;
 		calendar.setTime(date);
 		calendar.add(Calendar.DAY_OF_YEAR, window);
 		this.endDate = calendar.getTime();
 		
-		List<GtfsFeed> feeds;
 		Set<FeedDescriptor> toInclude = new HashSet<FeedDescriptor>();
 		
 		for (NtdAgency agency : area.getAgencies()) {
@@ -88,7 +93,7 @@ public class DeploymentPlan {
 		addFeeds(feed, toInclude, 0);
 	}
 	
-	private void addFeeds(GtfsFeed feed, Set<FeedDescriptor> toInclude, int i) {
+	private void addFeeds(GtfsFeed feed, Set<FeedDescriptor> toInclude, int iteration) {
 		FeedDescriptor fd;
 		GtfsFeed olderFeed;
 		
@@ -104,16 +109,17 @@ public class DeploymentPlan {
 				if (feed.supersededBy != null && 
 						feed.expirationDate.compareTo(feed.supersededBy.startDate) >= 0) {
 					calendar.setTime(feed.supersededBy.startDate);
-					// Go back one day to get the end date for this feed
-					calendar.add(Calendar.DAY_OF_YEAR, -1);
-					fd.expireOn = calendar.getTime();
+					// Go back 12 hours, this should be yesterday since we have date at 00:00:00
+					calendar.add(Calendar.HOUR, -12);
+					fd.expireOn = isoDate.format(calendar.getTime());
 				}
 				// otherwise, let it expire normally
 				else {
-					fd.expireOn = feed.expirationDate;
+					fd.expireOn = isoDate.format(feed.expirationDate);
 				}
 				
-				fd.defaultAgencyId = feed.dataExchangeId + "_" + i;
+				fd.defaultAgencyId = feed.dataExchangeId + "_" + iteration;
+				toInclude.add(fd);
 			}
 			
 			olderFeed = GtfsFeed.find("bySupersededBy", feed).first();
@@ -122,7 +128,7 @@ public class DeploymentPlan {
 				return;
 			}
 			
-			addFeeds(olderFeed, toInclude, i + 1);
+			addFeeds(olderFeed, toInclude, iteration + 1);
 			return;
 		}
 		else {
@@ -131,8 +137,18 @@ public class DeploymentPlan {
 			// to continue searching for older feeds.
 			fd = new FeedDescriptor();
 			fd.feedId = feed.storedId;
-			fd.expireOn = feed.expirationDate;
-			fd.defaultAgencyId = feed.dataExchangeId + "_" + i;
+			fd.expireOn = isoDate.format(feed.expirationDate);
+			fd.defaultAgencyId = feed.dataExchangeId + "_" + iteration;
+			
+			// force expire if necessary
+			if (feed.supersededBy != null &&
+					feed.expirationDate.compareTo(feed.supersededBy.startDate) >= 0) {
+				calendar.setTime(feed.supersededBy.startDate);
+				// Go back 12 hours, this should be yesterday since we have date at 00:00:00
+				calendar.add(Calendar.HOUR, -12);
+				fd.expireOn = isoDate.format(calendar.getTime());
+			}
+			
 			toInclude.add(fd);
 			return;
 		}
@@ -145,6 +161,8 @@ public class DeploymentPlan {
 	public String toJson () {
 		DeploymentPlanProxy plan = new DeploymentPlanProxy();
 		plan.feeds = this.feeds;
+		plan.metroId = this.area.id;
+		plan.metro = this.area.name;
 		
 		Gson gson = new Gson();
 		return gson.toJson(plan);
@@ -152,12 +170,74 @@ public class DeploymentPlan {
 	
 	// This is serialized to JSON and sent to deployer.
 	private class DeploymentPlanProxy {
+		private long metroId;
+		private String metro;
 		private FeedDescriptor[] feeds;
 	}
 	
-	private class FeedDescriptor {
+	public class FeedDescriptor {
+		public String getFeedId() {
+			return feedId;
+		}
+		public String getExpireOn() {
+			return expireOn;
+		}
+		public String getDefaultAgencyId() {
+			return defaultAgencyId;
+		}
 		private String feedId;
-		private Date expireOn;
+		private String expireOn;
 		private String defaultAgencyId;
+		
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime
+					* result
+					+ ((defaultAgencyId == null) ? 0 : defaultAgencyId
+							.hashCode());
+			result = prime * result
+					+ ((expireOn == null) ? 0 : expireOn.hashCode());
+			result = prime * result
+					+ ((feedId == null) ? 0 : feedId.hashCode());
+			return result;
+		}
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			FeedDescriptor other = (FeedDescriptor) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (defaultAgencyId == null) {
+				if (other.defaultAgencyId != null)
+					return false;
+			} else if (!defaultAgencyId.equals(other.defaultAgencyId))
+				return false;
+			if (expireOn == null) {
+				if (other.expireOn != null)
+					return false;
+			} else if (!expireOn.equals(other.expireOn))
+				return false;
+			if (feedId == null) {
+				if (other.feedId != null)
+					return false;
+			} else if (!feedId.equals(other.feedId))
+				return false;
+			return true;
+		}
+		private DeploymentPlan getOuterType() {
+			return DeploymentPlan.this;
+		}
+	}
+
+	public FeedDescriptor[] getFeeds() {
+		return feeds;
 	}
 }

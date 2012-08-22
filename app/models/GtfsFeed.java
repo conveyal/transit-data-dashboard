@@ -165,6 +165,13 @@ public class GtfsFeed extends Model implements Cloneable {
     	ret.trips = this.trips;
     	ret.tripsPerCalendar = this.tripsPerCalendar;
     	ret.storedId = this.storedId;
+    	
+    	// add it to agencies as appropriate
+    	for (NtdAgency agency : getAgencies()) {
+    		agency.feeds.add(ret);
+    		agency.save();
+    	}    	
+    	
     	return ret;
     			
     }
