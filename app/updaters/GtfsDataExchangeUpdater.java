@@ -12,12 +12,17 @@ import play.Logger;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.XPath;
+import utils.FeedUtils;
 import models.GtfsFeed;
 import models.MetroArea;
 import models.NtdAgency;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * This class reads the RSS from GTFS Data Exchange and updates the database with that information.
@@ -31,64 +36,52 @@ public class GtfsDataExchangeUpdater implements Updater {
 		Set<MetroArea> updated = new HashSet<MetroArea>();
 		
 		// First, fetch the RSS feed
-		HttpResponse res = WS.url("http://localhost:8000/feed").get();
+		HttpResponse res = WS.url("http://localhost:8000/api/agencies").get();
 		int status = res.getStatus(); 
 		if (status != 200) {
 			Logger.error("Error fetching GTFS changes from Data Exchange: HTTP status %s", status);
 			return null;
 		}
 		
-		DateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-		
-		Document rss = res.getXml();
-		for (Node entry : XPath.selectNodes("//entry", rss)) {
-			Node link = XPath.selectNode("link[@rel = 'enclosure']", entry);
+		JsonObject agencies = res.getJson().getAsJsonObject();
+		JsonArray data = agencies.get("data").getAsJsonArray();
+		JsonObject feed;
+		for (JsonElement rawFeed : data) {
+			feed = rawFeed.getAsJsonObject();
 			
-			// now, parse out the data exchange ID
-			// The data exchange ID matches /[a-z\-]/; an underscore indicates the start
-			// of the date. Some agencies append -archiver; sometimes, we just don't know.
-			// Fetching the meta will eventually be necessary.
-			String dataExchangeId = XPath.selectText("@title", link)
-					.split("_")[0];
-			dataExchangeId = dataExchangeId.replace("-archiver", "");
+			String dataExchangeId = feed.get("dataexchange_id").getAsString();
 			
-			// FIXME remove
-			if (dataExchangeId.equals("adelaide-metro")) break;
-			if (dataExchangeId.equals("mts")) continue;
-			if (dataExchangeId.equals("amtrak-sunset-limited-unofficial-feed")) continue;
-			if (dataExchangeId.equals("tac-transportation")) continue;
-						
-			// find the feed
-			// make sure we get the latest one so that date comparisons work
-			// TODO: This shouldn't depend on how JPA lays out relationships
-			GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? and supersededBy_id IS NULL", 
-						dataExchangeId)
-					.first();
+			GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? AND supersededBy IS NULL",
+					dataExchangeId).first();
 			
-			String url = XPath.selectText("@href", link);
+			// convert to ms
+			long lastUpdated = ((long) feed.get("date_last_updated").getAsDouble()) * 1000L;
+
+			// do we need to fetch?
+			if (originalFeed != null) {
+				// difference of less than 2000ms: ignore
+				if ((lastUpdated - originalFeed.dateUpdated.getTime()) < 2000) {
+					continue;
+				}
+			}
 			
-			String dateUpdatedStr = XPath.selectText("updated", entry);
-			// Java does not like the Z on the end
-			dateUpdatedStr = dateUpdatedStr.replace("Z", "-0000");
-			Date dateUpdated;
-			
-			try {
-				dateUpdated = isoDate.parse(dateUpdatedStr);
-			} catch (ParseException e) {
-				Logger.error("Unable to parse date %s", dateUpdatedStr);
+			// get the data file URL
+			res = WS.url("http://www.gtfs-data-exchange.com/agency/" + 
+					dataExchangeId + "/json").get();
+			status = res.getStatus();
+			if (status != 200) {
+				Logger.error("Error fetching agency %s, status %s", dataExchangeId, status);
 				continue;
 			}
 			
-			if (originalFeed != null && dateUpdated.equals(originalFeed.dateUpdated)) {
-				// We've reached the end of what we need to do
-				break;
-			}
+			JsonObject agency = res.getJson().getAsJsonObject();
+			JsonArray files = agency.get("data").getAsJsonObject()
+					.get("datafiles").getAsJsonArray();
+			JsonObject firstFile = files.get(0).getAsJsonObject();
+			String url = firstFile.get("file_url").getAsString();
 			
-			if (originalFeed != null) {
-				for (NtdAgency agency : originalFeed.getAgencies()) {
-					updated.add(agency.metroArea);
-				}
-			}
+			// FIXME remove
+			url = url.replace("gtfs.s3.amazonaws.com", "localhost:8000");
 			
 			// Download the feed
 			String feedId = storer.storeFeed(url);
@@ -103,10 +96,11 @@ public class GtfsDataExchangeUpdater implements Updater {
 				newFeed = originalFeed.clone();
 			else {
 				newFeed = new GtfsFeed();
-				newFeed.dataExchangeId = dataExchangeId;
 			}
-
 			
+			// update all fields
+			FeedUtils.copyFromJson(feed, newFeed);
+
 			// Calculate feed stats
 			FeedStatsCalculator stats;
 			try {
@@ -120,7 +114,6 @@ public class GtfsDataExchangeUpdater implements Updater {
 			
 			// save the stats
 			stats.apply(newFeed);
-			newFeed.dateUpdated = dateUpdated;
 			newFeed.downloadUrl = url;
 			newFeed.storedId = feedId;
 			newFeed.save();

@@ -130,6 +130,8 @@ public class FeedStatsCalculator {
 				// TODO Move them to the nearest day with service, i.e. if a weekday
 				// service pattern starts on a Saturday move it to the following Monday
 				
+				// move the start to the nearest day with service
+				
 				// expand the range on either end
 				if (startDate == null || 
 						(!startAlreadySet && currentStart.compareTo(startDate) < 0))
