@@ -1,0 +1,34 @@
+MetroArea(sf):
+        name: San Francisco, CA
+
+GtfsFeed(bart3):
+        startDate: 2012-12-10
+        expirationDate: 2013-4-10
+        storedId: bart3
+
+GtfsFeed(bart2):
+        startDate: 2012-07-16
+        expirationDate: 2012-12-31
+        storedId: bart2
+        supersededBy: bart3
+
+GtfsFeed(bart1):
+        startDate: 2012-01-01
+        expirationDate: 2012-09-15
+        storedId: bart1
+        supersededBy: bart2
+        
+GtfsFeed(muni):
+        startDate: 2012-05-16
+        expirationDate: 2012-10-10
+        storedId: muni
+        
+NtdAgency(bart):
+        url: http://www.bart.gov
+        metroArea: sf
+        feeds: [bart1, bart2, bart3]
+        
+NtdAgency(muni):
+        url: http://example.com
+        metroArea: sf
+        feeds: [muni]
