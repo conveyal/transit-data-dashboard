@@ -50,6 +50,12 @@ public class GtfsFeed extends Model implements Cloneable {
      */
     @URL
     public String downloadUrl;
+    
+    /**
+     * The URL of the GTFS Realtime feed for this feed, if available.
+     */
+    @URL
+    public String realtimeUrl;
 
     /** Is this feed a feed officially provided by the transit agency? */
     @Required

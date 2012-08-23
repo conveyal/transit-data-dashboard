@@ -8,6 +8,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.ManyToOne;
 
+import com.google.gson.annotations.Expose;
+
 import play.data.validation.URL;
 import play.db.jpa.Model;
 
@@ -26,7 +28,7 @@ public class BikeRentalSystem extends Model {
 	
 	/**
 	 * The type of this bike rental system.
-	 * One of KeolisRennes, Static, CityBikes or Bixi
+	 * One of KeolisRennes, Static, CityBik.es or Bixi
 	 * For people parsing deployment requests: static indicates that staticBikeRental should be
 	 * true on OpenStreetMapGraphBuilderImpl; the other indicate that the correct class should be
 	 * used: see https://github.com/openplans/OpenTripPlanner/wiki/Bike-Rental

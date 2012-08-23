@@ -13,6 +13,8 @@ import com.google.gson.Gson;
 
 import play.Play;
 
+import models.BikeRentalSystem;
+import models.BikeRentalSystemType;
 import models.GtfsFeed;
 import models.MetroArea;
 import models.NtdAgency;
@@ -118,6 +120,7 @@ public class DeploymentPlan {
 					fd.expireOn = isoDate.format(feed.expirationDate);
 				}
 				
+				fd.realtimeUrl = feed.realtimeUrl;
 				fd.defaultAgencyId = feed.dataExchangeId + "_" + iteration;
 				toInclude.add(fd);
 			}
@@ -138,6 +141,7 @@ public class DeploymentPlan {
 			fd = new FeedDescriptor();
 			fd.feedId = feed.storedId;
 			fd.expireOn = isoDate.format(feed.expirationDate);
+			fd.realtimeUrl = feed.realtimeUrl;
 			fd.defaultAgencyId = feed.dataExchangeId + "_" + iteration;
 			
 			// force expire if necessary
@@ -163,6 +167,10 @@ public class DeploymentPlan {
 		plan.feeds = this.feeds;
 		plan.metroId = this.area.id;
 		plan.metro = this.area.name;
+		plan.bikeRentalSystems = new ArrayList<BikeRentalSystemProxy>();
+		for (BikeRentalSystem system : this.area.getBikeRentalSystems()) {
+		    plan.bikeRentalSystems.add(new BikeRentalSystemProxy(system));
+		}
 		
 		Gson gson = new Gson();
 		return gson.toJson(plan);
@@ -173,6 +181,23 @@ public class DeploymentPlan {
 		private long metroId;
 		private String metro;
 		private FeedDescriptor[] feeds;
+		private List<BikeRentalSystemProxy> bikeRentalSystems;
+	}
+	
+	private class BikeRentalSystemProxy {
+	    private String name;
+	    private BikeRentalSystemType type;
+	    private String url;
+	    private String currency;
+	    private List<String> fareClasses;
+	    
+	    public BikeRentalSystemProxy(BikeRentalSystem s) {
+	        this.name = s.name;
+	        this.type = s.type;
+	        this.url = s.url;
+	        this.currency = s.currency;
+	        this.fareClasses = s.fareClasses;
+	    }
 	}
 	
 	public class FeedDescriptor {
@@ -188,6 +213,7 @@ public class DeploymentPlan {
 		private String feedId;
 		private String expireOn;
 		private String defaultAgencyId;
+		private String realtimeUrl;
 		
 		@Override
 		public int hashCode() {

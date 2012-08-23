@@ -6,13 +6,12 @@
 GET     /favicon.ico                            404
 GET     /api/ntdagencies/agency/{id}            NtdAgencies.agency
 GET     /api/ntdagencies/agencies/{as}          NtdAgencies.agencies
+# CRUD admin area
+*    /crud/                                   module:crud
 *       /api/{controller}/{action}              {controller}.{action}   
 
 # Home page alias
 GET    /public/                               staticDir:public
-
-# CRUD admin area
-GET    /crud/                                   module:crud
 
 # Home page
 GET     /                                    staticDir:public

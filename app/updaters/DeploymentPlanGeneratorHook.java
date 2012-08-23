@@ -20,13 +20,15 @@ public class DeploymentPlanGeneratorHook implements UpdaterHook {
 			DeploymentPlan plan = new DeploymentPlan(area);
 			
 			// and dispatch the JSON
+			/*
 			try {
 				FileWriter writer = new FileWriter("/tmp/" + area.name + ".json");
 				writer.write(plan.toJson());
 				writer.close();
 			} catch (IOException e) {
 				e.printStackTrace();
-			} 
+			}
+			*/ 
 		}
 	}
 }
