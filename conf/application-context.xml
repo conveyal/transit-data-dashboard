@@ -2,14 +2,17 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springsource.org/dtd/spring-beans-2.0.dtd">
 <beans>
 	<!-- https://groups.google.com/forum/?fromgroups=#!topic/play-framework/wW1WOxPwss0 -->
-	<import resource="file://${application.path}/conf/s3config.xml" />
+	<!-- <import resource="file://${application.path}/conf/s3config.xml" /> -->
 
 	<bean id="updaters" class="updaters.UpdaterFactory">
 		<property name="updaters">
 			<list>
 				<bean class="updaters.GtfsDataExchangeUpdater">
 					<property name="storer">
-						<ref bean="s3" />
+						<!-- <ref bean="s3" /> -->
+						<bean class="updaters.FileFeedStorer">
+							<property name="path" value="/extra/matthewc/gtfs-data" />
+						</bean>
 					</property>
 				</bean>
 			</list>

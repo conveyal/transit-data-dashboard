@@ -3,6 +3,7 @@ package models;
 import java.util.List;
 
 import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.ManyToOne;
@@ -10,6 +11,7 @@ import javax.persistence.ManyToOne;
 import play.data.validation.URL;
 import play.db.jpa.Model;
 
+@Entity
 public class BikeRentalSystem extends Model {
 	/**
 	 * The metro area this bike rental system is in.

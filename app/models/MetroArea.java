@@ -33,6 +33,13 @@ public class MetroArea extends Model {
     public List<NtdAgency> getAgencies () {
         return NtdAgency.find("byMetroArea", this).fetch();
     }
+    
+    /**
+     * Get a list of bike rental systems in this metro.
+     */
+    public List<BikeRentalSystem> getBikeRentalSystems () {
+        return BikeRentalSystem.find("byMetroArea", this).fetch();
+    }
 
     /**
      * Make a new metro area

@@ -2,5 +2,7 @@
 
 require:
     - play -> spring 1.0.3
+    - play -> crud
     - net.sf.opencsv -> opencsv 2.3
     - com.amazonaws -> aws-java-sdk 1.3.17
+    - org.onebusaway -> onebusaway-gtfs 1.3.0

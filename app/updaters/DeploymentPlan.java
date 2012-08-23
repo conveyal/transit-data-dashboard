@@ -47,8 +47,8 @@ public class DeploymentPlan {
 	 * @param date
 	 */
 	public DeploymentPlan(MetroArea area, Date date) {
-		this(area, date, 90);
-				//Integer.parseInt(Play.configuration.getProperty("dashboard.planwindow", "14")));
+		this(area, date,
+				Integer.parseInt(Play.configuration.getProperty("dashboard.planwindow", "14")));
 	}
 	
 	/**
