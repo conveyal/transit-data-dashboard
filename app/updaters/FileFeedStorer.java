@@ -92,4 +92,5 @@ public class FileFeedStorer implements FeedStorer {
 		return new File(path + "/" + feedId);
 	}
 
+	public void releaseFeed (String feedId) {};
 }

@@ -10,6 +10,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -35,6 +37,7 @@ public class S3FeedStorer implements FeedStorer {
 	private String secretKey;
 	private AmazonS3 s3Client;
 	private String bucket;
+	private Map<String, File> tempFiles;
 	
 	public void setAccessKey (String accessKey) {
 		this.accessKey = accessKey;
@@ -60,6 +63,7 @@ public class S3FeedStorer implements FeedStorer {
 	public S3FeedStorer () {
 		this.accessKey = null;
 		this.secretKey = null;
+		this.tempFiles = new HashMap<String, File>();
 	}
 	
 	private static Pattern uuidRe = Pattern.compile("^[0-9a-fA-F\\-]+$");
@@ -134,11 +138,21 @@ public class S3FeedStorer implements FeedStorer {
 			return null;
 		}
 		
-		// This is the best we can do for now
-		tempFile.deleteOnExit();
+		tempFiles.put(feedId, tempFile);
 		
 		GetObjectRequest request = new GetObjectRequest(this.bucket, feedId);
 		s3Client.getObject(request, tempFile);
 		return tempFile;
+	}
+
+	/**
+	 * Clear out the temp file.
+	 * @param feedId
+	 */
+	public void releaseFeed (String feedId) {
+	    if (tempFiles.containsKey(feedId)) {
+	        tempFiles.get(feedId).delete();
+	        tempFiles.remove(feedId);
+	    }
 	}
 }

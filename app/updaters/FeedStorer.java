@@ -21,4 +21,9 @@ public interface FeedStorer {
 	 * @return A file object accessing the desired file.
 	 */
 	public File getFeed(String feedId); 
+	
+	/**
+	 * Release a feed, whatever that means. Probably clean up temp files.
+	 */
+	public void releaseFeed(String feedId);
 }

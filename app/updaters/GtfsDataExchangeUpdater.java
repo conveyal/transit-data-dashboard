@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.io.File;
 
 import play.Logger;
 import play.db.jpa.JPA;
@@ -102,15 +103,19 @@ public class GtfsDataExchangeUpdater implements Updater {
 		        FeedUtils.copyFromJson(feed, newFeed);
 
 		        // Calculate feed stats
+		        File feedFile = storer.getFeed(feedId);
+		        
 		        FeedStatsCalculator stats;
 		        try {
-		            stats = new FeedStatsCalculator(storer.getFeed(feedId));
+		            stats = new FeedStatsCalculator(feedFile);
 		        } catch (Exception e) {
 		            // TODO be more descriptive
 		            Logger.error("Error calculating feed stats for feed %s", url);
 		            e.printStackTrace();
 		            continue;
 		        }
+		        
+		        storer.releaseFeed(feedId);
 
 		        // save the stats
 		        stats.apply(newFeed);
