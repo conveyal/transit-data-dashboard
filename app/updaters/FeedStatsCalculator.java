@@ -8,10 +8,23 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+
+import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.onebusaway.gtfs.impl.GtfsDaoImpl;
+import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.ServiceCalendar;
+import org.onebusaway.gtfs.model.ServiceCalendarDate;
+import org.onebusaway.gtfs.model.calendar.ServiceDate;
+import org.onebusaway.gtfs.serialization.GtfsReader;
 
 import models.GtfsFeed;
 
@@ -34,6 +47,7 @@ import au.com.bytecode.opencsv.CSVReader;
  *
  */
 public class FeedStatsCalculator {
+	private File rawGtfs;
 	private ZipFile gtfs;
 	
 	private Date startDate;
@@ -51,6 +65,7 @@ public class FeedStatsCalculator {
 	private static SimpleDateFormat gtfsDateFormat = new SimpleDateFormat("yyyyMMdd");
 	
 	public FeedStatsCalculator(File gtfs) throws Exception {
+		this.rawGtfs = gtfs;
 		this.gtfs = new ZipFile(gtfs);
 		this.startDate = null;
 		this.endDate = null;
@@ -69,6 +84,7 @@ public class FeedStatsCalculator {
 	
 	private void calculateStartAndEnd () throws Exception {
 		// First, read feed_info.txt
+		// no need to parse the whole GTFS if all we need is feed info
 		ZipEntry feed_info_txt = this.gtfs.getEntry("feed_info.txt");
 		if (feed_info_txt != null) {
 			CSVReader feedInfo = getReaderForZipEntry(feed_info_txt);
@@ -87,99 +103,114 @@ public class FeedStatsCalculator {
 		
 		// we have an authoritative answer
 		if (startDate != null && endDate != null) return;
+	
+		// let OBA deal with the complexities of interactions between calendar.txt and 
+		// calendar_dates.txt
+		// This code is lifted and slightly modified from
+		// https://github.com/demory/otp_gtfs/blob/master/java/gtfsmetrics/src/main/java/org/openplans/gtfsmetrics/CalendarStatus.java
 		
-		ZipEntry calendar_txt = this.gtfs.getEntry("calendar.txt");
-		if (calendar_txt != null) {
-			CSVReader calendar = new CSVReader(
-					new BufferedReader(
-							new InputStreamReader(
-									this.gtfs.getInputStream(calendar_txt)
-							)
-					)
-				);
-			
-			Date currentStart = null;
-			Date currentEnd = null;
-			
-			String[] firstRow = calendar.readNext();
-			String[] currentRow;
-			
-			// Don't re-set if we have an authoritative answer from feed_info
-			boolean startAlreadySet = this.startDate != null;
-			boolean endAlreadySet = this.endDate != null;
-			
-			// find column offsets
-			int startDateCol = -1, endDateCol = -1;
-			for (int i = 0; i < firstRow.length; i++) {
-				if (firstRow[i].toLowerCase().equals("start_date"))
-					startDateCol = i;
-				else if (firstRow[i].toLowerCase().equals("end_date"))
-					endDateCol = i;
-			}
-			
-			if (startDateCol == -1 || endDateCol == -1) {
-				Logger.error("calendar.txt is missing start_date or end_date");
-				calendar.close();
-				throw new ParseException("calendar.txt is missing start_date or end_date", 0);
-			}
-			
-			while ((currentRow = calendar.readNext()) != null) {
-				currentStart = gtfsDateFormat.parse(currentRow[startDateCol]);
-				currentEnd = gtfsDateFormat.parse(currentRow[endDateCol]);
-			
-				// TODO Move them to the nearest day with service, i.e. if a weekday
-				// service pattern starts on a Saturday move it to the following Monday
-				
-				// move the start to the nearest day with service
-				
-				// expand the range on either end
-				if (startDate == null || 
-						(!startAlreadySet && currentStart.compareTo(startDate) < 0))
-					startDate = currentStart;
-				
-				if (endDate == null ||
-						(!endAlreadySet && currentEnd.compareTo(endDate) > 0))
-					endDate = currentEnd;
-			}
-			calendar.close();
-		}
+		GtfsReader reader = new GtfsReader();
+		reader.setInputLocation(rawGtfs);
 		
-		ZipEntry calendar_dates_txt = this.gtfs.getEntry("calendar_dates.txt");
-		if (calendar_dates_txt != null) {
-			CSVReader dates = getReaderForZipEntry(calendar_dates_txt);
-			
-			String[] cols = dates.readNext();
-			String[] row;
-			Date date;
-			
-			int dateCol = -1, excTypeCol = -1;
-			
-			for (int i = 0; i < cols.length; i++) {
-				if (cols[i].toLowerCase().equals("date"))
-					dateCol = i;
-				else if (cols[i].toLowerCase().equals("exception_type"))
-					excTypeCol = i;
-			}
-			
-			if (dateCol == -1 || excTypeCol == -1) {
-				dates.close();
-				Logger.error("bad calendar_dates.txt");
-				throw new ParseException("bad calendar_dates.txt", 0);
-			}
-			
-			while ((row = dates.readNext()) != null) {
-				if (row[excTypeCol].equals("1")) {
-					// service will run
-					date = gtfsDateFormat.parse(row[dateCol]);
-					// this is before the start date
-					if (startDate == null || date.compareTo(startDate) < 0)
-						startDate = date;
-					else if (endDate == null || date.compareTo(endDate) > 0)
-						endDate = date;
-				}
-			}
-		}
-	}
+		GtfsDaoImpl store = new GtfsDaoImpl();
+        reader.setEntityStore(store);
+
+        reader.run();
+        
+        Map<AgencyAndId, Set<ServiceDate>> addExceptions = new HashMap<AgencyAndId, Set<ServiceDate>>();
+        Map<AgencyAndId, Set<String>> removeExceptions = new HashMap<AgencyAndId, Set<String>>();
+        for(ServiceCalendarDate date : store.getAllCalendarDates()) {
+            if(date.getExceptionType() == ServiceCalendarDate.EXCEPTION_TYPE_ADD) {
+                Set<ServiceDate> dateSet = addExceptions.get(date.getServiceId());
+                if(dateSet == null) {
+                    dateSet = new HashSet<ServiceDate>();
+                    addExceptions.put(date.getServiceId(), dateSet);
+                }
+                dateSet.add(date.getDate());
+            }
+            else if(date.getExceptionType() == ServiceCalendarDate.EXCEPTION_TYPE_REMOVE) {
+                Set<String> dateSet = removeExceptions.get(date.getServiceId());
+                if(dateSet == null) {
+                    dateSet = new HashSet<String>();
+                    removeExceptions.put(date.getServiceId(), dateSet);
+                }
+                dateSet.add(constructMDYString(date.getDate()));
+            }
+        }
+        
+        DateTime latestEnd = new DateTime(0);
+        DateTime earliestStart = null;
+        
+        for (ServiceCalendar svcCal : store.getAllCalendars()) {
+        
+            DateTime start = new DateTime(svcCal.getStartDate().getAsDate().getTime());
+            DateTime end = new DateTime(svcCal.getEndDate().getAsDate().getTime());
+            
+            int totalDays = Days.daysBetween(start, end).getDays();
+            for(int d=0; d < totalDays; d++) {
+                int gd = getDay(svcCal, end.dayOfWeek().get());// dateCal.get(Calendar.DAY_OF_WEEK));
+                boolean removeException = false;
+                Set<String> dateSet = removeExceptions.get(svcCal.getServiceId());
+                if(dateSet != null) {
+                 removeException = dateSet.contains(constructMDYString(end));
+                }
+                if(gd == 1 && !removeException) break;
+                end = end.minusDays(1);
+            }
+            if (end.isAfter(latestEnd))
+            	latestEnd = end;
+            
+            totalDays = Days.daysBetween(start, end).getDays();
+            for(int d=0; d < totalDays; d++) {
+                int gd = getDay(svcCal, start.dayOfWeek().get());// dateCal.get(Calendar.DAY_OF_WEEK));
+                boolean removeException = false;
+                Set<String> dateSet = removeExceptions.get(svcCal.getServiceId());
+                if(dateSet != null) {
+                 removeException = dateSet.contains(constructMDYString(start));
+                }
+                if(gd == 1 && !removeException) break;
+                start = start.plusDays(1);
+            }
+            if (earliestStart == null || start.isBefore(earliestStart))
+            	earliestStart = start;
+            
+        }
+        
+        // now, expand based on calendar_dates.txt
+        for(Set<ServiceDate> dateSet: addExceptions.values()) {
+            for(ServiceDate sd : dateSet) {
+                DateTime dt = new DateTime(sd.getAsDate().getTime());
+                if (dt.isAfter(latestEnd))
+                	latestEnd = dt;
+                if (dt.isBefore(earliestStart))
+                	earliestStart = dt;
+            }
+        }
+        
+        this.startDate = earliestStart.toDate();
+        this.endDate = latestEnd.toDate();        
+    }
+    
+    private static int getDay(ServiceCalendar cal, int dow) {
+        switch(dow) {
+            case 1: return cal.getMonday();
+            case 2: return cal.getTuesday();
+            case 3: return cal.getWednesday();
+            case 4: return cal.getThursday();
+            case 5: return cal.getFriday();
+            case 6: return cal.getSaturday();
+            case 7: return cal.getSunday();
+        }
+        return 0;
+    }
+    
+    private static String constructMDYString(ServiceDate date) {
+        return date.getMonth()+"-"+date.getDay()+"-"+date.getYear();
+    }
+    
+    private static String constructMDYString(DateTime dt) {
+        return dt.getMonthOfYear()+"-"+dt.getDayOfMonth()+"-"+dt.getYear();
+    }
 	
 	private void calculateGeometry () throws Exception {
 		ZipEntry stops_txt = this.gtfs.getEntry("stops.txt");
