@@ -15,6 +15,7 @@ import play.Play;
 
 import models.BikeRentalSystem;
 import models.BikeRentalSystemType;
+import models.DefaultBikesAllowedType;
 import models.GtfsFeed;
 import models.MetroArea;
 import models.NtdAgency;
@@ -106,6 +107,7 @@ public class DeploymentPlan {
 				// Feed starts before the end of the window, include it
 				fd = new FeedDescriptor();
 				fd.feedId = feed.storedId;
+				fd.defaultBikesAllowed = feed.defaultBikesAllowed;
 				
 				// force expire before the next one starts, if it's not already
 				if (feed.supersededBy != null && 
@@ -143,6 +145,7 @@ public class DeploymentPlan {
 			fd.expireOn = isoDate.format(feed.expirationDate);
 			fd.realtimeUrl = feed.realtimeUrl;
 			fd.defaultAgencyId = feed.dataExchangeId + "_" + iteration;
+			fd.defaultBikesAllowed = feed.defaultBikesAllowed;
 			
 			// force expire if necessary
 			if (feed.supersededBy != null &&
@@ -214,53 +217,79 @@ public class DeploymentPlan {
 		private String expireOn;
 		private String defaultAgencyId;
 		private String realtimeUrl;
+		private DefaultBikesAllowedType defaultBikesAllowed;
 		
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + getOuterType().hashCode();
-			result = prime
-					* result
-					+ ((defaultAgencyId == null) ? 0 : defaultAgencyId
-							.hashCode());
-			result = prime * result
-					+ ((expireOn == null) ? 0 : expireOn.hashCode());
-			result = prime * result
-					+ ((feedId == null) ? 0 : feedId.hashCode());
-			return result;
-		}
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			FeedDescriptor other = (FeedDescriptor) obj;
-			if (!getOuterType().equals(other.getOuterType()))
-				return false;
-			if (defaultAgencyId == null) {
-				if (other.defaultAgencyId != null)
-					return false;
-			} else if (!defaultAgencyId.equals(other.defaultAgencyId))
-				return false;
-			if (expireOn == null) {
-				if (other.expireOn != null)
-					return false;
-			} else if (!expireOn.equals(other.expireOn))
-				return false;
-			if (feedId == null) {
-				if (other.feedId != null)
-					return false;
-			} else if (!feedId.equals(other.feedId))
-				return false;
-			return true;
-		}
-		private DeploymentPlan getOuterType() {
-			return DeploymentPlan.this;
-		}
+		
+        /* (non-Javadoc)
+         * @see java.lang.Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime
+                    * result
+                    + ((defaultAgencyId == null) ? 0 : defaultAgencyId
+                            .hashCode());
+            result = prime
+                    * result
+                    + ((defaultBikesAllowed == null) ? 0 : defaultBikesAllowed
+                            .hashCode());
+            result = prime * result
+                    + ((expireOn == null) ? 0 : expireOn.hashCode());
+            result = prime * result
+                    + ((feedId == null) ? 0 : feedId.hashCode());
+            result = prime * result
+                    + ((realtimeUrl == null) ? 0 : realtimeUrl.hashCode());
+            return result;
+        }
+        /* (non-Javadoc)
+         * @see java.lang.Object#equals(java.lang.Object)
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            FeedDescriptor other = (FeedDescriptor) obj;
+            if (!getOuterType().equals(other.getOuterType()))
+                return false;
+            if (defaultAgencyId == null) {
+                if (other.defaultAgencyId != null)
+                    return false;
+            } else if (!defaultAgencyId.equals(other.defaultAgencyId))
+                return false;
+            if (defaultBikesAllowed == null) {
+                if (other.defaultBikesAllowed != null)
+                    return false;
+            } else if (!defaultBikesAllowed.equals(other.defaultBikesAllowed))
+                return false;
+            if (expireOn == null) {
+                if (other.expireOn != null)
+                    return false;
+            } else if (!expireOn.equals(other.expireOn))
+                return false;
+            if (feedId == null) {
+                if (other.feedId != null)
+                    return false;
+            } else if (!feedId.equals(other.feedId))
+                return false;
+            if (realtimeUrl == null) {
+                if (other.realtimeUrl != null)
+                    return false;
+            } else if (!realtimeUrl.equals(other.realtimeUrl))
+                return false;
+            return true;
+        }
+        private DeploymentPlan getOuterType() {
+            return DeploymentPlan.this;
+        }
+		
+		
 	}
 
 	public FeedDescriptor[] getFeeds() {
