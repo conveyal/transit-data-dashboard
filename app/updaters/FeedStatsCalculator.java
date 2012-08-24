@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,8 +20,10 @@ import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.AgencyAndId;
+import org.onebusaway.gtfs.model.FeedInfo;
 import org.onebusaway.gtfs.model.ServiceCalendar;
 import org.onebusaway.gtfs.model.ServiceCalendarDate;
+import org.onebusaway.gtfs.model.Stop;
 import org.onebusaway.gtfs.model.calendar.ServiceDate;
 import org.onebusaway.gtfs.serialization.GtfsReader;
 
@@ -48,7 +49,7 @@ import au.com.bytecode.opencsv.CSVReader;
  */
 public class FeedStatsCalculator {
 	private File rawGtfs;
-	private ZipFile gtfs;
+	private GtfsDaoImpl store;
 	
 	private Date startDate;
 	private Date endDate;
@@ -65,12 +66,16 @@ public class FeedStatsCalculator {
 	public Geometry getGeometry () {
 	    return the_geom;
 	}
-
-	private static SimpleDateFormat gtfsDateFormat = new SimpleDateFormat("yyyyMMdd");
 	
 	public FeedStatsCalculator(File gtfs) throws Exception {
 		this.rawGtfs = gtfs;
-		this.gtfs = new ZipFile(gtfs);
+	    GtfsReader reader = new GtfsReader();
+	    reader.setInputLocation(rawGtfs);
+	        
+	    this.store = new GtfsDaoImpl();
+	    reader.setEntityStore(this.store);
+	    reader.run();
+	    
 		this.startDate = null;
 		this.endDate = null;
 		calculateStartAndEnd();
@@ -88,22 +93,19 @@ public class FeedStatsCalculator {
 	
 	private void calculateStartAndEnd () throws Exception {
 		// First, read feed_info.txt
-		// no need to parse the whole GTFS if all we need is feed info
-		ZipEntry feed_info_txt = this.gtfs.getEntry("feed_info.txt");
-		if (feed_info_txt != null) {
-			CSVReader feedInfo = getReaderForZipEntry(feed_info_txt);
-			String[] cols = feedInfo.readNext();
-			String[] info = feedInfo.readNext();
-			
-			// find the columns
-			for (int i = 0; i < cols.length; i++) {
-				if (cols[i].toLowerCase().equals("feed_start_date"))
-					startDate = gtfsDateFormat.parse(info[i]);
-				else if (cols[i].toLowerCase().equals("feed_end_date"))
-					endDate = gtfsDateFormat.parse(info[i]);
-			}
-			feedInfo.close();
-		}
+	    // TODO is 1 ever not the correct value?
+	    FeedInfo feedInfo = store.getFeedInfoForId(1);
+	    if (feedInfo != null) {
+	        ServiceDate d;
+	        d = feedInfo.getStartDate();
+	        if (d != null)
+	            startDate = d.getAsDate();
+	        
+	        d = feedInfo.getEndDate();
+	        if (d != null)
+	            endDate = d.getAsDate();
+	    }
+	    
 		
 		// we have an authoritative answer
 		if (startDate != null && endDate != null) return;
@@ -113,13 +115,7 @@ public class FeedStatsCalculator {
 		// This code is lifted and slightly modified from
 		// https://github.com/demory/otp_gtfs/blob/master/java/gtfsmetrics/src/main/java/org/openplans/gtfsmetrics/CalendarStatus.java
 		
-		GtfsReader reader = new GtfsReader();
-		reader.setInputLocation(rawGtfs);
-		
-		GtfsDaoImpl store = new GtfsDaoImpl();
-        reader.setEntityStore(store);
 
-        reader.run();
         
         Map<AgencyAndId, Set<ServiceDate>> addExceptions = new HashMap<AgencyAndId, Set<ServiceDate>>();
         Map<AgencyAndId, Set<String>> removeExceptions = new HashMap<AgencyAndId, Set<String>>();
@@ -216,73 +212,34 @@ public class FeedStatsCalculator {
         return dt.getMonthOfYear()+"-"+dt.getDayOfMonth()+"-"+dt.getYear();
     }
 	
-	private void calculateGeometry () throws Exception {
-		ZipEntry stops_txt = this.gtfs.getEntry("stops.txt");
-		if (stops_txt != null) {
-			CSVReader stops = getReaderForZipEntry(stops_txt);
-			// Get coordinates for each stop, then convex-hull them.
-			List<Coordinate> stopsGeom = new ArrayList<Coordinate>();
-			
-			String[] cols = stops.readNext();
-			String[] row;
-			
-			int lonCol = -1, latCol = -1;
-			
-			// find the columns
-			for (int i = 0; i < cols.length; i++) {
-				if (cols[i].toLowerCase().equals("stop_lon"))
-					lonCol = i;
-				else if (cols[i].toLowerCase().equals("stop_lat"))
-					latCol = i;
-			}
-			
-			if (lonCol == -1 || latCol == -1) {
-				Logger.error("Missing stop_lat or stop_lon!");
-				stops.close();
-				throw new ParseException("Missing stop_lat or stop_lon!", 0);
-			}
-			
-			// Make a coordinate for each stop, and add it to the MultiPoint
-			double lon, lat;
-			while ((row = stops.readNext()) != null )	{
-			    // skip blank(ish) lines (often at ends of files, e.g. BART)
-			    if (row.length == 1)
-			        continue;
-			    
-				lon = Double.parseDouble(row[lonCol]);
-				lat = Double.parseDouble(row[latCol]);
-				
-				// ignore stops near 0,0 island
-				if (Math.abs(lon) < 1 && Math.abs(lat) <1)
-					continue;
-				
-				stopsGeom.add(
-						new Coordinate(lon, lat)
-						);
-			}
-			
-			GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
-			Coordinate[] coords = new Coordinate[stopsGeom.size()];
-			stopsGeom.toArray(coords);
-			Geometry geom = new ConvexHull(coords, gf).getConvexHull();
-			
-			if (geom instanceof Polygon) {
-				Polygon[] poly = new Polygon[] {(Polygon) geom};
-				geom = gf.createMultiPolygon(poly);
-			}
-			
-			this.the_geom = (MultiPolygon) geom;
-				
-		}
-	}
-	
-	private CSVReader getReaderForZipEntry(ZipEntry entry) throws IOException {
-		return new CSVReader(
-				new BufferedReader(
-						new InputStreamReader(
-								this.gtfs.getInputStream(entry)
-						)
-				)
-			);
-	}
+    private void calculateGeometry () {
+        List<Coordinate> stopsGeom = new ArrayList<Coordinate>();
+        // Make a coordinate for each stop, and add it to the MultiPoint
+        double lon, lat;
+        for (Stop stop : store.getAllStops()) {
+            lon = stop.getLon();
+            lat = stop.getLat();
+
+            // ignore stops near 0,0 island
+            if (Math.abs(lon) < 1 && Math.abs(lat) <1)
+                continue;
+
+            stopsGeom.add(
+                    new Coordinate(lon, lat)
+                    );
+        }
+
+        GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
+        Coordinate[] coords = new Coordinate[stopsGeom.size()];
+        stopsGeom.toArray(coords);
+        Geometry geom = new ConvexHull(coords, gf).getConvexHull();
+
+        if (geom instanceof Polygon) {
+            Polygon[] poly = new Polygon[] {(Polygon) geom};
+            geom = gf.createMultiPolygon(poly);
+        }
+
+        this.the_geom = (MultiPolygon) geom;		
+    }
 }
+
