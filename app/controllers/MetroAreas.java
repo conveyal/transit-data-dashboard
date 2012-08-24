@@ -6,6 +6,9 @@ import play.db.jpa.JPA;
 import models.MetroArea;
 import utils.GeometryUtils;
 import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.ParseException;
 import javax.persistence.Query;
 import java.util.List;
@@ -25,13 +28,24 @@ public class MetroAreas extends Controller {
     public static void create (String name, String geometry) {
         //String name = params.get("name");
         //String geometry = params.get("geometry");
-        MultiPolygon the_geom;
+        MultiPolygon the_geom = null;
+	Geometry tempGeom;
 
         try {
-            the_geom = (MultiPolygon) GeometryUtils.parseEwkt(geometry);
+	    tempGeom = GeometryUtils.parseEwkt(geometry);
         } catch (ParseException e) {
             return;
         }
+
+	if (tempGeom instanceof MultiPolygon) {
+	    the_geom = (MultiPolygon) tempGeom;
+	}
+
+	else if (tempGeom instanceof Polygon) {
+	    Polygon[] geoms = new Polygon[] {(Polygon) tempGeom};
+	    GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
+	    the_geom = new MultiPolygon(geoms, gf);
+	}
 
         new MetroArea(name, the_geom).save();
     }

@@ -25,7 +25,7 @@ for feature in lay:
         # census data is NAD 83
         # TODO: should we project to WGS 84 here?
         geometry = 'SRID=4269;' +
-            ogr.ForceToMultiPolygon(feature.geometry()).ExportToWkt()
+            feature.geometry().ExportToWkt()
         )
 
     encoded = urlencode(data)
