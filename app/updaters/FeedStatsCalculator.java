@@ -61,6 +61,10 @@ public class FeedStatsCalculator {
 	public Date getEndDate() {
 		return endDate;
 	}
+	
+	public Geometry getGeometry () {
+	    return the_geom;
+	}
 
 	private static SimpleDateFormat gtfsDateFormat = new SimpleDateFormat("yyyyMMdd");
 	
@@ -241,6 +245,10 @@ public class FeedStatsCalculator {
 			// Make a coordinate for each stop, and add it to the MultiPoint
 			double lon, lat;
 			while ((row = stops.readNext()) != null )	{
+			    // skip blank(ish) lines (often at ends of files, e.g. BART)
+			    if (row.length == 1)
+			        continue;
+			    
 				lon = Double.parseDouble(row[lonCol]);
 				lat = Double.parseDouble(row[latCol]);
 				
