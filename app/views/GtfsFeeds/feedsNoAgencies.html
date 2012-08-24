@@ -1,0 +1,18 @@
+#{extends 'main.html' /}
+#{set title:'Metro Area Autonamer' /}
+
+<table>
+  <thead>
+    <tr>
+      <td>Agency name</td>
+    </tr>
+  </thead>
+  <tbody>
+    #{list items:noAgency, as:'agency'}
+      <tr>
+        <td><a href="${agency.agencyUrl}>${agency.agencyName}</a></td>
+      </tr>
+    #{/list}
+  </tbody>
+</table>
+
