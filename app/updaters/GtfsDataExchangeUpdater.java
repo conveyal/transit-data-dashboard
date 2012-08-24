@@ -54,6 +54,9 @@ public class GtfsDataExchangeUpdater implements Updater {
 		        feed = rawFeed.getAsJsonObject();
 
 		        String dataExchangeId = feed.get("dataexchange_id").getAsString();
+		        
+		        if (dataExchangeId == null || dataExchangeId.equals(""))
+		            continue;
 
 		        GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? AND supersededBy IS NULL",
 		                dataExchangeId).first();
