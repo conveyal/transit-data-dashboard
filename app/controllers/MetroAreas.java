@@ -43,7 +43,7 @@ public class MetroAreas extends Controller {
 
 	else if (tempGeom instanceof Polygon) {
 	    Polygon[] geoms = new Polygon[] {(Polygon) tempGeom};
-	    GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
+	    GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(tempGeom.getSRID());
 	    the_geom = new MultiPolygon(geoms, gf);
 	}
 
