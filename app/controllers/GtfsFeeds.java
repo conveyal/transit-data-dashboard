@@ -64,6 +64,18 @@ public class GtfsFeeds extends Controller {
         renderJSON("{\"status\": \"success\"}");
     }
 
+    public static void feedsNoAgencies () {
+        List<GtfsFeed> noAgency = new ArrayList<GtfsFeed>();
+        
+        for (GtfsFeed feed : GtfsFeed.<GtfsFeed>findAll()) {
+            if (feed.getAgencies().size() == 0) {
+                noAgency.add(feed);
+            }
+        }
+        
+        render(noAgency);
+    }
+    
     public static void feeds () {
         List<GtfsFeedProxy> feeds = new ArrayList<GtfsFeedProxy>();
 
