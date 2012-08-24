@@ -5,6 +5,7 @@
 package controllers;
 
 import play.*;
+import play.modules.spring.Spring;
 import play.mvc.*;
 import play.db.jpa.JPA;
 import javax.persistence.Query;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
+import java.io.File;
 import java.math.BigInteger;
 
 import jobs.UpdateGtfs;
@@ -26,6 +28,8 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.operation.overlay.OverlayOp;
 
 import updaters.DeploymentPlan;
+import updaters.FeedStatsCalculator;
+import updaters.FeedStorer;
 import utils.GeometryUtils;
 
 public class Mapper extends Controller {
@@ -611,6 +615,27 @@ public class Mapper extends Controller {
     public static void createDeploymentPlan (MetroArea metroArea) {
     	DeploymentPlan dp = new DeploymentPlan(metroArea);
     	renderJSON(dp.toJson());
+    }
+    
+    /**
+     * Retrieve the GTFS with the given ID in storage and calculate its feed stats, displaying
+     * them to the user. It uses a stored ID not a GtfsFeed ID so the user can diagnose stats on
+     * feeds that downloaded successfully but crashed during feed stats calculation.
+     */
+    public static void calculateFeedStats(String storedId) throws Exception {
+        FeedStorer storer = Spring.getBeanOfType(FeedStorer.class);
+        File feed = storer.getFeed(storedId);
+        FeedStatsCalculator stats;
+        
+        try {
+            stats = new FeedStatsCalculator(feed);
+        }
+        finally {
+            storer.releaseFeed(storedId);
+        }
+        
+        renderJSON("{\"start\": \"" + stats.getStartDate() + "\",\"end\":\"" + stats.getEndDate() + 
+                "\",\"the_geom\":\"" + stats.getGeometry().toText() + "\"}");
     }
 }
             
