@@ -16,6 +16,7 @@ import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.XPath;
 import utils.FeedUtils;
+import models.FeedParseStatus;
 import models.GtfsFeed;
 import models.MetroArea;
 import models.NtdAgency;
@@ -91,6 +92,7 @@ public class GtfsDataExchangeUpdater implements Updater {
 		        String feedId = storer.storeFeed(url);
 		        if (feedId == null) {
 		            Logger.error("Could not retrieve feed %s", url);
+		            // feed will be redownloaded on next attempt
 		            continue;
 		        }
 
@@ -104,7 +106,9 @@ public class GtfsDataExchangeUpdater implements Updater {
 
 		        // update all fields
 		        FeedUtils.copyFromJson(feed, newFeed);
-
+	            newFeed.downloadUrl = url;
+	            newFeed.storedId = feedId;
+		        
 		        // Calculate feed stats
 		        File feedFile = storer.getFeed(feedId);
 		        
@@ -115,6 +119,14 @@ public class GtfsDataExchangeUpdater implements Updater {
 		            // TODO be more descriptive
 		            Logger.error("Error calculating feed stats for feed %s", url);
 		            e.printStackTrace();
+		            
+		            // still save it in the DB
+		            newFeed.status = FeedParseStatus.FAILED;
+		            
+		            // don't supersede anything
+		            newFeed.save();
+		            JPA.em().getTransaction().commit();
+		            
 		            continue;
 		        }
 		        
@@ -122,8 +134,7 @@ public class GtfsDataExchangeUpdater implements Updater {
 
 		        // save the stats
 		        stats.apply(newFeed);
-		        newFeed.downloadUrl = url;
-		        newFeed.storedId = feedId;
+		        newFeed.status = FeedParseStatus.SUCCESSFUL;
 		        newFeed.save();
 
 		        if (originalFeed != null) {

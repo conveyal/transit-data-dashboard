@@ -58,10 +58,16 @@ public class GtfsFeed extends Model implements Cloneable {
     public String realtimeUrl;
     
     /**
-     * Does this agency allow bikes on transit with unspecified bike rules in GTFS?
+     * Does this feed allow bikes on transit with unspecified bike rules in GTFS?
      */
     @Enumerated(EnumType.STRING)
     public DefaultBikesAllowedType defaultBikesAllowed;
+    
+    /**
+     * Was the parsing of this feed successful?
+     */
+    @Enumerated(EnumType.STRING)
+    public FeedParseStatus status;
 
     /** Is this feed a feed officially provided by the transit agency? */
     @Required
@@ -155,6 +161,7 @@ public class GtfsFeed extends Model implements Cloneable {
         this.downloadUrl = null;
         this.defaultBikesAllowed = DefaultBikesAllowedType.WARN;
         this.realtimeUrl = null;
+        this.status = null;
     }
     
     public GtfsFeed clone () {
@@ -181,6 +188,8 @@ public class GtfsFeed extends Model implements Cloneable {
     	ret.storedId = this.storedId;
     	ret.realtimeUrl = this.realtimeUrl;
     	ret.defaultBikesAllowed = this.defaultBikesAllowed;
+    	// this should always be overwritten
+    	ret.status = this.status;
     	
     	// add it to agencies as appropriate
     	for (NtdAgency agency : getAgencies()) {

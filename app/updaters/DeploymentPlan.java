@@ -16,6 +16,7 @@ import play.Play;
 import models.BikeRentalSystem;
 import models.BikeRentalSystemType;
 import models.DefaultBikesAllowedType;
+import models.FeedParseStatus;
 import models.GtfsFeed;
 import models.MetroArea;
 import models.NtdAgency;
@@ -77,6 +78,10 @@ public class DeploymentPlan {
 			for (GtfsFeed feed : agency.feeds) {
 				if (feed.supersededBy != null) {
 					continue;
+				}
+				
+				if (feed.status == FeedParseStatus.FAILED) {
+				    continue;
 				}
 				
 				addFeeds(feed, toInclude);
