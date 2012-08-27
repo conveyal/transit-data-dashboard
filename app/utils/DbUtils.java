@@ -27,7 +27,11 @@ public class DbUtils {
             if (feed.status != FeedParseStatus.SUCCESSFUL)
                 continue;
             
+            if (feed.supersededBy != null)
+                continue;
+            
             agency = new NtdAgency(feed);
+            agency.feeds.add(feed);
 
             // find metro area(s)
             String query = "SELECT m.id FROM MetroArea m WHERE " + 
