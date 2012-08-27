@@ -42,7 +42,7 @@ public class DeploymentPlan {
 	 * @param area
 	 */
 	public DeploymentPlan(MetroArea area) {
-		this(area, new Date(112, 7, 15));
+		this(area, new Date());
 	}
 	
 	/**
@@ -72,7 +72,7 @@ public class DeploymentPlan {
 		
 		Set<FeedDescriptor> toInclude = new HashSet<FeedDescriptor>();
 		
-		for (NtdAgency agency : area.getAgencies()) {
+		for (NtdAgency agency : area.agencies) {
 			// all the unsuperseded feeds for this agency
 			
 			for (GtfsFeed feed : agency.feeds) {
