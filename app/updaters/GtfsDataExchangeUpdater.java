@@ -102,6 +102,7 @@ public class GtfsDataExchangeUpdater implements Updater {
 		            newFeed = originalFeed.clone();
 		        else {
 		            newFeed = new GtfsFeed();
+		            newFeed.note = "new feed";
 		        }
 
 		        // update all fields

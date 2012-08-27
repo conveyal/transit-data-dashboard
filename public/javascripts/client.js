@@ -447,6 +447,10 @@ DataController.prototype.showAgency = function (id) {
                           '<th>Official</th>' +
                           '<td>' + (feed.official ? 'Yes' : 'No') + '</td>' +
                         '</tr>' +
+                        '<tr>' +
+                          '<th>Valid</th>' +
+                          '<td>' + feed.status + '</td>' +
+                        '</tr>' +
                      '</table></li>'
                 );
             });

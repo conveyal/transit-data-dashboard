@@ -21,6 +21,8 @@ import java.math.BigInteger;
 
 import jobs.UpdateGtfs;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -30,6 +32,7 @@ import com.vividsolutions.jts.operation.overlay.OverlayOp;
 import updaters.DeploymentPlan;
 import updaters.FeedStatsCalculator;
 import updaters.FeedStorer;
+import utils.DbUtils;
 import utils.GeometryUtils;
 
 public class Mapper extends Controller {
@@ -96,6 +99,19 @@ public class Mapper extends Controller {
         }
 
         render(matches, feedCount);
+    }
+    
+    /**
+     * Create NTD agencies and assign them to metro areas for all unmapped feeds.
+     * Since many agencies do not have NTD entries, this fills out the database.
+     */
+    public static void mapFeedsWithNoAgencies () {
+        Set<MetroArea> changed = DbUtils.mapFeedsWithNoAgencies();
+        List<String> names = new ArrayList<String>();
+        for (MetroArea m : changed) {
+            names.add(m.name);
+        }
+        renderJSON(names);
     }
 
     /**

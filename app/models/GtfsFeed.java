@@ -124,6 +124,9 @@ public class GtfsFeed extends Model implements Cloneable {
 	 */
 	public Date startDate;
 
+	/** A note for manual review by a human */
+    public String note;
+
     /**
      * Get the agencies this feed refers to.
      */

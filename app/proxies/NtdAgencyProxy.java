@@ -88,7 +88,7 @@ public class NtdAgencyProxy implements Proxy {
             publicGtfs = false;
 
         // TODO: parse google gtfs
-        googleGtfs = false;
+        googleGtfs = agency.googleGtfs;
 
         id = agency.id;
 
@@ -97,6 +97,9 @@ public class NtdAgencyProxy implements Proxy {
         feeds = new ArrayList<GtfsFeedProxy>();
 
         for (GtfsFeed feed : agency.feeds) {
+            if (feed.supersededBy != null)
+                continue;
+            
             feeds.add(new GtfsFeedProxy(feed));
         }
     }

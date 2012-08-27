@@ -36,11 +36,16 @@ public class NtdAgency extends Model {
     
     /** Annual passenger miles */
     public int passengerMiles;
+    
+    /** Where the data for this agency came from */
+    @Enumerated(EnumType.STRING)
+    public AgencySource source;
 
     /** Does this agency provide GTFS to Google? */
     public boolean googleGtfs;
 
-    // TODO: geometry
+    /** A note for human review */
+    public String note;
 
     @ManyToOne
     public MetroArea metroArea;
@@ -73,6 +78,23 @@ public class NtdAgency extends Model {
         this.uzaNames = uzaNames;
         this.ridership = ridership;
         this.passengerMiles = passengerMiles;
+        this.source = AgencySource.NTD;
+        this.note = null;
         feeds = new TreeSet<GtfsFeed>();
+    }
+
+    /**
+     * Build an NTD agency based on information in a GTFS feed.
+     * @param feed
+     */
+    public NtdAgency(GtfsFeed feed) {
+        this.name = feed.agencyName;
+        this.url = feed.agencyUrl;
+        this.note = null;
+        this.ntdId = null;
+        this.population = 0;
+        this.ridership = 0;
+        this.passengerMiles = 0;
+        this.source = AgencySource.GTFS;
     }      
 }

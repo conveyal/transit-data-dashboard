@@ -10,6 +10,7 @@ public class GtfsFeedProxy {
     public String feedBaseUrl;
     public boolean official;
     public Date expires; 
+    public String status;
 
     public GtfsFeedProxy (GtfsFeed feed) {
         this.id = feed.id;
@@ -18,5 +19,6 @@ public class GtfsFeedProxy {
         this.feedBaseUrl = feed.feedBaseUrl;
         this.expires = feed.expirationDate;
         this.official = feed.official;
+        this.status = feed.status.toString();
     }
 }

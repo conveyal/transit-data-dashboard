@@ -80,6 +80,9 @@ public class GtfsFeeds extends Controller {
         List<GtfsFeedProxy> feeds = new ArrayList<GtfsFeedProxy>();
 
         for (GtfsFeed feed : GtfsFeed.<GtfsFeed>findAll()) {
+            if (feed.supersededBy != null)
+                continue;
+            
             feeds.add(new GtfsFeedProxy(feed));
         }
 

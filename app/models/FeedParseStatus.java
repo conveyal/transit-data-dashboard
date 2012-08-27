@@ -1,5 +1,15 @@
 package models;
 
 public enum FeedParseStatus {
-    SUCCESSFUL, FAILED;
+    SUCCESSFUL("Successful"), FAILED("Failed");
+    
+    private String name;
+    
+    private FeedParseStatus(String name) {
+        this.name = name;
+    }
+    
+    public String toString () {
+        return this.name;
+    }
 }

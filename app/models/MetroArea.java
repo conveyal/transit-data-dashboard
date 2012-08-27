@@ -28,6 +28,11 @@ public class MetroArea extends Model {
     public MultiPolygon the_geom;
 
     /**
+     * The fare service (or first fare service, in the chained case) for this metro.
+     */
+    public FareConfiguration fareConfiguration;
+    
+    /**
      * Get a list of agencies for this metro.
      */
     public List<NtdAgency> getAgencies () {
