@@ -577,11 +577,12 @@ public class Mapper extends Controller {
                 "WHERE to_tsvector(CONCAT(a.name, ' ', " + 
                 "regexp_replace(a.url, '\\.|https?://|/|_|\\-', ' ', 'g'))) " +
                 "@@ plainto_tsquery(?) " +
+                "OR a.url ILIKE CONCAT('%', ?, '%') " +
                 "AND m.id = ?";
 
         q = JPA.em().createNativeQuery(qs);
         q.setParameter(1, name);
-        q.setParameter(2, metroId);
+        q.setParameter(3, metroId);
 
         for (Object result : q.getResultList()) {
             agency = NtdAgency.findById(((BigInteger) result).longValue());
