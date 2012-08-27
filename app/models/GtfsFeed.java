@@ -36,6 +36,9 @@ public class GtfsFeed extends Model implements Cloneable {
     
     /** The date this feed was last updated */
     public Date dateUpdated;
+
+    /** Is this feed disabled? */
+    public boolean disabled;
     
     /** 
      * The URL where this feed may be found. This may be the feed itself, or may be a
@@ -155,6 +158,7 @@ public class GtfsFeed extends Model implements Cloneable {
         this.downloadUrl = null;
         this.defaultBikesAllowed = DefaultBikesAllowedType.WARN;
         this.realtimeUrl = null;
+	this.disabled = false;
     }
     
     public GtfsFeed clone () {
@@ -181,7 +185,8 @@ public class GtfsFeed extends Model implements Cloneable {
     	ret.storedId = this.storedId;
     	ret.realtimeUrl = this.realtimeUrl;
     	ret.defaultBikesAllowed = this.defaultBikesAllowed;
-    	
+	ret.disabled = this.disabled;
+
     	// add it to agencies as appropriate
     	for (NtdAgency agency : getAgencies()) {
     		agency.feeds.add(ret);
