@@ -34,7 +34,10 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.impl.CoordinateArraySequence;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import com.vividsolutions.jts.algorithm.ConvexHull;
 
 import play.Logger;
@@ -213,9 +216,13 @@ public class FeedStatsCalculator {
     }
 	
     private void calculateGeometry () {
-        List<Coordinate> stopsGeom = new ArrayList<Coordinate>();
+        List<Point> stopsGeom = new ArrayList<Point>();
         // Make a coordinate for each stop, and add it to the MultiPoint
+        GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
         double lon, lat;
+        Point current;
+        Coordinate[] coord;
+        CoordinateArraySequence seq;
         for (Stop stop : store.getAllStops()) {
             lon = stop.getLon();
             lat = stop.getLat();
@@ -224,15 +231,25 @@ public class FeedStatsCalculator {
             if (Math.abs(lon) < 1 && Math.abs(lat) <1)
                 continue;
 
+            coord = new Coordinate[] {new Coordinate(lon, lat)};
+            seq = new CoordinateArraySequence(coord);
+            current = new Point(seq, gf);            
+            
             stopsGeom.add(
-                    new Coordinate(lon, lat)
+                    current
                     );
         }
 
-        GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
-        Coordinate[] coords = new Coordinate[stopsGeom.size()];
-        stopsGeom.toArray(coords);
-        Geometry geom = new ConvexHull(coords, gf).getConvexHull();
+        Point[] points = new Point[stopsGeom.size()];
+        stopsGeom.toArray(points);
+        // .04 degree buffer from Deployer
+        // TODO buffers in geographic coordinates are a bad idea.
+        Geometry geom = new MultiPoint(points, gf).buffer(.04, 6);
+        
+        // Simplify it to keep the DB small and fast
+        DouglasPeuckerSimplifier simplifier = new DouglasPeuckerSimplifier(geom);
+        simplifier.setDistanceTolerance(0.00001);
+        geom = simplifier.getResultGeometry();
 
         if (geom instanceof Polygon) {
             Polygon[] poly = new Polygon[] {(Polygon) geom};
