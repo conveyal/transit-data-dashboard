@@ -602,6 +602,31 @@ public class Mapper extends Controller {
     }
     
     /**
+     * Create GTFS bundle entries for the given metro area ID.
+     */
+    public static void createGtfsBundles (MetroArea metroArea) {
+        Set<GtfsFeed> feeds = new HashSet<GtfsFeed>();
+        
+        for (NtdAgency agency : metroArea.agencies) {
+            for (GtfsFeed feed : agency.feeds) {
+                if (feed.supersededBy == null)
+                    feeds.add(feed);
+            }
+        }
+        
+        String out = "";
+        
+        for (GtfsFeed feed : feeds) {
+            out = out + "<bean class=\"org.opentripplanner.graph_builder.model.GtfsBundle\">\n" +
+                    "  <property name=\"url\" value=\"" + feed.downloadUrl + "\" />\n" +
+                    "  <property name=\"defaultAgencyId\" value=\"" + feed.dataExchangeId + "\" />\n" +
+                    "</bean>\n";
+        }
+        
+        renderText(out);
+    }
+    
+    /**
      * Retrieve the GTFS with the given ID in storage and calculate its feed stats, displaying
      * them to the user. It uses a stored ID not a GtfsFeed ID so the user can diagnose stats on
      * feeds that downloaded successfully but crashed during feed stats calculation.
