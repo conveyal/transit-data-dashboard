@@ -572,10 +572,12 @@ public class Mapper extends Controller {
         
         // find matching agencies
         qs = "SELECT a.id FROM ntdagency a " +
-            "WHERE to_tsvector(CONCAT(a.name, ' ', " + 
-            "regexp_replace(a.url, '\\.|https?://|/|_|\\-', ' ', 'g'))) " +
-            "@@ plainto_tsquery(?) " +
-            "AND a.metroArea_id = ?";
+                "INNER JOIN metroarea_ntdagency mn ON (a.id = mn.agencies_id) " +
+                "INNER JOIN metroarea m ON (m.id = mn.metroarea_id)" +
+                "WHERE to_tsvector(CONCAT(a.name, ' ', " + 
+                "regexp_replace(a.url, '\\.|https?://|/|_|\\-', ' ', 'g'))) " +
+                "@@ plainto_tsquery(?) " +
+                "AND m.id = ?";
 
         q = JPA.em().createNativeQuery(qs);
         q.setParameter(1, name);
