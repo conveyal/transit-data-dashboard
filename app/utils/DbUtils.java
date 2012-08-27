@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.persistence.Query;
 
+import models.FeedParseStatus;
 import models.GtfsFeed;
 import models.MetroArea;
 import models.NtdAgency;
@@ -17,21 +18,19 @@ public class DbUtils {
     public static Set<MetroArea> mapFeedsWithNoAgencies () {
         Set<MetroArea> changedMetros = new HashSet<MetroArea>();
         
-        int count = 0;
-        
         NtdAgency agency;
         for (GtfsFeed feed : GtfsFeed.<GtfsFeed>findAll()) {
             if (feed.getAgencies().size() != 0)
                 continue;
-
-            if (++count > 100)
-                break;
+            
+            if (feed.status != FeedParseStatus.SUCCESSFUL)
+                continue;
             
             agency = new NtdAgency(feed);
 
             // find metro area(s)
             String query = "SELECT m.id FROM MetroArea m WHERE " + 
-                    "ST_DWithin(m.the_geom, transform(ST_GeomFromText(?, ?), ST_SRID(m.the_geom)), 0.04)";
+                    "ST_DWithin(m.the_geom, transform(ST_GeomFromText(?, ?), ST_SRID(m.the_geom)), 0.04)";;
             Query ids = JPA.em().createNativeQuery(query);
             ids.setParameter(1, feed.the_geom.toText());
             ids.setParameter(2, feed.the_geom.getSRID());
