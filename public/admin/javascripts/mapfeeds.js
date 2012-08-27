@@ -53,10 +53,10 @@ MapFeeds.prototype.populateForm = function () {
 
     $.each(filteredAgencies, function (ind, agency) {
         $('#agencies tbody').append(
-            '<tr class="agency">' +
+            '<tr class="agency ' + (agency.publicGtfs ? 'public' : 'notPublic') + '">' +
                 '<td><input type="checkbox" class="agencyBox" id="agency-' + agency.id + 
                     '" /></td>' +
-                '<td>' + agency.name + '</td>' +
+                '<td><a href="/crud/ntdagenciescrud/' + agency.id + '">' + agency.name + '</a></td>' +
                 '<td>' + agency.url + '</td>' +
                 '<td>' + agency.metro + '</td>' +
             '</tr>'
@@ -68,7 +68,7 @@ MapFeeds.prototype.populateForm = function () {
             '<tr class="feed">' +
                 '<td><input type="checkbox" class="feedBox" id="feed-' + feed.id + 
                     '" /></td>' +
-                '<td>' + feed.agencyName + '</td>' +
+                '<td><a href="/crud/gtfsfeedscrud/' + feed.id + '">' + feed.agencyName + '</a></td>' +
                 '<td>' + feed.agencyUrl + '</td>' +
             '</tr>'
         );
