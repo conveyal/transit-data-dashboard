@@ -2,6 +2,7 @@ package models;
 
 import javax.persistence.*;
 import java.util.*;
+
 import play.db.jpa.*;
 import play.data.validation.*;
 import com.vividsolutions.jts.geom.MultiPolygon;
@@ -39,6 +40,17 @@ public class MetroArea extends Model {
     public Set<NtdAgency> agencies;
     
     /**
+     * Is this metro disabled?
+     */
+    public boolean disabled;
+    
+    /**
+     * Human readable note.
+     */
+    public String note;
+    
+    
+    /**
      * Needed from old DB structure; still used in some code.
      */
     @Deprecated
@@ -62,8 +74,35 @@ public class MetroArea extends Model {
         this.initializeAgencies();
     }
 
-    public MetroArea () {};
+    public MetroArea () {
+        this(null, null);
+    };
 
+    /**
+     * Autoname this metro area.
+     */
+    public void autoname () {
+        NtdAgency largestAgency = null;
+        
+        for (NtdAgency agency : agencies) {
+            // if there's one agency, it's the largest
+            if (largestAgency == null) {
+                largestAgency = agency;
+                continue;
+            }
+
+            if (agency.population > largestAgency.population) {
+                largestAgency = agency;
+            }
+        }
+        
+        if (largestAgency != null) {
+            String[] uzaNames = new String[largestAgency.uzaNames.size()];
+            largestAgency.uzaNames.toArray(uzaNames);
+            this.name = mergeAreaNames(255, uzaNames);
+        }
+    }
+    
     /**
      * Return the string used in the admin interface
      */
@@ -80,10 +119,64 @@ public class MetroArea extends Model {
     }
 
     /**
-     * Initialize this metro's agencies. Warning: will erase all agency mappings if any exist.
+     * Initialize this metro's agencies. Warning: will erase all agency mappings.
      */
     public void initializeAgencies() {
         this.agencies = new HashSet<NtdAgency>();
+    }
+
+    /**
+     * Merge UZA names
+     * @param names The names to merge
+     * @param maxLength The maximum length of the resulting string
+     */
+    public static String mergeAreaNames (int maxLength, String... names) {
+        String[] thisSplit;
+        Set<String> cities = new HashSet<String>();
+        Set<String> states = new HashSet<String>();
+        StringBuilder out;
+    
+        for (String name : names) {
+            thisSplit = name.split(", ");
+    
+            for (String city : thisSplit[0].split("-")) {
+                cities.add(city);
+            }
+    
+            if (thisSplit.length >= 2) {
+                for (String state : thisSplit[1].split("-")) {
+                    states.add(state);
+                }
+            }
+        }
+    
+        out = new StringBuilder(maxLength);
+    
+        if (cities.size() > 0) {
+            for (String city : cities) {
+                out.append(city);
+                out.append('-');
+            }
+    
+            // delete last -
+            out.deleteCharAt(out.length() - 1);
+            out.append(", ");
+        }
+    
+        if (states.size() > 0) {
+            for (String state : states) {
+                out.append(state);
+                out.append('-');
+            }
+    
+            out.deleteCharAt(out.length() - 1);
+        }
+    
+        // truncate if needed
+        if (out.length() >= maxLength)
+            out.setLength(maxLength);
+    
+        return out.toString();
     }
 }
     

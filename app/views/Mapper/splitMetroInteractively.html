@@ -1,0 +1,34 @@
+#{extends 'main.html' /}
+#{set title:'Split Metro Area' /}
+
+<h2>Splitting metro ${original.toString()} into ${splits}</h2>
+
+Select the agencies to include in each resulting metro:
+<form action="saveSplitMetro" method="GET">
+<input type="submit" />
+<input type="hidden" name="splits" value="${splits}" />
+<input type="hidden" name="original" value="${original.id}" />
+<table>
+    <thead>
+        <th>Agency</th>
+        %{ for (int i = 1; i <= splits; i++) { }%
+            <th>${i}</th>
+        %{ } }%
+    </thead>
+    <tbody>
+    %{ for (agency in original.agencies) { }%
+        <tr>
+            <td>${agency.name}</td>
+            %{ for (int i = 1; i <= splits; i++) { }%
+                <td><input type="checkbox" name="metro${i}" value="${agency.id}" /></td>
+            %{ } }%
+        </tr>
+    %{ } }%
+    </tbody>
+</table>
+<input type="submit" />
+</form>
+        
+        
+            
+

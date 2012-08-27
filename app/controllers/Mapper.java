@@ -217,105 +217,25 @@ public class Mapper extends Controller {
      * Name metro areas based on area description of largest agency by ridership
      */
     public static void autoNameMetroAreas () {
-        List<MetroArea> areas = MetroArea.findAll();
         List<String[]> renames = new ArrayList<String[]>();
-        String[] rename, uzaNames;
-        NtdAgency largestAgency = null;
-        GtfsFeed feed;
+        String[] rename;
 
         // TODO: more efficient, DB driven algorithm
-        for (MetroArea area : areas) {
-            for (NtdAgency agency : area.agencies) {
-                // if there's one agency, it's the largest
-                if (largestAgency == null) {
-                    largestAgency = agency;
-                    continue;
-                }
-
-                // don't bother if it doesn't have a feed, since that's where the name comes
-                // from
-                if (agency.population > largestAgency.population) {
-                    largestAgency = agency;
-                }
-            }
-
+        for (MetroArea area : MetroArea.<MetroArea>findAll()) {
             rename = new String[2];
             rename[0] = area.name;
 
-            if (largestAgency == null) {
-                rename[1] = "-Unchanged-";
-                renames.add(rename);
-
-                // no need to re-set, already null
-                continue;
-            }
-            
-            uzaNames = new String[largestAgency.uzaNames.size()];
-            largestAgency.uzaNames.toArray(uzaNames);
-            area.name = mergeAreaNames(255, uzaNames);
+            area.autoname();
 
             rename[1] = area.name;
             area.save();
             
             renames.add(rename);
-
-            // clean up
-            largestAgency = null;
         }
 
         render(renames);
     }  
 
-    /**
-     * Merge UZA names
-     * @param names The names to merge
-     * @param maxLength The maximum length of the resulting string
-     */
-    private static String mergeAreaNames (int maxLength, String... names) {
-        String[] thisSplit;
-        Set<String> cities = new HashSet<String>();
-        Set<String> states = new HashSet<String>();
-        StringBuilder out;
-
-        for (String name : names) {
-            thisSplit = name.split(", ");
-
-            for (String city : thisSplit[0].split("-")) {
-                cities.add(city);
-            }
-
-            if (thisSplit.length >= 2) {
-                for (String state : thisSplit[1].split("-")) {
-                    states.add(state);
-                }
-            }
-        }
-
-        out = new StringBuilder(maxLength);
-
-        for (String city : cities) {
-            out.append(city);
-            out.append('-');
-        }
-
-        // delete last -
-        out.deleteCharAt(out.length() - 1);
-        out.append(", ");
-
-        for (String state : states) {
-            out.append(state);
-            out.append('-');
-        }
-
-        out.deleteCharAt(out.length() - 1);
-
-        // truncate if needed
-        if (out.length() >= maxLength)
-            out.setLength(maxLength);
-
-        return out.toString();
-    }
-    
     /**
      * Merge two metro areas.
      */
@@ -348,7 +268,7 @@ public class Mapper extends Controller {
 
         mergeInto.the_geom = (MultiPolygon) result;
         
-        mergeInto.name = mergeAreaNames(255, mergeInto.name, other.name);
+        mergeInto.name = MetroArea.mergeAreaNames(255, mergeInto.name, other.name);
     }
 
      
@@ -530,6 +450,57 @@ public class Mapper extends Controller {
         }
 
         render(resultingAreas, noUzaAgencies, nullUzas, unmappedAgencies, commit);
+    }
+    
+    /**
+     * Split a metro area into the given number of parts interactively.
+     * @param metroId The metro area to split
+     * @param splits The number of pieces to split it into 
+     */
+    public static void splitMetroInteractively (long metroId, int splits) {
+        MetroArea original = MetroArea.findById(metroId);
+        render(original, splits);
+    }
+    
+    /**
+     * Actually perform the split for a given metro
+     */
+    // 
+    public static void saveSplitMetro () {
+        // we get the number of splits then parse down the URL params; each metro is named
+        // metron, where n is a number greater than or equal to 1 and less than or equal to splits.
+        int splits = params.get("splits", Integer.class);
+        MetroArea original = MetroArea.findById(params.get("original", Long.class));
+        
+        // This is an array of lists of long.
+        NtdAgency[][] splitAgencies = new NtdAgency[splits][];
+        String[] currentAgencies;
+        
+        for (int i = 1; i <= splits; i++) {
+            // get all of the agencies with the metro of this index
+            currentAgencies = params.getAll("metro" + i);
+            splitAgencies[i - 1] = new NtdAgency[currentAgencies.length];
+            
+            // loop through each one, getting the agencies
+            for (int j = 0; j < currentAgencies.length; j++) {
+                splitAgencies[i - 1][j] = NtdAgency.findById(Long.parseLong(currentAgencies[j]));
+            }
+        }
+        
+        // now, create new metros for each
+        MetroArea metro;
+        for (NtdAgency[] agencies: splitAgencies) {
+            metro = new MetroArea();
+            for (NtdAgency agency : agencies) {
+                metro.agencies.add(agency);
+            }
+            metro.autoname();
+            metro.save();
+        }
+        
+        original.disabled = true;
+        original.note = "superseded by split metro.";
+        original.save();
     }
 
     /**

@@ -1,6 +1,7 @@
 package models;
 
 import javax.persistence.*;
+
 import java.util.*;
 
 import play.db.jpa.*;
@@ -43,6 +44,10 @@ public class NtdAgency extends Model {
 
     /** Does this agency provide GTFS to Google? */
     public boolean googleGtfs;
+    
+    /** The metro areas this agency is part of */
+    @ManyToMany
+    public Set<MetroArea> metroAreas;
 
     /** A note for human review */
     public String note;
