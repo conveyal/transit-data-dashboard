@@ -596,8 +596,13 @@ public class Mapper extends Controller {
     	renderJSON("{\"status\":\"running\"}");
     }
     
-    public static void createDeploymentPlan (MetroArea metroArea) {
+    public static void createDeploymentPlan (MetroArea metroArea, String send) {
     	DeploymentPlan dp = new DeploymentPlan(metroArea);
+    	
+    	if (send != null) {
+    	    dp.sendTo(send);
+    	}
+    	
     	renderJSON(dp.toJson());
     }
     

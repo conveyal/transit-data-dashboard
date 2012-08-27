@@ -8,10 +8,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
+import java.net.URL;
 
 import com.google.gson.Gson;
 
 import play.Play;
+import play.libs.WS;
 
 import models.BikeRentalSystem;
 import models.BikeRentalSystemType;
@@ -99,6 +101,15 @@ public class DeploymentPlan {
 	 */
 	private void addFeeds(GtfsFeed feed, Set<FeedDescriptor> toInclude) {
 		addFeeds(feed, toInclude, 0);
+	}
+	
+	/**
+	 * Send this to the given URL.
+	 * 
+	 * @param url
+	 */
+	public void sendTo(String url) {
+	    WS.url(url).setParameter("data", this.toJson()).get();
 	}
 	
 	private void addFeeds(GtfsFeed feed, Set<FeedDescriptor> toInclude, int iteration) {
