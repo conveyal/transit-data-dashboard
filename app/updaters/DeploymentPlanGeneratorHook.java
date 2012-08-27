@@ -16,11 +16,13 @@ public class DeploymentPlanGeneratorHook implements UpdaterHook {
 	@Override
 	public void update(Set<MetroArea> areas) {
 		for (MetroArea area : areas) {
-			// generate the plan
-			DeploymentPlan plan = new DeploymentPlan(area);
-			
-			// and dispatch the JSON
-			/*
+		    if (!area.disabled) {
+
+		        // generate the plan
+		        DeploymentPlan plan = new DeploymentPlan(area);
+
+		        // and dispatch the JSON
+		        /*
 			try {
 				FileWriter writer = new FileWriter("/tmp/" + area.name + ".json");
 				writer.write(plan.toJson());
@@ -28,7 +30,8 @@ public class DeploymentPlanGeneratorHook implements UpdaterHook {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			*/ 
+		         */ 
+		    }
 		}
 	}
 }
