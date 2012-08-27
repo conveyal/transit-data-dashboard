@@ -33,10 +33,17 @@ public class MetroArea extends Model {
     public FareConfiguration fareConfiguration;
     
     /**
-     * Get a list of agencies for this metro.
+     * The agencies in this metro
      */
-    public List<NtdAgency> getAgencies () {
-        return NtdAgency.find("byMetroArea", this).fetch();
+    @ManyToMany
+    public Set<NtdAgency> agencies;
+    
+    /**
+     * Needed from old DB structure; still used in some code.
+     */
+    @Deprecated
+    public Set<NtdAgency> getAgencies() {
+        return agencies;
     }
     
     /**
@@ -52,6 +59,7 @@ public class MetroArea extends Model {
     public MetroArea (String name, MultiPolygon the_geom) {
         this.name = name;
         this.the_geom = the_geom;
+        this.initializeAgencies();
     }
 
     public MetroArea () {};
@@ -60,21 +68,22 @@ public class MetroArea extends Model {
      * Return the string used in the admin interface
      */
     public String toString () {
-        List<NtdAgency> agencies = getAgencies();
         if (name != null && !name.equals("")) {
             return name;
         }
         else if (agencies.size() != 0) {
-            if (agencies.get(0).name != null && !agencies.get(0).name.equals("")) {
-                return "Metro including " + agencies.get(0).name;
-            }
-            else {
-                return "Metro including " + agencies.get(0).url;
-            }
+            return "Metro including " + agencies.size() + " agencies.";
         }
         else {
             return "Empty metro area";
         }
+    }
+
+    /**
+     * Initialize this metro's agencies. Warning: will erase all agency mappings if any exist.
+     */
+    public void initializeAgencies() {
+        this.agencies = new HashSet<NtdAgency>();
     }
 }
     

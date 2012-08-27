@@ -169,7 +169,7 @@ public class Mapper extends Controller {
             metro = MetroArea.findById(metroId);
 
             // don't break ones that have already been fixed
-            if (agency.metroArea != null)
+            if (agency.getMetroAreas().size() == 0)
                 continue;
 
             report[0] = (String) result[2];
@@ -178,8 +178,9 @@ public class Mapper extends Controller {
 
             matches.add(report);
 
-            agency.metroArea = metro;
+            metro.agencies.add(agency);
             agency.save();
+            metro.save();
         }
 
         render(matches, agencyCount);
@@ -189,10 +190,9 @@ public class Mapper extends Controller {
      * DANGER: clear all agency to metro area mappings
      */
     public static void clearAllAgencyMetroAreaMappings () {
-        List<NtdAgency> agencies = NtdAgency.findAll();
-        for (NtdAgency agency : agencies) {
-            agency.metroArea = null;
-            agency.save();
+        for (MetroArea metro : MetroArea.<MetroArea>findAll()) {
+            metro.initializeAgencies();
+            metro.save();
         }
     }
 
@@ -225,7 +225,7 @@ public class Mapper extends Controller {
 
         // TODO: more efficient, DB driven algorithm
         for (MetroArea area : areas) {
-            for (NtdAgency agency : area.getAgencies()) {
+            for (NtdAgency agency : area.agencies) {
                 // if there's one agency, it's the largest
                 if (largestAgency == null) {
                     largestAgency = agency;
@@ -317,21 +317,17 @@ public class Mapper extends Controller {
     }
     
     /**
-     * Merge two metro areas. Agencies get saved in here, but neither metro area is saved/deleted
+     * Merge two metro areas.
      */
     private static void mergeAreas (MetroArea mergeInto, MetroArea other) {
-        // first, bring in the other area's agencies
-        List<NtdAgency> otherAgencies = other.getAgencies();
         // we make a multipolygon with one member for the geometry
         Polygon[] polygons;
         Geometry result;
         GeometryFactory factory;
 
-        for (NtdAgency agency : otherAgencies) {
-            agency.metroArea = mergeInto;
-            Logger.debug("Agency %s now points to MetroArea %s (intended %s)", 
-                         agency.id, agency.metroArea.id, mergeInto.id);
-            agency.save();
+        for (NtdAgency agency : other.agencies) {
+            mergeInto.agencies.add(agency);
+            other.agencies.remove(agency);
         }
 
         // now, combine geometries
@@ -428,7 +424,8 @@ public class Mapper extends Controller {
                 unmappedAgencies.add(agency);
 
             // set the area
-            agency.metroArea = area;
+            area.agencies.add(agency);
+            area.save();
             agency.save();
 
             // intern all the strings for fast comparisons later

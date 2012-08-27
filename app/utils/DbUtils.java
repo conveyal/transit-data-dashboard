@@ -19,6 +19,7 @@ public class DbUtils {
         Set<MetroArea> changedMetros = new HashSet<MetroArea>();
         
         NtdAgency agency;
+        MetroArea metro;
         for (GtfsFeed feed : GtfsFeed.<GtfsFeed>findAll()) {
             if (feed.getAgencies().size() != 0)
                 continue;
@@ -43,9 +44,10 @@ public class DbUtils {
 
             // easy case
             if (metros.size() == 1) {
-                agency.metroArea = metros.get(0);
-                changedMetros.add(metros.get(0));
-                agency.save();
+                metro = metros.get(0);
+                metro.agencies.add(agency);
+                changedMetros.add(metro);
+                metro.save();
             }
 
             // flag for review
@@ -53,6 +55,8 @@ public class DbUtils {
                 feed.disabled = true;
                 agency.note = "Too few or too many metro areas.";
             }
+            
+            agency.save();
         }
         
         return changedMetros;

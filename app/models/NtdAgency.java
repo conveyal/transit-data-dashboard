@@ -47,9 +47,19 @@ public class NtdAgency extends Model {
     /** A note for human review */
     public String note;
 
+    /** The metro for this agency. Since agencies and metros now have a many-to-many relationship, this is deprecated */
     @ManyToOne
+    @Deprecated
     public MetroArea metroArea;
 
+    /**
+     * A list of metro areas that contain this agency.
+     */
+    public List<MetroArea> getMetroAreas () {
+        return MetroArea.find("SELECT m FROM MetroArea m INNER JOIN m.agencies agencies WHERE ? in agencies",
+                    this).fetch();  
+    }
+    
     @ManyToMany(cascade=CascadeType.PERSIST)
     public Set<GtfsFeed> feeds;
 

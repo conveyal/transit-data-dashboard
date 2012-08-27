@@ -1,5 +1,6 @@
 package proxies;
 
+import models.MetroArea;
 import models.NtdAgency;
 import models.GtfsFeed;
 import java.util.List;
@@ -73,10 +74,12 @@ public class NtdAgencyProxy implements Proxy {
         name = agency.name;
         url = agency.url;
 
-        if (agency.metroArea != null)
-            metro = agency.metroArea.toString();
-        else
-            metro = null;
+        // choose a representative metro
+        metro = null;
+        for (MetroArea m : agency.getMetroAreas()) {
+            metro = m.toString();
+            break;
+        }
 
         population = agency.population;
         ridership = agency.ridership;
