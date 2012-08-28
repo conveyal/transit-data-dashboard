@@ -50,6 +50,7 @@ public class DbUtils {
             if (metros.size() == 1) {
                 metro = metros.get(0);
                 metro.agencies.add(agency);
+                agency.save();
                 changedMetros.add(metro);
                 metro.save();
             }
