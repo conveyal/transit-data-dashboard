@@ -23,17 +23,11 @@ import jobs.UpdateGtfs;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.operation.overlay.OverlayOp;
 
 import updaters.DeploymentPlan;
 import updaters.FeedStatsCalculator;
 import updaters.FeedStorer;
 import utils.DbUtils;
-import utils.GeometryUtils;
 
 public class Mapper extends Controller {
     /**
@@ -237,42 +231,6 @@ public class Mapper extends Controller {
     }  
 
     /**
-     * Merge two metro areas.
-     */
-    private static void mergeAreas (MetroArea mergeInto, MetroArea other) {
-        // we make a multipolygon with one member for the geometry
-        Polygon[] polygons;
-        Geometry result;
-        GeometryFactory factory;
-
-        for (NtdAgency agency : other.agencies) {
-            mergeInto.agencies.add(agency);
-            other.agencies.remove(agency);
-        }
-
-        // now, combine geometries
-        
-        result = OverlayOp.overlayOp(mergeInto.the_geom, other.the_geom, OverlayOp.UNION);
-        
-        // sometimes it's a polygon, not sure why
-        if (result instanceof Polygon) {
-            // TODO: assumptions about SRID of other here
-            factory = GeometryUtils.getGeometryFactoryForSrid(mergeInto.the_geom.getSRID());
-            polygons = new Polygon[1];
-            polygons[0] = (Polygon) result;
-            result = factory.createMultiPolygon(polygons);
-        }
-        
-        // somewhere this gets lost
-        result.setSRID(mergeInto.the_geom.getSRID());
-
-        mergeInto.the_geom = (MultiPolygon) result;
-        
-        mergeInto.name = MetroArea.mergeAreaNames(255, mergeInto.name, other.name);
-    }
-
-     
-    /**
      * Assign agencies to metro areas by their UZA and then merge connected UZAs.
      * @param commit If set to false, this transaction will not be committed. Useful for
      *   doing a dry run since this mapper is pretty destructive.
@@ -442,7 +400,7 @@ public class Mapper extends Controller {
                     Logger.warn("Areas are equal!");
 
                 // otherwise, merge it and delete it
-                mergeAreas(areaMergeInto, other);
+                areaMergeInto.mergeAreas(other);
                 other.delete();
             }
             areaMergeInto.save();

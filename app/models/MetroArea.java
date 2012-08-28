@@ -5,7 +5,14 @@ import java.util.*;
 
 import play.db.jpa.*;
 import play.data.validation.*;
+import utils.GeometryUtils;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.operation.overlay.OverlayOp;
+
 import org.hibernate.annotations.Type;
 
 @Entity
@@ -134,6 +141,41 @@ public class MetroArea extends Model {
     }
 
     /**
+     * Merge two metro areas.
+     */
+    public void mergeAreas (MetroArea other) {
+        // we make a multipolygon with one member for the geometry
+        Polygon[] polygons;
+        Geometry result;
+        GeometryFactory factory;
+    
+        for (NtdAgency agency : other.agencies) {
+            this.agencies.add(agency);
+            other.agencies.remove(agency);
+        }
+    
+        // now, combine geometries
+        
+        result = OverlayOp.overlayOp(this.the_geom, other.the_geom, OverlayOp.UNION);
+        
+        // sometimes it's a polygon, not sure why
+        if (result instanceof Polygon) {
+            // TODO: assumptions about SRID of other here
+            factory = GeometryUtils.getGeometryFactoryForSrid(this.the_geom.getSRID());
+            polygons = new Polygon[1];
+            polygons[0] = (Polygon) result;
+            result = factory.createMultiPolygon(polygons);
+        }
+        
+        // somewhere this gets lost
+        result.setSRID(this.the_geom.getSRID());
+    
+        this.the_geom = (MultiPolygon) result;
+        
+        this.name = mergeAreaNames(255, this.name, other.name);
+    }
+
+    /**
      * Merge UZA names
      * @param names The names to merge
      * @param maxLength The maximum length of the resulting string
@@ -143,48 +185,55 @@ public class MetroArea extends Model {
         Set<String> cities = new HashSet<String>();
         Set<String> states = new HashSet<String>();
         StringBuilder out;
-    
-        for (String name : names) {
-            thisSplit = name.split(", ");
-    
-            for (String city : thisSplit[0].split("-")) {
-                cities.add(city);
-            }
-    
-            if (thisSplit.length >= 2) {
-                for (String state : thisSplit[1].split("-")) {
-                    states.add(state);
+
+        try {
+            for (String name : names) {
+                if (name == null)
+                    continue;
+
+                thisSplit = name.split(", ");
+
+                for (String city : thisSplit[0].split("-")) {
+                    cities.add(city);
+                }
+
+                if (thisSplit.length >= 2) {
+                    for (String state : thisSplit[1].split("-")) {
+                        states.add(state);
+                    }
                 }
             }
-        }
-    
-        out = new StringBuilder(maxLength);
-    
-        if (cities.size() > 0) {
-            for (String city : cities) {
-                out.append(city);
-                out.append('-');
+
+            out = new StringBuilder(maxLength);
+
+            if (cities.size() > 0) {
+                for (String city : cities) {
+                    out.append(city);
+                    out.append('-');
+                }
+
+                // delete last -
+                out.deleteCharAt(out.length() - 1);
+                out.append(", ");
             }
-    
-            // delete last -
-            out.deleteCharAt(out.length() - 1);
-            out.append(", ");
-        }
-    
-        if (states.size() > 0) {
-            for (String state : states) {
-                out.append(state);
-                out.append('-');
+
+            if (states.size() > 0) {
+                for (String state : states) {
+                    out.append(state);
+                    out.append('-');
+                }
+
+                out.deleteCharAt(out.length() - 1);
             }
-    
-            out.deleteCharAt(out.length() - 1);
+
+            // truncate if needed
+            if (out.length() >= maxLength)
+                out.setLength(maxLength);
+
+            return out.toString();
+        } catch (Exception e) {
+            return null;
         }
-    
-        // truncate if needed
-        if (out.length() >= maxLength)
-            out.setLength(maxLength);
-    
-        return out.toString();
     }
 }
     

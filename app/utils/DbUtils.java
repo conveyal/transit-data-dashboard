@@ -50,18 +50,57 @@ public class DbUtils {
             // easy case
             if (metros.size() == 1) {
                 metro = metros.get(0);
-                metro.agencies.add(agency);
+                agency.note = "Found single metro.";
                 agency.save();
+                metro.agencies.add(agency);
                 changedMetros.add(metro);
                 metro.save();
             }
 
             // flag for review
             else if (metros.size() > 1) {
-                feed.disabled = true;
-                agency.note = "Too many metro areas";
-                feed.save();
-                agency.save();
+                MetroArea metroWithTransit = null;
+                boolean isSingleMetroWithTransit = true;
+                for (MetroArea m : metros) {
+                    if (m.agencies.size() > 0) {
+                        if (metroWithTransit != null) {
+                            isSingleMetroWithTransit = false;
+                            break;
+                        }
+                        else {
+                            metroWithTransit = m;
+                        }
+                    }
+                }
+                
+                // merge into the metro with transit, or the first metro if none have transit
+                if (isSingleMetroWithTransit) {
+                    if (metroWithTransit == null) {
+                        metroWithTransit = metros.get(0);
+                    }
+                    
+                    for (MetroArea m : metros) {
+                        if (m == metroWithTransit)
+                            continue;
+                        
+                        metroWithTransit.mergeAreas(m);
+                        m.disabled = true;
+                        m.save();
+                        changedMetros.add(m);
+                    }
+                    
+                    agency.note = "Merged several non-transit metros.";
+                    agency.save();
+                    metroWithTransit.agencies.add(agency);                    
+                    metroWithTransit.save();
+                    changedMetros.add(metroWithTransit);
+                }
+                else {
+                    feed.disabled = true;
+                    agency.note = "Too many metro areas";
+                    feed.save();
+                    agency.save();
+                }
             }
             
             // no metro areas found: create one
@@ -75,6 +114,7 @@ public class DbUtils {
                 feed.save();                
                 agency.save();
                 area.save();
+                changedMetros.add(area);
             }
         }
         
