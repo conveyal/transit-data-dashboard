@@ -209,4 +209,15 @@ public class GtfsFeed extends Model implements Cloneable {
     	return ret;
     			
     }
+    
+    public int hashCode () {
+        return id.hashCode();
+    }
+    
+    public boolean equals(Object o) {
+        if (!(o instanceof GtfsFeed))
+            return false;
+        
+        return ((GtfsFeed) o).id == this.id;
+    }
 }
