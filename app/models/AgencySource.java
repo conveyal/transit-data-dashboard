@@ -1,5 +1,5 @@
 package models;
 
 public enum AgencySource {
-    NTD, GTFS;
+    NTD, GTFS, MANUAL;
 }
