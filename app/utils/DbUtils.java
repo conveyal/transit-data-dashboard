@@ -63,8 +63,8 @@ public class DbUtils {
                 for (MetroArea m : metros) {
                     agency.note += ", " + m.toString(); 
                 }
-                agency.save();
                 feed.save();
+                agency.save();
             }
             
             // no metro areas found: create one
@@ -75,9 +75,9 @@ public class DbUtils {
                 area.source = MetroAreaSource.GTFS;
                 area.agencies.add(agency);
                 area.autoname();
-                area.save();                
+                feed.save();                
                 agency.save();
-                feed.save();
+                area.save();
             }
         }
         
