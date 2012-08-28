@@ -49,6 +49,11 @@ public class MetroArea extends Model {
      */
     public String note;
     
+    /**
+     * The source of this metro area
+     */
+    @Enumerated(EnumType.STRING)
+    public MetroAreaSource source;
     
     /**
      * Needed from old DB structure; still used in some code.

@@ -11,6 +11,7 @@ import javax.persistence.Query;
 import models.FeedParseStatus;
 import models.GtfsFeed;
 import models.MetroArea;
+import models.MetroAreaSource;
 import models.NtdAgency;
 import play.db.jpa.JPA;
 
@@ -62,14 +63,22 @@ public class DbUtils {
                 for (MetroArea m : metros) {
                     agency.note += ", " + m.toString(); 
                 }
+                agency.save();
+                feed.save();
             }
             
+            // no metro areas found: create one
             else {
-                feed.disabled = true;
-                agency.note = "No metro areas.";
+                agency.note = "No metro areas found.";
+     
+                MetroArea area = new MetroArea(null, feed.the_geom);
+                area.source = MetroAreaSource.GTFS;
+                area.agencies.add(agency);
+                area.autoname();
+                area.save();                
+                agency.save();
+                feed.save();
             }
-            
-            agency.save();
         }
         
         return changedMetros;
