@@ -582,6 +582,7 @@ public class Mapper extends Controller {
 
         q = JPA.em().createNativeQuery(qs);
         q.setParameter(1, name);
+        q.setParameter(2, name);
         q.setParameter(3, metroId);
 
         for (Object result : q.getResultList()) {
