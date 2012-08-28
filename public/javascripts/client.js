@@ -45,7 +45,7 @@ function DataController (mapController) {
     	
     	// there won't be any filters yet, but we still have to do this
     	instance.getFilteredData();
-    	instance.sortBy('metro', false);
+    	instance.sortBy('ridership', true);
     	
     	// lose the loading text
     	$('#loading').remove();
