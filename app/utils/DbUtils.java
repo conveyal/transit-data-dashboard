@@ -60,9 +60,6 @@ public class DbUtils {
             else if (metros.size() > 1) {
                 feed.disabled = true;
                 agency.note = "Too many metro areas";
-                for (MetroArea m : metros) {
-                    agency.note += ", " + m.toString(); 
-                }
                 feed.save();
                 agency.save();
             }
