@@ -90,6 +90,9 @@ public class MetroArea extends Model {
         NtdAgency largestAgency = null;
         
         for (NtdAgency agency : agencies) {
+            if (agency.uzaNames == null)
+                continue;
+                
             // if there's one agency, it's the largest
             if (largestAgency == null) {
                 largestAgency = agency;
