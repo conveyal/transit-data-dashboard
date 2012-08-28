@@ -55,9 +55,17 @@ public class DbUtils {
             }
 
             // flag for review
+            else if (metros.size() > 1) {
+                feed.disabled = true;
+                agency.note = "Too many metro areas";
+                for (MetroArea m : metros) {
+                    agency.note += ", " + m.toString(); 
+                }
+            }
+            
             else {
                 feed.disabled = true;
-                agency.note = "Too few or too many metro areas.";
+                agency.note = "No metro areas.";
             }
             
             agency.save();

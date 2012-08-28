@@ -111,5 +111,6 @@ public class NtdAgency extends Model {
         this.ridership = 0;
         this.passengerMiles = 0;
         this.source = AgencySource.GTFS;
+        feeds = new TreeSet<GtfsFeed>();
     }      
 }
