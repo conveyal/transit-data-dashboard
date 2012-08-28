@@ -552,9 +552,9 @@ public class Mapper extends Controller {
 
         // First, get the MetroArea
         String qs = "SELECT id FROM MetroArea m " + 
-            "WHERE ST_Within(ST_Transform(" +
+            "WHERE ST_Within(" +
               "ST_GeomFromEWKT(CONCAT('SRID=4326;POINT(', ?, ' ', ?, ')'))" +
-            ", 4269), m.the_geom)";
+            ", m.the_geom)";
         Query q = JPA.em().createNativeQuery(qs);
         q.setParameter(1, "" + lon);
         q.setParameter(2, "" + lat);
