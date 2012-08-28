@@ -317,6 +317,19 @@ DataController.prototype.filterCallback = function (agency) {
         }
     }
     
+    // google gtfs
+    if (this.filters.googleGtfs) {
+        if (!agency.googleGtfs) {
+            return false;
+        }
+    }
+
+    if (this.filters.noGoogleGtfs) {
+        if (agency.googleGtfs) {
+            return false;
+        }
+    }
+    
     // if we're here it passes muster
     return true;
 };
