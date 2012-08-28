@@ -2,7 +2,10 @@ package models;
 
 import javax.persistence.*;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import play.db.jpa.*;
 import play.data.validation.*;
@@ -44,10 +47,6 @@ public class NtdAgency extends Model {
 
     /** Does this agency provide GTFS to Google? */
     public boolean googleGtfs;
-    
-    /** The metro areas this agency is part of */
-    @ManyToMany
-    public Set<MetroArea> metroAreas;
 
     /** A note for human review */
     public String note;
@@ -81,7 +80,7 @@ public class NtdAgency extends Model {
 
     // TODO: argumented constructors
     public NtdAgency () {
-        feeds = new TreeSet<GtfsFeed>();
+        this(null, null, null, 0, null, 0, 0);
     }
 
     public NtdAgency (String name, String url, String ntdId, int population,
@@ -95,7 +94,7 @@ public class NtdAgency extends Model {
         this.passengerMiles = passengerMiles;
         this.source = AgencySource.NTD;
         this.note = null;
-        feeds = new TreeSet<GtfsFeed>();
+        feeds = new HashSet<GtfsFeed>();
     }
 
     /**
@@ -111,6 +110,6 @@ public class NtdAgency extends Model {
         this.ridership = 0;
         this.passengerMiles = 0;
         this.source = AgencySource.GTFS;
-        feeds = new TreeSet<GtfsFeed>();
+        feeds = new HashSet<GtfsFeed>();
     }      
 }
