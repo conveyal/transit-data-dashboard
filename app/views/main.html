@@ -4,10 +4,37 @@
     <head>
         <title>#{get 'title' /}</title>
         <meta charset="${_response_encoding}">
-        #{get 'moreStyles' /}
+        <link rel="stylesheet" href="/javascripts/leaflet/leaflet.css" />
+        <!--[if lte IE 8]>
+            <link rel="stylesheet" href="javascripts/leaflet/leaflet.ie.css" />
+        <![endif]-->
+        <link rel="stylesheet"
+	           href="/css/ui-lightness/jquery-ui-1.8.21.custom.css" />
+        <link rel="stylesheet" href="/stylesheets/main.css" />
+        <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" />
+
+        <script src="/javascripts/leaflet/leaflet.js"></script>
+        <script src="/javascripts/jquery-1.7.2.min.js"></script>
+        <script src="/javascripts/client.js"></script>
+        <script src="/js/jquery-ui-1.8.21.custom.min.js"></script>
+        
+        #{get 'moreStyles' /} 
         #{get 'moreScripts' /}
     </head>
     <body>
-        #{doLayout /}
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                <a class="brand" href="#">Transit Data Dashboard</a>
+                <h4>Administration</h4>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="span12">
+                #{doLayout /}
+                </div>
+            </div>
+        </div>
     </body>
 </html>
