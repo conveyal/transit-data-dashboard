@@ -52,23 +52,26 @@ public class Admin extends Mapper {
         Map<Long, List<MetroAreaWithGeom>> metros = new HashMap<Long, List<MetroAreaWithGeom>>();
         
         MetroAreaWithGeom metro;
+        String query = "SELECT m.name, ST_AsGeoJSON(the_geom) FROM MetroArea m WHERE " + 
+                "ST_DWithin(m.the_geom, transform(ST_GeomFromText(?, ?), ST_SRID(m.the_geom)), 0.04)";
+        Geometry agencyGeom;
+        Query ids;
+        List<Object[]> metrosTemp;
         for (NtdAgency agency : agenciesMultiAreas) {
+            if (!metros.containsKey(agency.id))
+                metros.put(agency.id, new ArrayList<MetroAreaWithGeom>());
+            
             // find metro area(s)
-            Geometry agencyGeom = agency.getGeom();
-            String query = "SELECT m.name, ST_AsGeoJSON(the_geom) FROM MetroArea m WHERE " + 
-                    "ST_DWithin(m.the_geom, transform(ST_GeomFromText(?, ?), ST_SRID(m.the_geom)), 0.04)";;
-            Query ids = JPA.em().createNativeQuery(query);
+            agencyGeom = agency.getGeom();
+            ids = JPA.em().createNativeQuery(query);
             ids.setParameter(1, agencyGeom.toText());
             ids.setParameter(2, agencyGeom.getSRID());
-            List<Object[]> metrosTemp = ids.getResultList();
+            metrosTemp = ids.getResultList();
             
             for (Object[] result : metrosTemp) {
                 metro = new MetroAreaWithGeom();
                 metro.name = (String) result[0];
                 metro.geom = (String) result[1];
-                
-                if (!metros.containsKey(agency.id))
-                    metros.put(agency.id, new ArrayList<MetroAreaWithGeom>());
                 
                 metros.get(agency.id).add(metro);
             }
