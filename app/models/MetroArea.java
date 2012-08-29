@@ -156,9 +156,11 @@ public class MetroArea extends Model {
         GeometryFactory factory;
     
         for (NtdAgency agency : other.agencies) {
-            this.agencies.add(agency);
-            other.agencies.remove(agency);
+            this.agencies.add(agency);;
         }
+        
+        // erase all other's agencies
+        other.initializeAgencies();
     
         // now, combine geometries
         
