@@ -1,7 +1,10 @@
 package models;
 
 public enum FeedParseStatus {
-    SUCCESSFUL("Successful"), FAILED("Failed");
+    // Keep in mind that these names will be displayed as
+    // Valid: ______ in the webapp, so they should make sense
+    // in that context
+    SUCCESSFUL("Yes"), FAILED("No");
     
     private String name;
     
