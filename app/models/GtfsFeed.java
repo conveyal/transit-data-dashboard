@@ -1,7 +1,9 @@
 package models;
 
 import javax.persistence.*;
+
 import java.util.*;
+import java.math.BigInteger;
 
 import play.Logger;
 import play.db.jpa.*;
@@ -39,6 +41,12 @@ public class GtfsFeed extends Model implements Cloneable {
 
     /** Is this feed disabled? */
     public boolean disabled;
+    
+    /**
+     * Machine readable problem type requiring human review - picked up in the admin interface.
+     */
+    @Enumerated(EnumType.STRING)
+    public ReviewType review;
     
     /** 
      * The URL where this feed may be found. This may be the feed itself, or may be a
@@ -208,5 +216,35 @@ public class GtfsFeed extends Model implements Cloneable {
     	
     	return ret;
     			
+    }
+
+    /**
+     * Attempt to automatically find and link this feed to agencies.
+     * @return true if matching was successful, false otherwise
+     */
+    public boolean findAgency() {
+        Query q = JPA.em().createNativeQuery("SELECT a.id FROM NtdAgency a WHERE regexp_replace(LOWER(?), " + 
+                                       // that regular expression strips the protocol, 
+                                       // strips pathinfo,
+                                       // and strips www. to get a hopefully LCD domain name
+                                       "'(?:\\W*)(?:https?://)?(?:www\\.)?([a-zA-Z0-9\\-_\\.]*)(?:/.*)?(?:\\W*)'," +
+                                       "'\\1') = " + 
+                                       "regexp_replace(LOWER(a.url)," + 
+                                       "'(?:\\W*)(?:https?://)?(?:www\\.)?([a-zA-Z0-9\\-_\\.]*)(?:/.*)?(?:\\W*)'," +
+                                       "'\\1');");
+        q.setParameter(1, this.agencyUrl);
+        List<Object> results = q.getResultList();
+        
+        if (results.size() == 0)
+            return false;
+        else {
+            NtdAgency agency;
+            for (Object result : results) {
+                agency = NtdAgency.findById(((BigInteger) result).longValue());
+                agency.feeds.add(this);
+                agency.save();
+            }
+            return true;
+        }
     }
 }

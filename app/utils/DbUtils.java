@@ -13,6 +13,7 @@ import models.GtfsFeed;
 import models.MetroArea;
 import models.MetroAreaSource;
 import models.NtdAgency;
+import models.ReviewType;
 import play.db.jpa.JPA;
 
 public class DbUtils {
@@ -98,6 +99,7 @@ public class DbUtils {
                 else {
                     feed.disabled = true;
                     agency.note = "Too many metro areas";
+                    agency.review = ReviewType.AGENCY_MULTIPLE_AREAS;
                     feed.save();
                     agency.save();
                 }

@@ -57,6 +57,12 @@ public class MetroArea extends Model {
     public String note;
     
     /**
+     * Machine readable problem type requiring human review - picked up in the admin interface.
+     */
+    @Enumerated(EnumType.STRING)
+    public ReviewType review;
+    
+    /**
      * The source of this metro area
      */
     @Enumerated(EnumType.STRING)

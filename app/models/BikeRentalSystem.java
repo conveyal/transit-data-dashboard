@@ -26,6 +26,12 @@ public class BikeRentalSystem extends Model {
 	 */
 	public String name;
 	
+    /**
+     * Machine readable problem type requiring human review - picked up in the admin interface.
+     */
+    @Enumerated(EnumType.STRING)
+    public ReviewType review;
+	
 	/**
 	 * The type of this bike rental system.
 	 * One of KeolisRennes, Static, CityBik.es or Bixi

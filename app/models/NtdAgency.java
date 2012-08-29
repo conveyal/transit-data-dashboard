@@ -44,6 +44,12 @@ public class NtdAgency extends Model {
     /** Where the data for this agency came from */
     @Enumerated(EnumType.STRING)
     public AgencySource source;
+    
+    /**
+     * Machine readable problem type requiring human review - picked up in the admin interface.
+     */
+    @Enumerated(EnumType.STRING)
+    public ReviewType review;
 
     /** Does this agency provide GTFS to Google? */
     public boolean googleGtfs;

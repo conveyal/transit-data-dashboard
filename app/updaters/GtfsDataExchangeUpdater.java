@@ -20,6 +20,7 @@ import models.FeedParseStatus;
 import models.GtfsFeed;
 import models.MetroArea;
 import models.NtdAgency;
+import models.ReviewType;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -97,12 +98,16 @@ public class GtfsDataExchangeUpdater implements Updater {
 		        }
 
 		        GtfsFeed newFeed;
+		        boolean isNew;
 		        // copy over all the data.
-		        if (originalFeed != null)
+		        if (originalFeed != null) {
+		            isNew = false;
 		            newFeed = originalFeed.clone();
+		        }
 		        else {
 		            newFeed = new GtfsFeed();
 		            newFeed.note = "new feed";
+		            isNew = true;
 		        }
 
 		        // update all fields
@@ -137,6 +142,14 @@ public class GtfsDataExchangeUpdater implements Updater {
 		        stats.apply(newFeed);
 		        newFeed.status = FeedParseStatus.SUCCESSFUL;
 		        newFeed.save();
+		        
+		        // if it's a new feed, find an agency.
+                if (isNew) {
+                    if (!newFeed.findAgency())
+                        newFeed.review = ReviewType.NO_AGENCY;
+                
+                    newFeed.save();
+                }
 
 		        if (originalFeed != null) {
 		            originalFeed.supersededBy = newFeed;
