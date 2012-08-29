@@ -408,6 +408,7 @@ DataController.prototype.showAgency = function (id) {
 
             $('#agencyUrl').html('<a href="http://' + DataController.validUrl(agency.url) + '">' + 
                                  agency.url + '</a>');
+            $('#agencyGoogle').text((agency.googleGtfs ? 'Yes' : 'No'));
             $('#agencyNtdId').text(agency.ntdId);
             $('#agencyRidership').text(DataController.formatNumber(agency.ridership));
             $('#agencyPassengerMiles').text(DataController.formatNumber(agency.passengerMiles));
