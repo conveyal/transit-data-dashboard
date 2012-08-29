@@ -81,13 +81,21 @@ public class Admin extends Mapper {
     }
     
     /**
+     * Decide whether to redirect to agenciesMultiAreas or not.
+     */
+    public static void showAgenciesMultiAreas () {
+            //agenciesMultiAreas();
+            renderText("Success");
+    }
+    
+    /**
      * This just disables an agency and clears the review flag.
      */
     public static void disableAgency(NtdAgency agency) {
         agency.disabled = true;
         agency.review = null;
         agency.save();
-        agenciesMultiAreas();
+        showAgenciesMultiAreas();
     }
     
     /**
@@ -98,13 +106,13 @@ public class Admin extends Mapper {
             agency.mergeAllAreas();
         } catch (NullPointerException e) {
             flash("error", "invalid geometry for agency");
-            agenciesMultiAreas();
+            showAgenciesMultiAreas();
             return;
         }
         
         agency.review = null;
         agency.save();
-        agenciesMultiAreas();
+        showAgenciesMultiAreas();
     }
     
     /**
@@ -117,7 +125,7 @@ public class Admin extends Mapper {
             agency.splitToAreas();
         } catch (NullPointerException e) {
             flash("error", "agency has no valid geometry");
-            agenciesMultiAreas();
+            showAgenciesMultiAreas();
             return;
         }
         
@@ -126,7 +134,7 @@ public class Admin extends Mapper {
         
         // redirect back
         // http://stackoverflow.com/questions/4283256
-        agenciesMultiAreas();
+        showAgenciesMultiAreas();
     }
     
     /**
