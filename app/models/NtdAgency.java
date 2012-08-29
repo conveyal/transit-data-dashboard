@@ -2,6 +2,11 @@ package models;
 
 import javax.persistence.*;
 
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.operation.overlay.OverlayOp;
+
+import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,6 +14,7 @@ import java.util.TreeSet;
 
 import play.db.jpa.*;
 import play.data.validation.*;
+import utils.GeometryUtils;
 
 @Entity
 public class NtdAgency extends Model {
@@ -73,6 +79,11 @@ public class NtdAgency extends Model {
     @ManyToMany(cascade=CascadeType.PERSIST)
     public Set<GtfsFeed> feeds;
 
+    /**
+     * Is this agency disabled?
+     */
+    public boolean disabled;
+
     /** 
      * Convert to a human-readable string. This is exposed in the admin interface, so it should be
      * correct.
@@ -100,6 +111,7 @@ public class NtdAgency extends Model {
         this.passengerMiles = passengerMiles;
         this.source = AgencySource.NTD;
         this.note = null;
+        this.disabled = false;
         feeds = new HashSet<GtfsFeed>();
     }
 
@@ -115,7 +127,83 @@ public class NtdAgency extends Model {
         this.population = 0;
         this.ridership = 0;
         this.passengerMiles = 0;
+        this.disabled = feed.disabled;
         this.source = AgencySource.GTFS;
         feeds = new HashSet<GtfsFeed>();
+    }
+
+    public Geometry getGeom() {
+        Geometry out = null;
+        Integer srid = null;
+        
+        for (GtfsFeed feed : feeds) {
+            // ignore feeds that did not parse as they will have null geoms
+            if (feed.status != FeedParseStatus.SUCCESSFUL)
+                continue;
+            
+            if (srid == null)
+                srid = feed.the_geom.getSRID();
+            
+            if (out == null)
+                out = feed.the_geom;
+            else
+                out = OverlayOp.overlayOp(out, feed.the_geom, OverlayOp.UNION);
+        }
+        
+        // re-set SRID, it gets lost
+        if (out != null)
+            out.setSRID(srid);
+        
+        return out;
+    }
+
+    /**
+     * Make this agency a member of every metro it overlaps, without merging anything.
+     */
+    public void splitToAreas() {
+        Geometry agencyGeom = this.getGeom();
+
+        String query = "SELECT m.id FROM MetroArea m WHERE " + 
+                "ST_DWithin(m.the_geom, transform(ST_GeomFromText(?, ?), ST_SRID(m.the_geom)), 0.04)";;
+        Query ids = JPA.em().createNativeQuery(query);
+        ids.setParameter(1, agencyGeom.toText());
+        ids.setParameter(2, agencyGeom.getSRID());
+        List<BigInteger> metrosTemp = ids.getResultList();
+        
+        MetroArea metro;
+        for (BigInteger metroId : metrosTemp) {
+            metro = MetroArea.findById(metroId.longValue());
+            metro.agencies.add(this);
+            metro.save();
+        }
+    }
+
+    /**
+     * Merge all the areas this agency is potentially a part of. Beware this will create huge agencies if
+     * it is applied to (a) something like Amtrak or Greyhound or (b) an agency with a few misplaced stops
+     * far away in other metros; since geoms are convex-hulled, they will cross lots of areas.
+     */
+    public void mergeAllAreas() {
+        Geometry agencyGeom = this.getGeom();
+
+        String query = "SELECT m.id FROM MetroArea m WHERE " + 
+                "ST_DWithin(m.the_geom, transform(ST_GeomFromText(?, ?), ST_SRID(m.the_geom)), 0.04)";;
+        Query ids = JPA.em().createNativeQuery(query);
+        ids.setParameter(1, agencyGeom.toText());
+        ids.setParameter(2, agencyGeom.getSRID());
+        List<BigInteger> metrosTemp = ids.getResultList();
+        
+        MetroArea metro;
+        MetroArea first = MetroArea.findById(metrosTemp.get(0).longValue());
+        metrosTemp.remove(0);
+        
+        for (BigInteger metroId : metrosTemp) {
+            metro = MetroArea.findById(metroId.longValue());
+            first.mergeAreas(metro);
+            metro.delete();
+        }
+        
+        first.agencies.add(this);
+        first.save();
     }      
 }
