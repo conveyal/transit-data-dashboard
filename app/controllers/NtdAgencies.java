@@ -59,11 +59,13 @@ public class NtdAgencies extends Controller {
             "X(ST_Transform(ST_Centroid(m.the_geom), 4326)) AS lon, " +
             "a.id " +
             "FROM (NtdAgency a " +
-            "  LEFT JOIN (SELECT mn.agencies_id AS id, min(m.name) AS name, min(m.source) AS source, ST_Union(m.the_geom) AS the_geom FROM MetroArea_NtdAgency mn LEFT JOIN MetroArea m ON (mn.metroarea_id = m.id) GROUP BY mn.agencies_id) m " +
+            "  LEFT JOIN (SELECT mn.agencies_id AS id, min(m.name) AS name, bool_and(m.disabled) AS disabled, min(m.source) AS source, ST_Union(m.the_geom) AS the_geom FROM MetroArea_NtdAgency mn LEFT JOIN MetroArea m ON (mn.metroarea_id = m.id) GROUP BY mn.agencies_id) m " +
             "    ON (m.id = a.id))" +
             "  LEFT JOIN (SELECT j.NtdAgency_id, count(*) > 0 AS publicGtfs " + 
             "               FROM NtdAgency_GtfsFeed j " +
-            "             GROUP BY j.NtdAgency_id) f ON (a.id = f.NtdAgency_id)";
+            "             GROUP BY j.NtdAgency_id) f ON (a.id = f.NtdAgency_id) " +
+            // if any are enabled, show this agency
+            "WHERE m.disabled = false AND a.disabled = false;";
 
         Query q = JPA.em().createNativeQuery(qs);
         
