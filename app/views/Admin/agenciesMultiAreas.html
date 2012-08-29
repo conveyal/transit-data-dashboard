@@ -10,32 +10,33 @@
                 #{/list}
             </ul>    
         </div>
-        
-        #{list items:metros.keySet(), as:'agencyId' }
-            <div class="span6 hidden agencyDetail" id="agency-${agencyId}">
-                <ul>
-                    #{list items:metros.get(agencyId), as:'metro'}
-                        <li>${metro.name}</li>
-                    #{/list} 
-                </ul>
-                
-                <div class="btn-group">
-                    <a href="mergeAllAreas?agency.id=${agencyId}" class="btn btn-danger">Merge all</a>
-                    <a href="splitToAreas?agency.id=${agencyId}" class="btn">Split to each</a>
-                    <a href="disableAgency?agency.id=${agencyId}" class="btn">Disable</a>           
-                </ul>
-            </div>
-        #{/list}
-    </div>
-</div>
+		<div class="span6">
+			#{list items:metros.keySet(), as:'agencyId' }
+			<div class="agencyDetail hidden" id="agency-${agencyId}">
+				<ul>
+					#{list items:metros.get(agencyId), as:'metro'}
+					<li>${metro.name}</li> #{/list}
+				</ul>
+
+				<div class="btn-group">
+					<a href="mergeAllAreas?agency.id=${agencyId}"
+						class="btn btn-danger">Merge all</a> <a
+						href="splitToAreas?agency.id=${agencyId}" class="btn">Split to
+						each</a> <a href="disableAgency?agency.id=${agencyId}" class="btn">Disable</a>
+					</ul>
+				</div>
+			</div>
+			#{/list}
+		</div>
+	</div>
 
 <script type="text/javascript">
-    $('.agencyLink').click(function (e) {
-        e.preventDefault();
-        var id = $(this).attr('id').split('-')[1];
-        
-        $('.agencyDetail').addClass('hidden');
-        $('#agency-' + id).removeClass('hidden');
-    });
+	$('.agencyLink').click(function(e) {
+		e.preventDefault();
+		var id = $(this).attr('id').split('-')[1];
+
+		$('.agencyDetail').addClass('hidden');
+		$('#agency-' + id).removeClass('hidden');
+	});
 </script>
 
