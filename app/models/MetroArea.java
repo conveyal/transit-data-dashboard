@@ -136,9 +136,9 @@ public class MetroArea extends Model {
                         states.add(feed.state);
                     }
                 }
-                
-                this.name = mergeAreaNames(255, cities, states); 
             }
+            
+            this.name = mergeAreaNames(255, cities, states); 
         }
     }
     
@@ -249,8 +249,10 @@ public class MetroArea extends Model {
 
                 // delete last -
                 out.deleteCharAt(out.length() - 1);
-                out.append(", ");
             }
+            
+            if (cities.size() > 0 && states.size() > 0)
+                out.append(", ");
 
             if (states.size() > 0) {
                 for (String state : states) {
