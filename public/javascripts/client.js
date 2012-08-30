@@ -368,6 +368,10 @@ DataController.prototype.setUpPagination = function () {
  * Format a large integer
  */
 DataController.formatNumber = function (number) {
+	// 0 === N/A in this case
+	if (number === 0)
+		return '';
+	
     number = '' + number;
     numLen = number.length;
     output = '';
@@ -424,18 +428,23 @@ DataController.prototype.showAgency = function (id) {
                 var expires = new Date(Date.parse(feed.expires));
                 // if it expires in under 2 months
                 later.setMonth(later.getMonth() + 2);
-                if (expires < now)
-                    status = 'feedExpired';
-                else if (expires < later)
-                    status = 'feedToExpire';
-                else
-                    // just black, don't use red and green together.
-                    status = 'feedOk';
+                if (!isNaN(expires.getDate())) {
+                	if (expires < now)
+                		status = 'feedExpired';
+                	else if (expires < later)
+                		status = 'feedToExpire';
+                	else
+                		// just black, don't use red and green together.
+                		status = 'feedOk';
 
-                var expireText = ['January', 'February', 'March', 'April', 'May', 'June',
-                                  'July', 'August', 'September', 'October', 'November', 
-                                  'December'][expires.getMonth()] + ' ' + expires.getDate() +
-                    ', ' + expires.getFullYear();
+                	var expireText = ['January', 'February', 'March', 'April', 'May', 'June',
+                	                  'July', 'August', 'September', 'October', 'November', 
+                	                  'December'][expires.getMonth()] + ' ' + expires.getDate() +
+                	                  ', ' + expires.getFullYear();
+                }
+                else {
+                	var expireText = '';
+                }
 
                 $('#agencyFeeds').append(
                     '<li class="feedFields"><table>' +
