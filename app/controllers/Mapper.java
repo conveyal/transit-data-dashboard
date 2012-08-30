@@ -300,7 +300,7 @@ public class Mapper extends Controller {
         String qs = "SELECT id FROM MetroArea m " + 
             "WHERE ST_Within(" +
               "ST_GeomFromEWKT(CONCAT('SRID=4326;POINT(', ?, ' ', ?, ')'))" +
-            ", m.the_geom)";
+            ", m.the_geom) AND (NOT m.disabled OR m.disabled IS NULL)";
         Query q = JPA.em().createNativeQuery(qs);
         q.setParameter(1, "" + lon);
         q.setParameter(2, "" + lat);
