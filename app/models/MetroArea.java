@@ -103,7 +103,7 @@ public class MetroArea extends Model {
         NtdAgency largestAgency = null;
         
         for (NtdAgency agency : agencies) {
-            if (agency.uzaNames == null)
+            if (agency.uzaNames == null || agency.uzaNames.size() == 0)
                 continue;
                 
             // if there's one agency, it's the largest
@@ -121,6 +121,24 @@ public class MetroArea extends Model {
             String[] uzaNames = new String[largestAgency.uzaNames.size()];
             largestAgency.uzaNames.toArray(uzaNames);
             this.name = mergeAreaNames(255, uzaNames);
+        }
+        else {
+            Set<String> cities = new HashSet<String>();
+            Set<String> states = new HashSet<String>();
+            
+            // go through agencies looking for data exchange information
+            for (NtdAgency agency : agencies) {
+                for (GtfsFeed feed : agency.feeds) {
+                    if (feed.areaDescription != null) {
+                        cities.add(feed.areaDescription);
+                    }
+                    if (feed.state != null) {
+                        states.add(feed.state);
+                    }
+                }
+                
+                this.name = mergeAreaNames(255, cities, states); 
+            }
         }
     }
     
@@ -192,7 +210,6 @@ public class MetroArea extends Model {
         String[] thisSplit;
         Set<String> cities = new HashSet<String>();
         Set<String> states = new HashSet<String>();
-        StringBuilder out;
 
         try {
             for (String name : names) {
@@ -211,7 +228,17 @@ public class MetroArea extends Model {
                     }
                 }
             }
-
+        } catch (Exception e) {
+            return null;
+        }
+        
+        return mergeAreaNames(maxLength, cities, states);
+    }
+    
+    public static String mergeAreaNames(int maxLength, Set<String> cities, Set<String> states) {
+        try {
+            StringBuilder out;
+        
             out = new StringBuilder(maxLength);
 
             if (cities.size() > 0) {
