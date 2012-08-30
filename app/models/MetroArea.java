@@ -138,7 +138,9 @@ public class MetroArea extends Model {
                 }
             }
             
-            this.name = mergeAreaNames(255, cities, states);
+            String name = mergeAreaNames(255, cities, states);
+            if (name != null && !name.equals("") && name.length() >= 4)
+                this.name = name; 
         }
     }
     
