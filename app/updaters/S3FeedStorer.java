@@ -10,7 +10,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -20,8 +22,10 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectResult;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import play.Logger;
 import play.libs.WS;
@@ -154,5 +158,39 @@ public class S3FeedStorer implements FeedStorer {
 	        tempFiles.get(feedId).delete();
 	        tempFiles.remove(feedId);
 	    }
+	}
+	
+	/**
+	 * Get all the feeds in S3.
+	 */
+	public List<String> getFeedIds () {
+	    List<String> feedIds = new ArrayList<String>();
+	    List<S3ObjectSummary> summaries;
+	    
+	    ObjectListing listing = this.s3Client.listObjects(this.bucket);
+	    summaries = listing.getObjectSummaries();
+	    
+	    for (S3ObjectSummary summary : summaries) {
+	        feedIds.add(summary.getKey());
+	    }
+	    
+	    while (listing.isTruncated()) {
+	        listing = this.s3Client.listNextBatchOfObjects(listing);
+	        summaries = listing.getObjectSummaries();
+
+	        for (S3ObjectSummary summary : summaries) {
+	            feedIds.add(summary.getKey());
+	        }
+	    }
+	    
+	    return feedIds;
+	}
+	
+	public void deleteFeed (String id) {
+	    
+	}
+	
+	public String toString () {
+	    return "S3FeedStorer with bucket " + bucket;
 	}
 }

@@ -11,7 +11,10 @@ import javax.persistence.Query;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import play.Logger;
 import play.db.jpa.JPA;
+import play.modules.spring.Spring;
+import updaters.FeedStorer;
 
 import models.MetroArea;
 import models.NtdAgency;
@@ -188,4 +191,38 @@ public class Admin extends Mapper {
         render(original, splits);
     }
 
+    /**
+     * Find all the stored feeds that are not also in the database.
+     */
+    public static void removeUnreferencedStoredFeeds () {
+        // TODO: is this safe?
+        FeedStorer feedStorer = Spring.getBeanOfType(FeedStorer.class); 
+        List<String> storedIds = feedStorer.getFeedIds();
+        
+        // get the ids stored in the db
+        Query q = JPA.em().createQuery("SELECT storedId FROM GtfsFeed");
+        List<String> dbIds = q.getResultList();
+        
+        List<String> notInDb = new ArrayList<String>();
+        
+        for (String storedId : storedIds) {
+            if (!dbIds.contains(storedId)) {
+                notInDb.add(storedId);
+            }
+        }
+        
+        String storerType = feedStorer.toString();
+        render(notInDb, storerType);
+    }
+    
+    public static void deleteStoredFeeds(List<String> storedId) {
+        Logger.debug("%s feeds to delete", storedId.size());
+        FeedStorer feedStorer = Spring.getBeanOfType(FeedStorer.class); 
+
+        for (String id : storedId) {
+            feedStorer.deleteFeed(id);
+        }
+        
+        index();
+    }
 }

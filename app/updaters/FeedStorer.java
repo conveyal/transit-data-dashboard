@@ -1,6 +1,7 @@
 package updaters;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Download and store a GTFS feed.
@@ -26,4 +27,13 @@ public interface FeedStorer {
 	 * Release a feed, whatever that means. Probably clean up temp files.
 	 */
 	public void releaseFeed(String feedId);
+	
+	/**
+	 * Get the stored IDs of all the feeds in here. Used to keep this in sync with the DB.
+	 * In some cases things can get put in here without being put in the DB (for instance, 
+	 * OutOfMemoryError or hardware failure during feed parsing).
+	 */
+	public List<String> getFeedIds ();
+
+    public void deleteFeed(String id);
 }

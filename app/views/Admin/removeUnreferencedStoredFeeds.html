@@ -1,0 +1,23 @@
+#{extends 'main.html' /}
+#{set title:'Remove unreferenced stored feeds' /}
+
+<h2>The following stored feeds are unreferenced and can be removed</h2>
+
+<div class="alert alert-error alert-block">
+    <h4>Danger!</h4>
+    If you have more than one feed storer defined in your application-context.xml, you may be deleting
+    feeds from the wrong place. The feed storer you are using is: ${storerType}.
+</div>
+
+<ol>
+    #{list items:notInDb, as:'id'}
+        <li><code>${id}</code></li>
+    #{/list}
+</ol>
+
+<form action="deleteStoredFeeds" method="POST">
+    #{list items:notInDb, as:'id'}
+        <input type="hidden" name="storedId" value="${id}" />
+    #{/list}
+    <input type="submit" value="Delete these stored feeds" class="btn btn-danger" />
+</form>

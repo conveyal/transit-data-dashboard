@@ -3,11 +3,14 @@ package updaters;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -65,9 +68,8 @@ public class FileFeedStorer implements FeedStorer {
 			try {
 				out.close();
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				Logger.error("Cannot close file,  leaving unclosed");
-			}
+			}    
 			return null;
 		}
 		
@@ -93,4 +95,33 @@ public class FileFeedStorer implements FeedStorer {
 	}
 
 	public void releaseFeed (String feedId) {};
+	
+	private static class UuidFilenameFilter implements FilenameFilter {
+        @Override
+        public boolean accept(File arg0, String arg1) {
+            return uuidRe.matcher(arg1).matches();
+        }
+	}
+
+	public List<String> getFeedIds () {
+	    List<String> ids = new ArrayList<String>();
+	    for (File file : new File(this.path).listFiles(new UuidFilenameFilter())) {
+	        ids.add(file.getName());
+	    }
+	    return ids;
+	}
+	
+	public void deleteFeed(String id) {
+	    if (!uuidRe.matcher(id).matches())
+	        return;
+	    
+	    File f = new File(this.path, id);
+	    if (f.exists()) {
+	        f.delete();
+	    }
+	}
+	
+	public String toString() {
+	    return "FileFeedStorer with path " + path;
+	}
 }
