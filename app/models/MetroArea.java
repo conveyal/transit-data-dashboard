@@ -129,16 +129,16 @@ public class MetroArea extends Model {
             // go through agencies looking for data exchange information
             for (NtdAgency agency : agencies) {
                 for (GtfsFeed feed : agency.feeds) {
-                    if (feed.areaDescription != null) {
+                    if (feed.areaDescription != null && !feed.areaDescription.equals("")) {
                         cities.add(feed.areaDescription);
                     }
-                    if (feed.state != null) {
+                    if (feed.state != null && !feed.state.equals("")) {
                         states.add(feed.state);
                     }
                 }
             }
             
-            this.name = mergeAreaNames(255, cities, states); 
+            this.name = mergeAreaNames(255, cities, states);
         }
     }
     
