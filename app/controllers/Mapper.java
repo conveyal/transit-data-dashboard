@@ -295,6 +295,7 @@ public class Mapper extends Controller {
         List<Object> results;
         List<NtdAgencyProxy> agencies = new ArrayList<NtdAgencyProxy>();
         NtdAgency agency;
+        UnmatchedPrivateGtfsProvider provider;
 
         // First, get the MetroArea
         String qs = "SELECT id FROM MetroArea m " + 
@@ -308,6 +309,14 @@ public class Mapper extends Controller {
         try {
             metroId = ((BigInteger) q.getSingleResult()).longValue();
         } catch (NoResultException e) {
+            // store in the DB that it failed
+            provider = new UnmatchedPrivateGtfsProvider();
+            provider.name = name;
+            provider.lat = lat;
+            provider.lon = lon;
+            provider.metroArea = null;
+            provider.save();
+            
             renderJSON("[]");
             return; // so Java won't warn about metroId be used unitialized.
         }
@@ -330,12 +339,21 @@ public class Mapper extends Controller {
         q.setParameter(1, name);
         q.setParameter(2, name);
         q.setParameter(3, metroId);
-
+        
         for (Object result : q.getResultList()) {
             agency = NtdAgency.findById(((BigInteger) result).longValue());
             agency.googleGtfs = true;
             agency.save();
             agencies.add(new NtdAgencyProxy(agency));
+        }
+        
+        if (agencies.size() == 0) {
+            provider = new UnmatchedPrivateGtfsProvider();
+            provider.name = name;
+            provider.lat = lat;
+            provider.lon = lon;
+            provider.metroArea = metro;
+            provider.save();
         }
 
         renderJSON(agencies);

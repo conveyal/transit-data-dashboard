@@ -132,6 +132,32 @@ public class NtdAgency extends Model {
         feeds = new HashSet<GtfsFeed>();
     }
 
+    public NtdAgency(UnmatchedPrivateGtfsProvider privateProvider) {
+        this.name = privateProvider.name;
+        this.url = null;
+        this.note = null;
+        this.ntdId = null;
+        this.population = 0;
+        this.ridership = 0;
+        this.passengerMiles = 0;
+        this.disabled = false;
+        this.googleGtfs = true;
+        
+        feeds = new HashSet<GtfsFeed>();
+        
+        if (privateProvider.metroArea == null)
+            this.review = ReviewType.NO_METRO;
+        
+        // This is a bit odd, but required
+        this.save();
+        
+        if (privateProvider.metroArea != null) {
+            privateProvider.metroArea.agencies.add(this);
+            privateProvider.metroArea.save();
+        }
+        
+    }
+
     public Geometry getGeom() {
         Geometry out = null;
         Integer srid = null;

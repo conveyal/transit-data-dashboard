@@ -19,6 +19,7 @@ import updaters.FeedStorer;
 import models.MetroArea;
 import models.NtdAgency;
 import models.ReviewType;
+import models.UnmatchedPrivateGtfsProvider;
 
 public class Admin extends Mapper {
     /**
@@ -34,8 +35,10 @@ public class Admin extends Mapper {
         q = JPA.em().createNativeQuery("SELECT count(*) FROM NtdAgency WHERE review = 'AGENCY_MULTIPLE_AREAS'");
         results = q.getResultList();
         int agenciesMultiAreas = results.get(0).intValue();
+     
+        long unmatchedPrivate = UnmatchedPrivateGtfsProvider.count();
         
-        render(feedsNoAgency, agenciesMultiAreas);
+        render(feedsNoAgency, agenciesMultiAreas, unmatchedPrivate);
     }
     
     private static class MetroAreaWithGeom {
@@ -215,6 +218,11 @@ public class Admin extends Mapper {
         render(notInDb, storerType);
     }
     
+    /**
+     * Delete the stored feeds referenced by the specified ID. Note that this is the 
+     * ID in storage, not in the DB.
+     * @param storedId
+     */
     public static void deleteStoredFeeds(List<String> storedId) {
         Logger.debug("%s feeds to delete", storedId.size());
         FeedStorer feedStorer = Spring.getBeanOfType(FeedStorer.class); 
@@ -225,4 +233,34 @@ public class Admin extends Mapper {
         
         index();
     }
+    
+    /**
+     * Show all the unmatched non-public feeds and give the user a choice of what to do about them.
+     */
+    public static void unmatchedPrivate () {
+        List<UnmatchedPrivateGtfsProvider> providers = UnmatchedPrivateGtfsProvider.findAll();
+        render(providers);
+    }
+    
+    /**
+     * Assign a private feed to an agency
+     */
+    public static void assignPrivateToAgency (UnmatchedPrivateGtfsProvider privateProvider,
+            NtdAgency agency) {
+        agency.googleGtfs = true;
+        agency.save();
+        privateProvider.delete();
+        renderText("Success");
+    }
+    
+    /**
+     * Create a new agency from an unmatched agency
+     */
+     public static void newAgencyFromPrivate(UnmatchedPrivateGtfsProvider privateProvider) {
+         // saved inside the constructor
+         new NtdAgency(privateProvider);
+         privateProvider.delete();
+         renderText("Success");
+     }
+    
 }

@@ -6,7 +6,8 @@ package models;
  */
 public enum ReviewType {
     NO_AGENCY ("Feed matches no agency"),
-    AGENCY_MULTIPLE_AREAS ("Agency matches multiple metro areas");
+    AGENCY_MULTIPLE_AREAS ("Agency matches multiple metro areas"),
+    NO_METRO ("Agency matches no metros.");
     
     private String description;
     
