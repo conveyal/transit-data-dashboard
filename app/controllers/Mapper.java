@@ -609,6 +609,27 @@ public class Mapper extends Controller {
     
         render(resultingAreas, noUzaAgencies, nullUzas, unmappedAgencies, commit);
     }
+    
+    /**
+     * This function is for a very specific circumstance: when the user has accidentally deleted the
+     * UnmatchedMetroAreas, this will recreate them based on the UnmatchedPrivateGtfsFeeds.
+     */
+    public static void createDeletedMetroAreas () {
+        String qs = "SELECT lat, lon, string_AGG(name, ', ') AS name FROM unmatchedprivategtfsprovider GROUP BY lat, lon;";
+        Query q = JPA.em().createNativeQuery(qs);
+        List<Object[]> results = q.getResultList();
+        
+        UnmatchedPrivateGtfsProvider provider;
+        for (Object[] result : results) {
+            provider = new UnmatchedPrivateGtfsProvider();
+            provider.lat = ((Double) result[0]);
+            provider.lon = ((Double) result[1]);
+            provider.name = ((String) result[2]);
+            provider.save();
+        }
+        
+        renderText("Success");
+    }
 }
             
             
