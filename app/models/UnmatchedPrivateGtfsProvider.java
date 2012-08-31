@@ -9,6 +9,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Query;
 
+import play.Logger;
 import play.db.jpa.JPA;
 import play.db.jpa.Model;
 import proxies.NtdAgencyProxy;
@@ -64,6 +65,8 @@ public class UnmatchedPrivateGtfsProvider extends Model {
         for (Object result : q.getResultList()) {
             hadAtLeastOneAgency = true;
             agency = NtdAgency.findById(((BigInteger) result).longValue());
+            // logged with WARN level so it shows up in production logs
+            Logger.warn("Matching agency %s to %s", this.name, agency.name);
             agency.googleGtfs = true;
             agency.save();
         }
