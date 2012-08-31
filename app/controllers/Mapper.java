@@ -619,13 +619,13 @@ public class Mapper extends Controller {
         Query q = JPA.em().createNativeQuery(qs);
         List<Object[]> results = q.getResultList();
         
-        UnmatchedPrivateGtfsProvider provider;
+        UnmatchedMetroArea metro;
         for (Object[] result : results) {
-            provider = new UnmatchedPrivateGtfsProvider();
-            provider.lat = ((Double) result[0]);
-            provider.lon = ((Double) result[1]);
-            provider.name = ((String) result[2]);
-            provider.save();
+            metro = new UnmatchedMetroArea();
+            metro.lat = ((Double) result[0]);
+            metro.lon = ((Double) result[1]);
+            metro.name = ((String) result[2]);
+            metro.save();
         }
         
         renderText("Success");
