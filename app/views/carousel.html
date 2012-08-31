@@ -1,0 +1,30 @@
+#{extends 'main.html' /}
+
+<div id="carousel" class="carousel slide">
+    <div class="carousel-inner">
+        #{doLayout /}
+    </div>
+</div>
+
+<script type="text/javascript">
+$(".carousel").carousel({
+	interval: false
+});
+$(".carousel-inner .item").first().addClass('active');
+
+$("a.xhr").click(function (e) {
+	e.preventDefault();
+	
+	var href = $(this).attr('href');
+	
+	if (href != '#') {
+	    $.ajax({
+            url: href 
+	    });
+	}
+	
+	$('#carousel').carousel('next');
+});
+
+</script>
+

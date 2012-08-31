@@ -1,0 +1,43 @@
+#{extends 'carousel.html' /} #{set title:'Unmatched private feeds' /}
+
+#{list items:metros, as:'metro'}
+<div class="item">
+	<table>
+		<tr>
+			<th>Name</th>
+			<td>${metro.name}</td>
+		</tr>
+		<tr>
+			<th>Latitude</th>
+			<td>${metro.lat}</td>
+		</tr>
+		<tr>
+			<th>Longitude</th>
+			<td>${metro.lon}</td>
+		</tr>
+	</table>
+	<div class="btn-group">
+        <a href="#" class="xhr btn">Skip</a>
+	</div>
+
+    <h4>GTFS providers in metro</h4>
+    <ul>
+		#{list items:metro.getProviders(), as:'provider'}
+	       	<li>${provider.name}</li> 
+	    #{/list}
+	</ul>
+	
+	<h4>Potential metro areas</h4>
+	<ul>
+        #{list items:metro.getPotentialMetroAreas(), as:'area'}
+            <li>
+                ${area}
+                <a class="xhr btn btn-mini"7 
+                    href="mapUnmatchedMetro?unmatched.id=${metro.id}&area.id=${area.id}">
+                    Assign
+                </a>
+            </li> 
+        #{/list}
+    </ul>
+</div>
+#{/list}

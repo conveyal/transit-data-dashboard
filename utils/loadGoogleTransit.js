@@ -1,4 +1,3 @@
-
 fs = require('fs')
 $ = require('jquery')
 
@@ -12,6 +11,10 @@ function parseUrl (url) {
     return {lat: result[1], lon: result[2]};
 }
 
+function normalizeName (name) {
+    return name.replace('\n', '').replace(/\W+/, ' ').trim();
+}
+
 $.each(allAreas, function (ind, area) {
     area = $(area);
 
@@ -23,13 +26,16 @@ $.each(allAreas, function (ind, area) {
     }
     
     var latlng = parseUrl(area.find('a').attr('href'));
+    latlng.areaName = normalizeName(area.find('a').text());
     area.find('a').remove();
 
     $.each(area.text().split(','), function (ind, agencyName) {
         var local = $.extend({}, latlng);
-        local.name = agencyName.replace('\n', '').trim();
+        local.name = normalizeName(agencyName);
         if (latlng.name == '')
             return;
+
+        console.log(local);
 
         $.ajax({
             url: 'http://localhost:9000/api/mapper/setGoogleGtfsFromParse',

@@ -19,6 +19,7 @@ import updaters.FeedStorer;
 import models.MetroArea;
 import models.NtdAgency;
 import models.ReviewType;
+import models.UnmatchedMetroArea;
 import models.UnmatchedPrivateGtfsProvider;
 
 public class Admin extends Mapper {
@@ -37,8 +38,9 @@ public class Admin extends Mapper {
         int agenciesMultiAreas = results.get(0).intValue();
      
         long unmatchedPrivate = UnmatchedPrivateGtfsProvider.count();
+        long unmatchedMetro = UnmatchedMetroArea.count();
         
-        render(feedsNoAgency, agenciesMultiAreas, unmatchedPrivate);
+        render(feedsNoAgency, agenciesMultiAreas, unmatchedPrivate, unmatchedMetro);
     }
     
     private static class MetroAreaWithGeom {
@@ -263,4 +265,27 @@ public class Admin extends Mapper {
          renderText("Success");
      }
     
+     /**
+      * Allow the user to match an unmatched metro to an existing metro.
+      */
+     public static void unmatchedMetro () {
+         List<UnmatchedMetroArea> metros = UnmatchedMetroArea.findAll();
+         render(metros);
+     }
+     
+     /**
+      * Map an unmatched metro to a matched metro, moving all of the formerly unmatched agencies
+      * to the new metro and attempting to rematch them.
+      */
+     public static void mapUnmatchedMetro(UnmatchedMetroArea unmatched, MetroArea area) {
+         // first, move all the agencies
+         for (UnmatchedPrivateGtfsProvider provider : unmatched.getProviders()) {
+             provider.unmatchedArea = null;
+             provider.metroArea = area;
+             provider.save();
+             provider.search();
+         }
+         
+         unmatched.delete();
+     }
 }

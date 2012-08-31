@@ -1,65 +1,36 @@
-#{extends 'main.html' /}
-#{set title:'Unmatched private feeds' /}
+#{extends 'carousel.html' /} #{set title:'Unmatched private feeds' /}
 
-<div id="carousel" class="carousel slide">
-    <div class="carousel-inner">
-        #{list items:providers, as:'provider'}
-            <div class="item">
-                <table>
-                    <tr>
-                        <th>Name</th>
-                        <td>${provider.name}</td>
-                    </tr>
-                    <tr>
-                        <th>Latitude</th>
-                        <td>${provider.lat}</td>
-                    </tr>
-                    <tr>
-                        <th>Longitude</th>
-                        <td>${provider.lon}</td>
-                    </tr>
-                    <tr>
-                        <th>Metro Area</th>
-                        <td>${provider.metroArea}</td>
-                    </tr>
-                </table>
-                <div class="btn-group">
-                    <a class="xhr btn" href="newAgencyFromPrivate?privateProvider.id=${provider.id}">New agency</a>
-                    <a href="#" class="xhr btn">Skip</a>
-                </div>
-                
-                <h4>Agencies in metro</h4>
-                %{ if (provider.metroArea != null) { %}
-                #{list items:provider.metroArea.agencies, as:'agency'}
-                    <li>${agency} <a class="xhr btn btn-mini" 
-                        href="assignPrivateToAgency?privateProvider.id=${provider.id}&agency.id=${agency.id}">
-                        Assign</a></li>
-                #{/list}
-                %{ } %}
-            </div>
-        #{/list}
-    </div>
+#{list items:providers, as:'provider'}
+<div class="item">
+	<table>
+		<tr>
+			<th>Name</th>
+			<td>${provider.name}</td>
+		</tr>
+		<tr>
+			<th>Latitude</th>
+			<td>${provider.lat}</td>
+		</tr>
+		<tr>
+			<th>Longitude</th>
+			<td>${provider.lon}</td>
+		</tr>
+		<tr>
+			<th>Metro Area</th>
+			<td>${provider.metroArea}</td>
+		</tr>
+	</table>
+	<div class="btn-group">
+		<a class="xhr btn"
+			href="newAgencyFromPrivate?privateProvider.id=${provider.id}">New
+			agency</a> <a href="#" class="xhr btn">Skip</a>
+	</div>
+
+	<h4>Agencies in metro</h4>
+	%{ if (provider.metroArea != null) { %} #{list
+	items:provider.metroArea.agencies, as:'agency'}
+	<li>${agency} <a class="xhr btn btn-mini"
+		href="assignPrivateToAgency?privateProvider.id=${provider.id}&agency.id=${agency.id}">
+			Assign</a></li> #{/list} %{ } %}
 </div>
-
-<script type="text/javascript">
-$(".carousel").carousel({
-	interval: false
-});
-$(".carousel-inner .item").first().addClass('active');
-
-$("a.xhr").click(function (e) {
-	e.preventDefault();
-	
-	var href = $(this).attr('href');
-	
-	if (href != '#') {
-	    $.ajax({
-            url: href 
-	    });
-	}
-	
-	$('#carousel').carousel('next');
-});
-
-</script>
-
+#{/list}

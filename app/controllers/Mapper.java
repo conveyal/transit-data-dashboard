@@ -289,7 +289,7 @@ public class Mapper extends Controller {
     /**
      * Make a best-guess for what agency is referenced by a name based on its location and name.
      */
-    public static void setGoogleGtfsFromParse (String name, double lat, double lon) {
+    public static void setGoogleGtfsFromParse (String name, String areaName, double lat, double lon) {
         long metroId;
         MetroArea metro;
         List<Object> results;
@@ -310,11 +310,21 @@ public class Mapper extends Controller {
             metroId = ((BigInteger) q.getSingleResult()).longValue();
         } catch (NoResultException e) {
             // store in the DB that it failed
+            UnmatchedMetroArea unmatched = UnmatchedMetroArea.find("byNameAndLatAndLon", areaName, lat, lon).first();
+            if (unmatched == null) {
+                unmatched = new UnmatchedMetroArea();
+                unmatched.name = areaName;
+                unmatched.lat = lat;
+                unmatched.lon = lon;
+                unmatched.save();
+            }
+                        
             provider = new UnmatchedPrivateGtfsProvider();
             provider.name = name;
             provider.lat = lat;
             provider.lon = lon;
             provider.metroArea = null;
+            provider.unmatchedArea = unmatched; 
             provider.save();
             
             renderJSON("[]");
