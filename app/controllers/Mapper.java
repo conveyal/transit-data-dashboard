@@ -615,7 +615,7 @@ public class Mapper extends Controller {
      * UnmatchedMetroAreas, this will recreate them based on the UnmatchedPrivateGtfsFeeds.
      */
     public static void createDeletedMetroAreas () {
-        String qs = "SELECT lat, lon, string_AGG(name, ', ') AS name FROM unmatchedprivategtfsprovider GROUP BY lat, lon;";
+        String qs = "SELECT lat, lon, SUBSTRING(string_AGG(name, ', ') FROM 0 FOR 254) AS name FROM unmatchedprivategtfsprovider GROUP BY lat, lon;";
         Query q = JPA.em().createNativeQuery(qs);
         List<Object[]> results = q.getResultList();
         
