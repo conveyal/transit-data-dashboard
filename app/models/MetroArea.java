@@ -149,7 +149,7 @@ public class MetroArea extends Model {
      */
     public String toString () {
         if (name != null && !name.equals("")) {
-            return name;
+            return name + "(" + agencies.size() + " agencies)";
         }
         else if (agencies.size() != 0) {
             return "Metro including " + agencies.size() + " agencies.";
