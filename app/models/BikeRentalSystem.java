@@ -26,6 +26,11 @@ public class BikeRentalSystem extends Model {
 	 */
 	public String name;
 	
+	/**
+	 * The ID in the CityBik.es database.
+	 */
+	public Integer cityBikesId;
+	
     /**
      * Machine readable problem type requiring human review - picked up in the admin interface.
      */
@@ -36,7 +41,7 @@ public class BikeRentalSystem extends Model {
 	 * The type of this bike rental system.
 	 * One of KeolisRennes, Static, CityBik.es or Bixi
 	 * For people parsing deployment requests: static indicates that staticBikeRental should be
-	 * true on OpenStreetMapGraphBuilderImpl; the other indicate that the correct class should be
+	 * true on OpenStreetMapGraphBuilderImpl; the others indicate that the correct class should be
 	 * used: see https://github.com/openplans/OpenTripPlanner/wiki/Bike-Rental
 	 */
 	@Enumerated(EnumType.STRING)
@@ -58,4 +63,12 @@ public class BikeRentalSystem extends Model {
 	 */
 	@ElementCollection
 	public List<String> fareClasses; 
+	
+	public BikeRentalSystem () {
+	    this.metroArea = null;
+	}
+	
+	public String toString () {
+	    return name + " (" + type.toString() + " system)"; 
+	}
 }

@@ -16,4 +16,8 @@ public enum BikeRentalSystemType {
 	private BikeRentalSystemType (String type) {
 		this.type = type;
 	}
+	
+	public String toString () {
+	    return type;
+	}
 }
