@@ -81,7 +81,7 @@ MapFeeds.prototype.filterAgencies = function () {
     
     return this.agencies.filter(function (agency) {
         return (agency.name.toLowerCase().indexOf(filter) > -1 || 
-                agency.url.toLowerCase().indexOf(filter) > -1 ||
+                (agency.url != undefined && agency.url.toLowerCase().indexOf(filter) > -1) ||
                 (agency.metro != undefined && agency.metro.toLowerCase().indexOf(filter) > -1));
     });
 };
