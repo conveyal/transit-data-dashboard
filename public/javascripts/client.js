@@ -23,7 +23,7 @@ function DataController (mapController) {
     
     var votesdf = //new $.Deferred();
     $.ajax({
-    	url: DataController.API_LOCATION + '/getvotes/' +
+    	url: DataController.API_LOCATION + 'getvotes/' +
     		DataController.VOTE_NAMESPACE,
     	dataType: 'json',
     	success: function (data) {
@@ -113,7 +113,7 @@ function DataController (mapController) {
 DataController.PAGE_SIZE = 100;
 
 // The location of the vote API.
-DataController.API_LOCATION = "http://localhost:9200";
+DataController.API_LOCATION = "http://localhost:9200/";
 DataController.VOTE_NAMESPACE = "gtfsDataDashboard";
 
 DataController.prototype.sortBy = function (field, desc) {
@@ -236,26 +236,90 @@ DataController.prototype.sortBy = function (field, desc) {
         	var upvote = create('a').attr('href', '#')
         		.addClass('ui-icon')
         		.addClass('ui-icon-arrowthick-1-n')
-        		.attr('title', 'Vote for this agency to release their data!')
+        		.attr('title', 'Vote for ' + agency.name + ' to release their data!')
         		.data('id', agency.id)
         		.click(function (e) {
         			e.preventDefault();
         			
-        			var id = $(this).data('id');
+        			var voteButton = $(this);
+        			var id = voteButton.data('id');
         			
         			// prevent multiple voting
         			if (instance.votedForAgencies.indexOf(id) == -1) {
-        				instance.votedForAgencies.push(id);
+        				$('#voteform').remove();
         				
-        				$.ajax({
-        					url: DataController.API_LOCATION + "/upvote/" +
-        						DataController.VOTE_NAMESPACE + "/" + id,
+        				// pop up the popover, using Bootstrap
+        				voteButton.popover({
+        					// we want it on the left so it's over the table not
+        					// off the screen
+        					placement: 'left',
+        					trigger: 'manual',
+        					content: 
+        						'<form id="voteform" class="control-horizontal" action="' + DataController.API_LOCATION + 
+        						'upvote" method="get">' +
+        						'<div class="alert alert-success">' +
+        						"  If you'd like, give us some more information about yourself. " +
+        						'  Or, just ' +
+        						'  <button type="submit" class="btn btn-mini">register your vote now</button>.' +
+        						'</div>' +
+        						'<div class="control-group">' +
+        						'  <label class="control-label" for="user-name">Name</label>' +
+        						'  <div class="controls">' +
+        						'    <input type="text" id="user-name" name="name" />' +
+        						'  </div>' +
+        						'</div>' +
+        						'<div class="control-group">' +
+        						'  <label class="control-label" for="user-email">Email</label>' +
+        						'  <div class="controls">' +
+        						'    <input type="text" id="user-email" name="email" />' +
+        						'  </div>' +
+        						'</div>' +
+        						'<div class="control-group">' +
+        						'  <div class="controls">' +
+        						// TODO: is this the proper 508 way to do things?
+        						'    <label class="checkbox">' +
+        						'      <input type="checkbox" name="takesLocalTransit" />' +
+        						'      I ride transit in this area' +
+        						'    </label>' +
+        						'    <label class="checkbox">' +
+        						'      <input type="checkbox" name="canEmail" />' +
+        						'      <a href="http://www.openplans.org">OpenPlans</a> ' + 
+        						'      may email me about open data initiatives in my community ' +
+        						'      and around the world' +
+        						'    </label>' +
+        						'    <input type="hidden" name="namespace" value="' + DataController.VOTE_NAMESPACE + '" />' +
+        						'    <input type="hidden" name="key" value="' + id + '" />' +
+        						'    <div class="btn-group">' +
+        						'      <button type="submit" class="btn btn-primary">Register my vote</button>' +
+        						'      <button class="btn" id="closeform">Cancel</button>' +
+        						'    </div>' +
+        						'  </div>' +
+        						'</div>' +
+        						'</form>'
         				});
+        				$(this).popover('show');
         			
         				// make them think it happened right away, even if it didn't, to prevent
         				// repeated clicks
         				var numVotes = $(this).parent().find('.numVotes');
-        				numVotes.text(Number(numVotes.text()) + 1);
+        				$('#voteform').submit(function (e) {
+        					e.preventDefault();
+        					$.ajax({
+        						url: DataController.API_LOCATION + 'upvote?' +
+        							$(this).serialize()
+        					});
+        					// make them think it happened right away
+            				numVotes.text(Number(numVotes.text()) + 1);
+            				instance.votedForAgencies.push(id);
+            				voteButton.popover('hide');
+            				$('#voteform').remove();
+        				});
+        				
+        				$('#closeform').click(function (e) {
+        					e.preventDefault();
+        					voteButton.popover('hide');
+        					$('#voteform').remove();
+        				});
         			}
         		});
         	votes.append(upvote);
@@ -394,6 +458,9 @@ DataController.formatNumber = function (number) {
  * Make a URL valid by adding a protocol if needed
  */
 DataController.validUrl = function (url) {
+	if (typeof url == 'undefined')
+		return '';
+	
     if (url.indexOf('://') == -1)
         url = 'http://' + url;
     return url;
