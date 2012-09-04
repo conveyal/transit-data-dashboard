@@ -2,6 +2,7 @@ package models;
 
 import javax.persistence.*;
 import java.util.*;
+import java.math.BigInteger;
 
 import play.db.jpa.*;
 import play.data.validation.*;
@@ -273,6 +274,21 @@ public class MetroArea extends Model {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static MetroArea findByGeom(double lat, double lon) {
+        Query q = JPA.em().createNativeQuery("SELECT m.id FROM MetroArea m WHERE ST_Within(ST_SetSRID(ST_Point(?, ?), 4326), m.the_geom) " +
+        		"LIMIT 1");
+        q.setParameter(1, lon);
+        q.setParameter(2, lat);
+        long id;
+        try {
+            id = ((BigInteger) q.getSingleResult()).longValue();
+        } catch (NoResultException e) {
+            return null;
+        }
+        
+        return MetroArea.findById(id);
     }
 }
     
