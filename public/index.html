@@ -7,8 +7,8 @@
         <link rel="stylesheet" href="javascripts/leaflet/leaflet.ie.css" />
     <![endif]-->
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.8.21.custom.css" />
-    <link rel="stylesheet" href="stylesheets/main.css" />
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="stylesheets/main.css" />
 
     <script src="javascripts/leaflet/leaflet.js"></script>
     <script src="javascripts/jquery-1.7.2.min.js"></script>
@@ -19,7 +19,8 @@
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="#">Transit Data Dashboard</a>
+          <a class="brand toplogo" href="http://www.openplans.org/"><img src="images/openplans.png" alt="OpenPlans" /></a>
+          <a class="brand title" href="#">Transit Data Dashboard</a>
           <ul class="nav">
             <li class="active"><a href="#mapTab" class="tabButton" data-toggle="tab" 
                                   id="mapTabToggle">Map</a></li>
@@ -202,6 +203,22 @@
           <ol id="agencyFeeds"></ol>
 
           <a href="#" id="agencyClose">&larr; Back to table</a>
+        </div>
+      </div>
+      <div class="vspacer"></div>
+      <!--  footer -->
+      <div class="row">
+        <div class="span12">
+            <p>A project of 
+                <a href="http://www.openplans.org"><img src="images/openplans-text.png" alt="OpenPlans." /></a>
+            </p>
+            <p>
+                Data from the <a href="http://www.ntdprogram.gov">National Transit Database</a>, 
+                the <a href="http://www.census.gov">United States Census</a>, 
+                <a href="http://www.gtfs-data-exchange.com">GTFS Data Exchange</a>, 
+                <a href="http://transit.google.com">Google</a>, and the many transit agencies
+                providing open data!
+            </p>
         </div>
       </div>
     </div>

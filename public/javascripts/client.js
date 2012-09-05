@@ -246,7 +246,7 @@ DataController.prototype.sortBy = function (field, desc) {
         			
         			// prevent multiple voting
         			if (instance.votedForAgencies.indexOf(id) == -1) {
-        				$('#voteform').remove();
+        				$('.popover').remove();
         				
         				// pop up the popover, using Bootstrap
         				voteButton.popover({
@@ -254,13 +254,12 @@ DataController.prototype.sortBy = function (field, desc) {
         					// off the screen
         					placement: 'left',
         					trigger: 'manual',
+        					title: "",
         					content: 
         						'<form id="voteform" class="control-horizontal" action="' + DataController.API_LOCATION + 
         						'upvote" method="get">' +
         						'<div class="alert alert-success">' +
         						"  If you'd like, give us some more information about yourself. " +
-        						'  Or, just ' +
-        						'  <button type="submit" class="btn btn-mini">register your vote now</button>.' +
         						'</div>' +
         						'<div class="control-group">' +
         						'  <label class="control-label" for="user-name">Name</label>' +
@@ -610,6 +609,7 @@ MapController.prototype.sizeMapArea = function () {
  */
 MapController.prototype.zoomTo = function (lat, lng, zoom) {
     this.map.setView(new L.LatLng(lat, lng), zoom);
+    this.sizeMapArea();
 };
         
 /* Convenience function to create a detached jQuery DOM object */
