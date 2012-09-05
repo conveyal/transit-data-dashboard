@@ -48,8 +48,8 @@ table tr td, table tr th { padding-right: 2em }
    -5px with -105px */
 .popover.left .arrow { margin-top: -105px }
 
-.brand.toplogo img { position: absolute; top: 4.5px }
+.brand.toplogo { height: 10px; overflow: visible }
+.brand.toplogo img { position: relative; top: -3px; overflow: visible}
 
-.brand.title { margin-left: -7px }
-
+.brand.title { margin-left: -32px }
 .vspacer { height: 25px }
