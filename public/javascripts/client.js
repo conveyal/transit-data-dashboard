@@ -1,31 +1,54 @@
 function DataController (mapController) {
     var instance = this;
     this.data = null;
+    this.voteData = null;
+    this.votedForAgencies = [];
     // start on the first page
     this.page = 0;
     this.filters = {};
     this.mapController = mapController;
 
+    // the reason for two API calls is that agencies change infrequently
+    // and can be cached, while votes change frequently but can be cheaply
+    // retrieved from the DB
+    var agenciesdf = //new $.Deferred();
     $.ajax({
         url: 'api/ntdagencies/agencies/JSON',
         dataType: 'json',
         success: function (data) {
-            instance.data = data;
-
-            // lose the loading text
-            $('#loading').remove();
-            
-            // hide the next page button if need be
-            if (data.length < DataController.PAGE_SIZE)
-                $('#nextPage').fadeOut();
-
-            // there won't be any filters yet, but we still have to do this
-            instance.getFilteredData();
-            instance.sortBy('metro', false);
-        },
-        error: function (xhr, textStatus) {
-            //console.log('Error retrieving JSON: ', textStatus);
-        }
+        	instance.data = data;
+        	//agenciesdf.resolve();
+        }        	
+    });
+    
+    var votesdf = //new $.Deferred();
+    $.ajax({
+    	url: DataController.API_LOCATION + 'getvotes/' +
+    		DataController.VOTE_NAMESPACE,
+    	dataType: 'json',
+    	success: function (data) {
+    		instance.voteData = data;
+    		//votesdf.resolve();
+    	}
+    });
+    
+    $.when(votesdf, agenciesdf).done(function () {
+     	// do the join
+    	var agencyLen = instance.data.length;
+    	var agency;
+    	for (var i = 0; i < agencyLen; i++) {
+    		agency = instance.data[i];
+    		agency.votes = instance.voteData[agency.id];
+    		if (agency.votes == undefined) 
+    			agency.votes = 0;
+    	}
+    	
+    	// there won't be any filters yet, but we still have to do this
+    	instance.getFilteredData();
+    	instance.sortBy('ridership', true);
+    	
+    	// lose the loading text
+    	$('#loading').remove();
     });
 
     // set up the sort buttons
@@ -88,6 +111,10 @@ function DataController (mapController) {
 
 // STATIC CONFIG
 DataController.PAGE_SIZE = 100;
+
+// The location of the vote API.
+DataController.API_LOCATION = "http://localhost:9200/";
+DataController.VOTE_NAMESPACE = "gtfsDataDashboard";
 
 DataController.prototype.sortBy = function (field, desc) {
     var instance = this;
@@ -198,7 +225,107 @@ DataController.prototype.sortBy = function (field, desc) {
                                     '<span class="ui-icon ui-icon-check">Yes</span>' :
                                     '<span class="ui-icon ui-icon-blank">No</span>')
                       .addClass('tblColOdd'));
+        
+        // votes
+        var votes = create('td').addClass('tblColEven');
+        
+        // we only do votes on agencies with no public gtfs
+        if (!agency.publicGtfs) {
+        	votes.append('<span class="numVotes">' + agency.votes + '</span>');
+        	// and the upvote button
+        	var upvote = create('a').attr('href', '#')
+        		.addClass('ui-icon')
+        		.addClass('ui-icon-arrowthick-1-n')
+        		.attr('title', 'Vote for ' + agency.name + ' to release their data!')
+        		.data('id', agency.id)
+        		.click(function (e) {
+        			e.preventDefault();
+        			
+        			var voteButton = $(this);
+        			var id = voteButton.data('id');
+        			
+        			// prevent multiple voting
+        			if (instance.votedForAgencies.indexOf(id) == -1) {
+        				$('.popover').remove();
+        				
+        				// pop up the popover, using Bootstrap
+        				voteButton.popover({
+        					// we want it on the left so it's over the table not
+        					// off the screen
+        					placement: 'left',
+        					trigger: 'manual',
+        					title: "",
+        					content: 
+        						'<form id="voteform" class="control-horizontal" action="' + DataController.API_LOCATION + 
+        						'upvote" method="get">' +
+        						'<div class="alert alert-success">' +
+        						"  If you'd like, give us some more information about yourself. " +
+        						'</div>' +
+        						'<div class="control-group">' +
+        						'  <label class="control-label" for="user-name">Name</label>' +
+        						'  <div class="controls">' +
+        						'    <input type="text" id="user-name" name="name" />' +
+        						'  </div>' +
+        						'</div>' +
+        						'<div class="control-group">' +
+        						'  <label class="control-label" for="user-email">Email</label>' +
+        						'  <div class="controls">' +
+        						'    <input type="text" id="user-email" name="email" />' +
+        						'  </div>' +
+        						'</div>' +
+        						'<div class="control-group">' +
+        						'  <div class="controls">' +
+        						// TODO: is this the proper 508 way to do things?
+        						'    <label class="checkbox">' +
+        						'      <input type="checkbox" name="takesLocalTransit" />' +
+        						'      I ride transit in this area' +
+        						'    </label>' +
+        						'    <label class="checkbox">' +
+        						'      <input type="checkbox" name="canEmail" />' +
+        						'      <a href="http://www.openplans.org">OpenPlans</a> ' + 
+        						'      may email me about open data initiatives in my community ' +
+        						'      and around the world' +
+        						'    </label>' +
+        						'    <input type="hidden" name="namespace" value="' + DataController.VOTE_NAMESPACE + '" />' +
+        						'    <input type="hidden" name="key" value="' + id + '" />' +
+        						'    <div class="btn-group">' +
+        						'      <button type="submit" class="btn btn-primary">Register my vote</button>' +
+        						'      <button class="btn" id="closeform">Cancel</button>' +
+        						'    </div>' +
+        						'  </div>' +
+        						'</div>' +
+        						'</form>'
+        				});
+        				$(this).popover('show');
+        			
+        				// make them think it happened right away, even if it didn't, to prevent
+        				// repeated clicks
+        				var numVotes = $(this).parent().find('.numVotes');
+        				$('#voteform').submit(function (e) {
+        					e.preventDefault();
+        					$.ajax({
+        						url: DataController.API_LOCATION + 'upvote?' +
+        							$(this).serialize()
+        					});
+        					// make them think it happened right away
+            				numVotes.text(Number(numVotes.text()) + 1);
+            				instance.votedForAgencies.push(id);
+            				voteButton.popover('hide');
+            				$('#voteform').remove();
+        				});
+        				
+        				$('#closeform').click(function (e) {
+        					e.preventDefault();
+        					voteButton.popover('hide');
+        					$('#voteform').remove();
+        				});
+        			}
+        		});
+        	votes.append(upvote);
+        }
 
+        tr.append(votes);
+        
         $('tbody#data').append(tr);
         
     });
@@ -253,6 +380,19 @@ DataController.prototype.filterCallback = function (agency) {
         }
     }
     
+    // google gtfs
+    if (this.filters.googleGtfs) {
+        if (!agency.googleGtfs) {
+            return false;
+        }
+    }
+
+    if (this.filters.noGoogleGtfs) {
+        if (agency.googleGtfs) {
+            return false;
+        }
+    }
+    
     // if we're here it passes muster
     return true;
 };
@@ -291,6 +431,10 @@ DataController.prototype.setUpPagination = function () {
  * Format a large integer
  */
 DataController.formatNumber = function (number) {
+	// 0 === N/A in this case
+	if (number === 0)
+		return '';
+	
     number = '' + number;
     numLen = number.length;
     output = '';
@@ -313,6 +457,9 @@ DataController.formatNumber = function (number) {
  * Make a URL valid by adding a protocol if needed
  */
 DataController.validUrl = function (url) {
+	if (typeof url == 'undefined')
+		return '';
+	
     if (url.indexOf('://') == -1)
         url = 'http://' + url;
     return url;
@@ -329,8 +476,9 @@ DataController.prototype.showAgency = function (id) {
 
             $('#agencyDownload').attr('href', 'api/ntdagencies/agency/' + agency.id);
 
-            $('#agencyUrl').html('<a href="http://' + DataController.validUrl(agency.url) + '">' + 
+            $('#agencyUrl').html('<a href="' + DataController.validUrl(agency.url) + '">' + 
                                  agency.url + '</a>');
+            $('#agencyGoogle').text((agency.googleGtfs ? 'Yes' : 'No'));
             $('#agencyNtdId').text(agency.ntdId);
             $('#agencyRidership').text(DataController.formatNumber(agency.ridership));
             $('#agencyPassengerMiles').text(DataController.formatNumber(agency.passengerMiles));
@@ -346,18 +494,23 @@ DataController.prototype.showAgency = function (id) {
                 var expires = new Date(Date.parse(feed.expires));
                 // if it expires in under 2 months
                 later.setMonth(later.getMonth() + 2);
-                if (expires < now)
-                    status = 'feedExpired';
-                else if (expires < later)
-                    status = 'feedToExpire';
-                else
-                    // just black, don't use red and green together.
-                    status = 'feedOk';
+                if (!isNaN(expires.getDate())) {
+                	if (expires < now)
+                		status = 'feedExpired';
+                	else if (expires < later)
+                		status = 'feedToExpire';
+                	else
+                		// just black, don't use red and green together.
+                		status = 'feedOk';
 
-                var expireText = ['January', 'February', 'March', 'April', 'May', 'June',
-                                  'July', 'August', 'September', 'October', 'November', 
-                                  'December'][expires.getMonth()] + ' ' + expires.getDate() +
-                    ', ' + expires.getFullYear();
+                	var expireText = ['January', 'February', 'March', 'April', 'May', 'June',
+                	                  'July', 'August', 'September', 'October', 'November', 
+                	                  'December'][expires.getMonth()] + ' ' + expires.getDate() +
+                	                  ', ' + expires.getFullYear();
+                }
+                else {
+                	var expireText = '';
+                }
 
                 $('#agencyFeeds').append(
                     '<li class="feedFields"><table>' +
@@ -382,6 +535,10 @@ DataController.prototype.showAgency = function (id) {
                         '<tr>' +
                           '<th>Official</th>' +
                           '<td>' + (feed.official ? 'Yes' : 'No') + '</td>' +
+                        '</tr>' +
+                        '<tr>' +
+                          '<th>Valid</th>' +
+                          '<td>' + feed.status + '</td>' +
                         '</tr>' +
                      '</table></li>'
                 );
@@ -410,17 +567,17 @@ function MapController () {
 
     this.layers = {};
 
-    this.layers.osm = new L.TileLayer('http://{s}.tiles.mapbox.com/v3/openplans.map-g4j0dszr/{z}/{x}/{y}.png', {
+    this.layers.osm = new L.TileLayer('http://{s}.tiles.mapbox.com/v3/openplans.map-g4j0dszr,openplans.gtfs_coverage/{z}/{x}/{y}.png', {
         attribution: 'Map data &copy; OpenStreetMap contributors, CC-BY-SA',
         maxZoom: 18
     });
 
-    this.layers.transit = new L.TileLayer('http://localhost:8001/{z}/{x}/{y}.png', {
-        attribution: 'GTFS data courtesy GTFS Data Exchange'
-    });
+    //this.layers.transit = new L.TileLayer('http://localhost:8001/{z}/{x}/{y}.png', {
+    //    attribution: 'GTFS data courtesy GTFS Data Exchange'
+    //});
 
     this.map.addLayer(this.layers.osm);
-    this.map.addLayer(this.layers.transit);
+    //this.map.addLayer(this.layers.transit);
     this.zoomTo(40, -100, 4);
 
     // https://groups.google.com/forum/?fromgroups#!topic/leaflet-js/2QN0diKp5UY
@@ -452,6 +609,7 @@ MapController.prototype.sizeMapArea = function () {
  */
 MapController.prototype.zoomTo = function (lat, lng, zoom) {
     this.map.setView(new L.LatLng(lat, lng), zoom);
+    this.sizeMapArea();
 };
         
 /* Convenience function to create a detached jQuery DOM object */

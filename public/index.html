@@ -7,8 +7,8 @@
         <link rel="stylesheet" href="javascripts/leaflet/leaflet.ie.css" />
     <![endif]-->
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.8.21.custom.css" />
-    <link rel="stylesheet" href="stylesheets/main.css" />
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="stylesheets/main.css" />
 
     <script src="javascripts/leaflet/leaflet.js"></script>
     <script src="javascripts/jquery-1.7.2.min.js"></script>
@@ -19,7 +19,8 @@
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="#">Transit Data Dashboard</a>
+          <a class="brand toplogo" href="http://www.openplans.org/"><img src="images/openplans.png" alt="OpenPlans" /></a>
+          <a class="brand title" href="#">Transit Data Dashboard</a>
           <ul class="nav">
             <li class="active"><a href="#mapTab" class="tabButton" data-toggle="tab" 
                                   id="mapTabToggle">Map</a></li>
@@ -64,6 +65,21 @@
                         <span class="ui-icon ui-icon-blank"></span>No Public GTFS
                       </a>
                     </li>
+                    
+                    <li class="divider"></li>
+                    
+                    <li>
+                        <a href="#" name="googleGtfs" opposite="noGoogleGtfs">
+                            <span class="ui-icon ui-icon-blank"></span>Google Transit
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="#" name="noGoogleGtfs" opposite="googleGtfs">
+                            <span class="ui-icon ui-icon-blank"></span>No Google Transit
+                        </a>
+                    </li>
+                    
                     <span class="hidden508">End Dropdown Menu</span>
                   </ul>
                   <div class="clear"></div>
@@ -109,6 +125,9 @@
                     <th><a href="#" class="sortBtn" name="publicGtfs" rel="tooltip"
                            title="Does the agency provide open GTFS data to the public">
                         Public GTFS</a></th>
+                    <th><a href="#" class="sortBtn" name="votes" rel="tooltip" 
+                    	   title="Number of votes for release of data">
+                    	Votes</a></th>
                   </tr>
 
                   <!-- clear the floating sort indicators -->
@@ -159,6 +178,10 @@
               <td id="agencyUrl"></td>
             </tr>
             <tr>
+                <th title="Whether or not this agency is on Google Transit">Google Transit</th>
+                <td id="agencyGoogle"></td>
+            </tr>        
+            <tr>
               <th title="ID in the National Transportation Dataset">NTD ID</th>
               <td id="agencyNtdId"></td>
             </tr>
@@ -180,6 +203,22 @@
           <ol id="agencyFeeds"></ol>
 
           <a href="#" id="agencyClose">&larr; Back to table</a>
+        </div>
+      </div>
+      <div class="vspacer"></div>
+      <!--  footer -->
+      <div class="row">
+        <div class="span12">
+            <p>A project of 
+                <a href="http://www.openplans.org"><img src="images/openplans-text.png" alt="OpenPlans." /></a>
+            </p>
+            <p>
+                Data from the <a href="http://www.ntdprogram.gov">National Transit Database</a>, 
+                the <a href="http://www.census.gov">United States Census</a>, 
+                <a href="http://www.gtfs-data-exchange.com">GTFS Data Exchange</a>, 
+                <a href="http://transit.google.com">Google</a>, and the many transit agencies
+                providing open data!
+            </p>
         </div>
       </div>
     </div>

@@ -39,3 +39,17 @@ table tr td, table tr th { padding-right: 2em }
 /* colors copied from Bootstrap's form validation, except we're not using red/green together */
 .feedExpired { color: #B94A48; font-weight: bold }
 .feedToExpire { color: #C09853; font-weight: bold }
+
+.public { background:#cfc }
+
+/* prevent Bootstrap popover from popping under the nav bar */
+.popover { z-index: 1031; margin-top: 100px }
+/* since we overrode the margin-top of the popover, moving it down, move the arrow up, replacing
+   -5px with -105px */
+.popover.left .arrow { margin-top: -105px }
+
+.brand.toplogo img { position: absolute; top: 4.5px }
+
+.brand.title { margin-left: -7px }
+
+.vspacer { height: 25px }
