@@ -6,6 +6,10 @@
     /* IE 8 */
     filter: opacity(0.0);
     z-index: -1;
+    padding: 0px;
+    margin: 0px;
+    border: 0px;
+    left: -1000px
 }
 
 /* Avoid navbar, from bootstrap example */
@@ -18,9 +22,11 @@ body {
 
 th { text-align: left; }
 
-.clear {
-    clear: both;
-}
+/* convenience */
+
+.float-left { float: left }
+
+.clear { clear: both }
 
 .tblRowEven .tblColOdd { background: #fff; }
 .tblRowEven .tblColEven { background: #e5e5e5; }
@@ -53,3 +59,7 @@ table tr td, table tr th { padding-right: 2em }
 
 .brand.title { margin-left: -32px }
 .vspacer { height: 25px }
+
+.numVotes { padding-right: 7px }
+
+.modal { overflow: hidden }

@@ -231,11 +231,11 @@ DataController.prototype.sortBy = function (field, desc) {
         
         // we only do votes on agencies with no public gtfs
         if (!agency.publicGtfs) {
-        	votes.append('<span class="numVotes">' + agency.votes + '</span>');
+        	votes.append('<span class="numVotes float-left">' + agency.votes + '</span>');
         	// and the upvote button
         	var upvote = create('a').attr('href', '#')
-        		.addClass('ui-icon')
-        		.addClass('ui-icon-arrowthick-1-n')
+        		.addClass('float-left')
+        		.addClass('icon-thumbs-up')
         		.attr('title', 'Vote for ' + agency.name + ' to release their data!')
         		.data('id', agency.id)
         		.click(function (e) {
@@ -256,6 +256,7 @@ DataController.prototype.sortBy = function (field, desc) {
         					trigger: 'manual',
         					title: "",
         					content: 
+        						'<div class="hidden508">Begin simulated dialog</div>' +
         						'<form id="voteform" class="control-horizontal" action="' + DataController.API_LOCATION + 
         						'upvote" method="get">' +
         						'<div class="alert alert-success">' +
@@ -294,9 +295,12 @@ DataController.prototype.sortBy = function (field, desc) {
         						'    </div>' +
         						'  </div>' +
         						'</div>' +
-        						'</form>'
+        						'</form>' +
+        						'<div class="hidden508">End simulated dialog</div>'
         				});
         				$(this).popover('show');
+        				// focus element for accessibility
+    					$('.popover-title').attr('tabindex', '-1').focus();
         			
         				// make them think it happened right away, even if it didn't, to prevent
         				// repeated clicks
@@ -311,17 +315,25 @@ DataController.prototype.sortBy = function (field, desc) {
             				numVotes.text(Number(numVotes.text()) + 1);
             				instance.votedForAgencies.push(id);
             				voteButton.popover('hide');
+            				
+            				// restore focus
+            				voteButton.focus();
+            				
             				$('#voteform').remove();
         				});
         				
         				$('#closeform').click(function (e) {
         					e.preventDefault();
         					voteButton.popover('hide');
+        					
+            				voteButton.focus();
+        					
         					$('#voteform').remove();
         				});
         			}
         		});
         	votes.append(upvote);
+        	votes.append('<div class="clear"></div>');
         }
 
         tr.append(votes);
@@ -620,7 +632,14 @@ function create (tag) {
 $(document).ready(function () {
     mc = new MapController();
     dc = new DataController(mc);
+    
+    $('form.xhr').submit(function (e) {
+    	e.preventDefault();
+    	$.ajax({
+    		url: $(this).attr('action') + '?' +
+    			$(this).serialize()
+    	});
+    });
 });
-
 
     
