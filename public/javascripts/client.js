@@ -590,7 +590,7 @@ function MapController () {
 
     this.map.addLayer(this.layers.osm);
     //this.map.addLayer(this.layers.transit);
-    this.zoomTo(40, -100, 4);
+    this.zoomTo(39.87602, -95.97656, 4);
 
     // https://groups.google.com/forum/?fromgroups#!topic/leaflet-js/2QN0diKp5UY
     $('#mapTab').on('shown', function () {
@@ -606,7 +606,8 @@ MapController.prototype.sizeMapArea = function () {
     
     $('#map')
         .css('width',  parent.innerWidth() + 'px')
-        .css('height', $('body').innerHeight() + 'px');
+        // golden rectangle, horizontal
+        .css('height', (parent.innerWidth() / 1.618) + 'px');
 
     if (this.map != undefined) {
         this.map.invalidateSize();
