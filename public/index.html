@@ -221,8 +221,49 @@
                 <a href="http://transit.google.com">Google</a>, and the many transit agencies
                 providing open data!
             </p>
+            <p><a href="#feedback" data-toggle="modal">Send feedback</a></p>
         </div>
       </div>
+    </div>
+
+    <div class="modal hidden" id="feedback" tabindex="-1" role="dialog">
+        <span class="hidden508">Begin simulated dialog</span>
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h3>Send feedback</h3>
+        </div>
+        <div class="modal-body">
+            <form class="xhr" action="http://example.com/test" method="get" 
+                class="form-horizontal">
+                <div class="control-group">
+                    <label class="control-label" for="fbName">Your name</label>
+                    <div class="controls">
+                        <input type="text" name="name" id="fbName" placeholder="Name" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="fbEmail">Your email</label>
+                    <div class="controls">
+                        <input type="text" name="email" id="fbEmail" placeholder="Email" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="fbComments">Your comments</label>
+                    <div class="controls">
+                        <textarea rows="7" name="comments" id="fbComments"></textarea>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="controls">
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">Send feedback</button>
+                            <button class="btn" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <span class="hidden508">End simulated dialog</span>
     </div>
 
     <script src="bootstrap/js/bootstrap.js"></script>
