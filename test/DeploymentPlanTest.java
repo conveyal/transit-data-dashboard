@@ -14,17 +14,20 @@
 */
 
 import org.junit.*;
+import org.postgresql.util.PSQLException;
+
+import deployment.DeploymentPlan;
+import deployment.DeploymentPlan.FeedDescriptor;
+
 import java.util.*;
 import play.test.*;
-import updaters.DeploymentPlan;
-import updaters.DeploymentPlan.FeedDescriptor;
 import models.*;
 
 public class DeploymentPlanTest extends UnitTest {
 	@Before
     public void setUp () {
         // TODO: this seems to only delete the ones loaded from fixtures.
-        Fixtures.deleteAll();
+	    Fixtures.deleteAllModels();
         Fixtures.loadModels("planner.yml");
     }
     
@@ -96,5 +99,83 @@ public class DeploymentPlanTest extends UnitTest {
         assertEquals(1, fd.length);
         
         assertEquals("bart1", fd[0].getFeedId());        
+    }
+    
+    /**
+     * Test that the deployment planner properly handles the situation where there is a
+     * common feed being split to uncommon feeds at different times; keep in mind that "proper"
+     * is a relative term here.
+     */
+    //@Test
+    public void testCommonFeedSplit () {
+        // note that this implicitly tests Unicode in the DB.
+        MetroArea sb = MetroArea.find("byName", "Santa Bárbara, CA").first();
+        // sept 10, 2012
+        DeploymentPlan dp = new DeploymentPlan(sb, new Date(112, 6, 5), 365);
+        FeedDescriptor[] feeds = dp.getFeeds();
+        
+        boolean mtdFound = false, rtaFound = false, countyFound = false;
+        
+        for (FeedDescriptor fd : feeds) {
+            if (fd.getFeedId().equals("sbmtd")) {
+                // it should only be found once
+                assertTrue(!mtdFound);
+                mtdFound = true;
+            }
+            else if (fd.getFeedId().equals("slorta")) {
+                assertTrue(!rtaFound);
+                rtaFound = true;
+            }
+            else if (fd.getFeedId().equals("sbcounty")) {
+                assertTrue(!countyFound);
+                countyFound = true;
+                // it should run up to when the new MTD feed starts
+                // if it's 2012-10-08, then it's running up to SLORTA
+                // otherwise, something strange is happening.
+                assertEquals("2012-10-31", fd.getExpireOn());
+            }
+            else {
+                // This shouldn't happen; we've covered all the possible cases
+                assertTrue(false);
+            }
+        }
+        // make sure everything was found
+        assertEquals(3, feeds.length);
+        assertTrue(mtdFound);
+        assertTrue(rtaFound);
+        assertTrue(countyFound);
+    }
+    
+    /**
+     * Test the case of a regional GTFS feed to ensure nothing is added twice when feeds are shared
+     * by multiple agencies.
+     */
+    @Test
+    public void testMultipleGtfs () {
+        MetroArea la = MetroArea.find("byName", "Los Angeles, CA").first();
+        assertNotNull(la);
+        DeploymentPlan dp = new DeploymentPlan(la, new Date(112, 1, 1), 500);
+        
+        FeedDescriptor[] feeds = dp.getFeeds();
+        assertEquals(2, feeds.length);
+        
+        boolean comb1Found = false, comb2Found = false;
+        
+        for (FeedDescriptor fd : feeds) {
+            if ("lacombined1".equals(fd.getFeedId())) {
+                assertTrue(!comb1Found);
+                comb1Found = true;
+            }
+            else if ("lacombined2".equals(fd.getFeedId())) {
+                assertTrue(!comb2Found);
+                comb2Found = true;
+            }
+            else
+                assertTrue(false);
+        }
+        
+        assertTrue(comb1Found);
+        assertTrue(comb2Found);
+        assertEquals(2, feeds.length);
     }
 }

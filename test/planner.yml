@@ -32,3 +32,58 @@ NtdAgency(muni):
         url: http://example.com
         metroArea: sf
         feeds: [muni]
+
+GtfsFeed(sbmtd):
+        startDate: 2012-11-01
+        expirationDate: 2014-10-10
+        storedId: sbmtd
+
+GtfsFeed(slorta):
+        startDate: 2012-10-09
+        expirationDate: 2014-10-10
+        storedId: slorta
+
+GtfsFeed(sbcounty):
+        startDate: 2011-10-10
+        expirationDate: 2015-10-10
+        storedId: sbcounty
+        supersededBy: sbmtd
+
+NtdAgency(sbmtd):
+        url: http://www.sbmtd.gov
+        feeds: [sbmtd, sbcounty]
+
+NtdAgency(slorta):
+        url: http://www.example.com
+        feeds: [slorta, sbcounty]
+
+MetroArea(sb):
+        name: Santa Bárbara, CA
+        agencies: [slorta, sbmtd]
+
+GtfsFeed(lacombined2):
+        startDate: 2012-09-05
+        expirationDate: 2014-01-01
+        storedId: lacombined2
+
+GtfsFeed(lacombined1):
+        startDate: 2011-09-05
+        expirationDate: 2014-01-01
+        storedId: lacombined1
+        supersededBy: lacombined2
+
+NtdAgency(metro):
+        url: http://www.metro.net
+        feeds: [lacombined1, lacombined2]
+
+NtdAgency(metrolink):
+        url: http://www.metrolinktrains.com
+        feeds: [lacombined1, lacombined2]
+
+MetroArea(la):
+        name: Los Angeles, CA
+        agencies: [metro, metrolink]
+
+BikeRentalSystem:
+        type: CITYBIKES
+
