@@ -31,6 +31,7 @@ import play.db.jpa.JPA;
 import play.modules.spring.Spring;
 import updaters.FeedStorer;
 
+import models.GtfsFeed;
 import models.MetroArea;
 import models.NtdAgency;
 import models.ReviewType;
@@ -56,6 +57,38 @@ public class Admin extends Mapper {
         long unmatchedMetro = UnmatchedMetroArea.count();
         
         render(feedsNoAgency, agenciesMultiAreas, unmatchedPrivate, unmatchedMetro);
+    }
+    
+    /**
+     * Show feeds with no agencies.
+     * @author mattwigway
+     */
+    public static void feedsNoAgencies () {
+        List<GtfsFeed> feedsNoAgencies = GtfsFeed.find("byReview", ReviewType.NO_AGENCY).fetch();
+        List<NtdAgency> agencies = NtdAgency.findAll();
+        
+        render(feedsNoAgencies, agencies);
+    }
+    
+    /**
+     * Link a feed to an agency
+     * @author mattwigway
+     */
+    public static void linkFeedToAgency (GtfsFeed feed, NtdAgency agency) {
+        agency.feeds.add(feed);
+        feed.review = null;
+        feed.save();
+        agency.save();
+    }
+    
+    /**
+     * Create a new agency from a feed
+     * @author mattwigway
+     */
+    public static void newAgencyFromFeed(GtfsFeed feed) {
+        NtdAgency agency = new NtdAgency(feed);
+        agency.review = ReviewType.NO_METRO;
+        agency.save();
     }
     
     private static class MetroAreaWithGeom {
