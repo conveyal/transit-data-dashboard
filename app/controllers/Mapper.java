@@ -39,7 +39,8 @@ import jobs.UpdateGtfs;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import updaters.DeploymentPlan;
+import deployment.DeploymentPlan;
+
 import updaters.FeedStatsCalculator;
 import updaters.FeedStorer;
 import utils.DbUtils;
@@ -412,7 +413,7 @@ public class Mapper extends Controller {
             }
         }
         
-        String out = "";
+        String out = "<!-- total: " + feeds.size() + " feeds -->\n";
         
         for (GtfsFeed feed : feeds) {
             out = out + "<bean class=\"org.opentripplanner.graph_builder.model.GtfsBundle\">\n" +
