@@ -10,7 +10,7 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU Lesser General Public License
-  along with this program. If not, see <http://www.gnu.org/licenses/>. 
+  along with this program. If not, see  <http://www.gnu.org/licenses/>. 
 */
 
 package controllers;
@@ -38,6 +38,11 @@ import models.ReviewType;
 import models.UnmatchedMetroArea;
 import models.UnmatchedPrivateGtfsProvider;
 
+/**
+ * This defines the admin interface, which is a place to deal with things that are unmapped, &c.
+ * It works in conjunction with /admin/mapfeeds.html and /crud/
+ * @author mattwigway
+ */
 public class Admin extends Mapper {
     /**
      * The main admin screen.
@@ -91,6 +96,9 @@ public class Admin extends Mapper {
         agency.save();
     }
     
+    /**
+     * This is just a proxy to serialize the important parts of a metro to JSON.
+     */
     private static class MetroAreaWithGeom {
         private String name;
         // in GeoJSON format
@@ -196,7 +204,6 @@ public class Admin extends Mapper {
     /**
      * Actually perform the split for a given metro
      */
-    // 
     public static void saveSplitMetro () {
         // we get the number of splits then parse down the URL params; each metro is named
         // metron, where n is a number greater than or equal to 1 and less than or equal to splits.
