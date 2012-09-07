@@ -38,7 +38,7 @@ public class LoggingUpdaterHook implements UpdaterHook {
 			else
 				needsComma = true;
 			
-			out += area.name;
+			out += area.toString();
 		}
 		
 		Logger.info("Updated areas: " + out);
