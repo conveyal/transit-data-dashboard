@@ -70,12 +70,8 @@ public class GtfsDataExchangeUpdater implements Updater {
 		JsonObject feed;
 		
 		for (JsonElement rawFeed : data) {
-            // if it wasn't committed, roll it back
-		    try {
-		        if (JPA.em().getTransaction().isActive())
-		            JPAPlugin.closeTx(true);
-		    } catch (JPAException e) {}; // not initialized
-
+		    // this doesn't seem to cause a problem if there is no active transaction
+		    JPAPlugin.closeTx(true);
             JPAPlugin.startTx(false);
 
             feed = rawFeed.getAsJsonObject();
