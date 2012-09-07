@@ -165,6 +165,12 @@ public class GtfsDataExchangeUpdater implements Updater {
                 
                     newFeed.save();
                 }
+                
+                for (NtdAgency ntd : newFeed.getAgencies()) {
+                    for (MetroArea metro : ntd.getMetroAreas()) {
+                        updated.add(metro);
+                    }
+                }
 
 		        if (originalFeed != null) {
 		            originalFeed.supersededBy = newFeed;
