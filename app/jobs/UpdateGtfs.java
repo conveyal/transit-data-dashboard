@@ -15,6 +15,7 @@
 
 package jobs;
 
+import play.db.jpa.NoTransaction;
 import play.jobs.Job;
 import updaters.UpdaterFactory;
 import play.modules.spring.Spring;
@@ -25,6 +26,7 @@ import play.modules.spring.Spring;
  *
  */
 //@Every('24h')
+@NoTransaction
 public class UpdateGtfs extends Job {
 	public void doJob () {
 		UpdaterFactory factory = Spring.getBeanOfType(UpdaterFactory.class);

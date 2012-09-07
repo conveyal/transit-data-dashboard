@@ -26,6 +26,7 @@ import java.io.File;
 
 import play.Logger;
 import play.db.jpa.JPA;
+import play.db.jpa.JPAPlugin;
 import play.db.jpa.NoTransaction;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
@@ -66,125 +67,125 @@ public class GtfsDataExchangeUpdater implements Updater {
 		JsonObject agencies = res.getJson().getAsJsonObject();
 		JsonArray data = agencies.get("data").getAsJsonArray();
 		JsonObject feed;
+		
 		for (JsonElement rawFeed : data) {
-		    try {
-		        feed = rawFeed.getAsJsonObject();
+            // if it wasn't committed, roll it back
+            if (JPA.em().getTransaction().isActive())
+                JPAPlugin.closeTx(true);
 
-		        String dataExchangeId = feed.get("dataexchange_id").getAsString();
-		        
-		        if (dataExchangeId == null || dataExchangeId.equals(""))
-		            continue;
+            JPAPlugin.startTx(false);
 
-		        GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? AND supersededBy IS NULL",
-		                dataExchangeId).first();
+            feed = rawFeed.getAsJsonObject();
 
-		        // convert to ms
-		        long lastUpdated = ((long) feed.get("date_last_updated").getAsDouble()) * 1000L;
+            String dataExchangeId = feed.get("dataexchange_id").getAsString();
 
-		        // do we need to fetch?
-		        if (originalFeed != null) {
-		            // difference of less than 2000ms: ignore
-		            if ((lastUpdated - originalFeed.dateUpdated.getTime()) < 2000) {
-		                continue;
-		            }
-		        }
+            if (dataExchangeId == null || dataExchangeId.equals(""))
+                continue;
 
-		        // get the data file URL
-		        res = WS.url("http://www.gtfs-data-exchange.com/agency/" + 
-		                dataExchangeId + "/json").get();
-		        status = res.getStatus();
-		        if (status != 200) {
-		            Logger.error("Error fetching agency %s, status %s", dataExchangeId, status);
-		            continue;
-		        }
+            GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? AND supersededBy IS NULL",
+                    dataExchangeId).first();
 
-		        JsonObject agency = res.getJson().getAsJsonObject();
-		        JsonArray files = agency.get("data").getAsJsonObject()
-		                .get("datafiles").getAsJsonArray();
-		        JsonObject firstFile = files.get(0).getAsJsonObject();
-		        String url = firstFile.get("file_url").getAsString();
+            // convert to ms
+            long lastUpdated = ((long) feed.get("date_last_updated").getAsDouble()) * 1000L;
 
-		        // Download the feed
-		        String feedId = storer.storeFeed(url);
-		        if (feedId == null) {
-		            Logger.error("Could not retrieve feed %s", url);
-		            // feed will be redownloaded on next attempt
-		            continue;
-		        }
-
-		        GtfsFeed newFeed;
-		        boolean isNew;
-		        // copy over all the data.
-		        if (originalFeed != null) {
-		            isNew = false;
-		            newFeed = originalFeed.clone();
-		        }
-		        else {
-		            newFeed = new GtfsFeed();
-		            newFeed.note = "new feed";
-		            isNew = true;
-		        }
-
-		        // update all fields
-		        FeedUtils.copyFromJson(feed, newFeed);
-	            newFeed.downloadUrl = url;
-	            newFeed.storedId = feedId;
-		        
-		        // Calculate feed stats
-		        File feedFile = storer.getFeed(feedId);
-		        
-		        FeedStatsCalculator stats;
-		        try {
-		            stats = new FeedStatsCalculator(feedFile);
-		        } catch (Exception e) {
-		            // TODO be more descriptive
-		            Logger.error("Error calculating feed stats for feed %s", url);
-		            e.printStackTrace();
-		            
-		            // still save it in the DB
-		            newFeed.status = FeedParseStatus.FAILED;
-		            
-		            // don't supersede anything
-		            newFeed.save();
-		            JPA.em().getTransaction().commit();
-		            
-		            continue;
-		        }
-		        
-		        storer.releaseFeed(feedId);
-
-		        // save the stats
-		        stats.apply(newFeed);
-		        newFeed.status = FeedParseStatus.SUCCESSFUL;
-		        newFeed.save();
-		        
-		        // if it's a new feed, find an agency.
-                if (isNew) {
-                    if (!newFeed.findAgency())
-                        newFeed.review = ReviewType.NO_AGENCY;
-                
-                    newFeed.save();
+            // do we need to fetch?
+            if (originalFeed != null) {
+                // difference of less than 2000ms: ignore
+                if ((lastUpdated - originalFeed.dateUpdated.getTime()) < 2000) {
+                    continue;
                 }
-                
-                for (NtdAgency ntd : newFeed.getAgencies()) {
-                    for (MetroArea metro : ntd.getMetroAreas()) {
-                        updated.add(metro);
-                    }
+            }
+
+            // get the data file URL
+            res = WS.url("http://www.gtfs-data-exchange.com/agency/" + 
+                    dataExchangeId + "/json").get();
+            status = res.getStatus();
+            if (status != 200) {
+                Logger.error("Error fetching agency %s, status %s", dataExchangeId, status);
+                continue;
+            }
+
+            JsonObject agency = res.getJson().getAsJsonObject();
+            JsonArray files = agency.get("data").getAsJsonObject()
+                    .get("datafiles").getAsJsonArray();
+            JsonObject firstFile = files.get(0).getAsJsonObject();
+            String url = firstFile.get("file_url").getAsString();
+
+            // Download the feed
+            String feedId = storer.storeFeed(url);
+            if (feedId == null) {
+                Logger.error("Could not retrieve feed %s", url);
+                // feed will be redownloaded on next attempt
+                continue;
+            }
+
+            GtfsFeed newFeed;
+            boolean isNew;
+            // copy over all the data.
+            if (originalFeed != null) {
+                isNew = false;
+                newFeed = originalFeed.clone();
+            }
+            else {
+                newFeed = new GtfsFeed();
+                newFeed.note = "new feed";
+                isNew = true;
+            }
+
+            // update all fields
+            FeedUtils.copyFromJson(feed, newFeed);
+            newFeed.downloadUrl = url;
+            newFeed.storedId = feedId;
+
+            // Calculate feed stats
+            File feedFile = storer.getFeed(feedId);
+
+            FeedStatsCalculator stats;
+            try {
+                stats = new FeedStatsCalculator(feedFile);
+            } catch (Exception e) {
+                // TODO be more descriptive
+                Logger.error("Error calculating feed stats for feed %s", url);
+                e.printStackTrace();
+
+                // still save it in the DB
+                newFeed.status = FeedParseStatus.FAILED;
+
+                // don't supersede anything
+                newFeed.save();
+                JPA.em().getTransaction().commit();
+
+                continue;
+            }
+
+            storer.releaseFeed(feedId);
+
+            // save the stats
+            stats.apply(newFeed);
+            newFeed.status = FeedParseStatus.SUCCESSFUL;
+            newFeed.save();
+
+            // if it's a new feed, find an agency.
+            if (isNew) {
+                if (!newFeed.findAgency())
+                    newFeed.review = ReviewType.NO_AGENCY;
+
+                newFeed.save();
+            }
+
+            for (NtdAgency ntd : newFeed.getAgencies()) {
+                for (MetroArea metro : ntd.getMetroAreas()) {
+                    updated.add(metro);
                 }
+            }
 
-		        if (originalFeed != null) {
-		            originalFeed.supersededBy = newFeed;
-		            originalFeed.save();
-		        }
-		        
-		        JPA.em().getTransaction().commit();
-		    } finally {
-		        // if it wasn't committed, roll it back
-		        if (JPA.em().getTransaction().isActive())
-		            JPA.em().getTransaction().rollback();
+            if (originalFeed != null) {
+                originalFeed.supersededBy = newFeed;
+                originalFeed.save();
+            }
 
-		        JPA.em().getTransaction().begin();
-		    }
+            // https://groups.google.com/forum/?fromgroups=#!topic/play-framework/qaIaMOIjpMM
+            JPAPlugin.closeTx(false);
 		}
 		
 		return updated;

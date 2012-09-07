@@ -19,6 +19,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
 
+import play.db.jpa.JPAPlugin;
+
 import deployment.DeploymentPlan;
 
 import models.MetroArea;
@@ -32,6 +34,8 @@ public class DeploymentPlanGeneratorHook implements UpdaterHook {
 
 	@Override
 	public void update(Set<MetroArea> areas) {
+	    JPAPlugin.startTx(true);
+	    
 		for (MetroArea area : areas) {
 		    if (!area.disabled) {
 
@@ -47,8 +51,9 @@ public class DeploymentPlanGeneratorHook implements UpdaterHook {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		         */ 
+		         */
 		    }
 		}
+		JPAPlugin.closeTx(false);
 	}
 }

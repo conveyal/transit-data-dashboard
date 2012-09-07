@@ -18,6 +18,7 @@ package updaters;
 import java.util.Set;
 
 import play.Logger;
+import play.db.jpa.JPAPlugin;
 
 import models.MetroArea;
 
@@ -30,6 +31,8 @@ public class LoggingUpdaterHook implements UpdaterHook {
 
 	@Override
 	public void update(Set<MetroArea> areas) {
+	    JPAPlugin.startTx(true);
+	    
 		String out = "";
 		boolean needsComma = false;
 		for (MetroArea area : areas) {
@@ -41,6 +44,7 @@ public class LoggingUpdaterHook implements UpdaterHook {
 			out += area.toString();
 		}
 		
+		JPAPlugin.closeTx(false);
 		Logger.info("Updated areas: " + out);
 	}
 }
