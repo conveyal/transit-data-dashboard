@@ -28,6 +28,7 @@ import play.Logger;
 import play.db.jpa.JPA;
 import play.db.jpa.JPAPlugin;
 import play.db.jpa.NoTransaction;
+import play.exceptions.JPAException;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.XPath;
@@ -70,8 +71,10 @@ public class GtfsDataExchangeUpdater implements Updater {
 		
 		for (JsonElement rawFeed : data) {
             // if it wasn't committed, roll it back
-            if (JPA.em().getTransaction().isActive())
-                JPAPlugin.closeTx(true);
+		    try {
+		        if (JPA.em().getTransaction().isActive())
+		            JPAPlugin.closeTx(true);
+		    } catch (JPAException e) {}; // not initialized
 
             JPAPlugin.startTx(false);
 
