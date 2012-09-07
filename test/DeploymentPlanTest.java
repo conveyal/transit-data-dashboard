@@ -18,8 +18,12 @@ import org.postgresql.util.PSQLException;
 
 import deployment.DeploymentPlan;
 import deployment.DeploymentPlan.FeedDescriptor;
+import deployment.DeploymentPlanScheduler;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
+
+import play.db.jpa.JPA;
 import play.test.*;
 import models.*;
 
@@ -28,6 +32,8 @@ public class DeploymentPlanTest extends UnitTest {
     public void setUp () {
         // TODO: this seems to only delete the ones loaded from fixtures.
 	    Fixtures.deleteAllModels();
+	    JPA.em().getTransaction().rollback();
+	    JPA.em().getTransaction().begin(); 
         Fixtures.loadModels("planner.yml");
     }
     
@@ -106,7 +112,7 @@ public class DeploymentPlanTest extends UnitTest {
      * common feed being split to uncommon feeds at different times; keep in mind that "proper"
      * is a relative term here.
      */
-    //@Test
+    @Test
     public void testCommonFeedSplit () {
         // note that this implicitly tests Unicode in the DB.
         MetroArea sb = MetroArea.find("byName", "Santa Bárbara, CA").first();
@@ -178,4 +184,77 @@ public class DeploymentPlanTest extends UnitTest {
         assertTrue(comb2Found);
         assertEquals(2, feeds.length);
     }
+    
+    /**
+     * Test the case of a GTFS feed beyond the window; make sure it is both (a) not included in the
+     *  current build and (b) there is a scheduled rebuild of the graph
+     */ 
+     @Test
+     public void testDeploymentScheduler () {
+         MetroArea chi = MetroArea.find("byName", "Chicago, IL").first();
+         assertNotNull(chi);
+         
+         DeploymentPlan dp = new DeploymentPlan(chi, getDate(2012, 6, 15), 10);
+         
+         FeedDescriptor[] feeds = dp.getFeeds();
+         
+         boolean ctaFound = false, cta2Found = false, metraFound = false;
+         
+         for (FeedDescriptor feed : feeds) {
+             if ("cta1".equals(feed.getFeedId())) {
+                 assertTrue(!ctaFound);
+                 ctaFound = true;
+             }
+             else if ("cta2".equals(feed.getFeedId())) {
+                 assertTrue(!cta2Found);
+                 cta2Found = true;
+             }
+             else if ("metra".equals(feed.getFeedId())) {
+                 assertTrue(!metraFound);
+                 metraFound = true;
+             }
+             else {
+                 assertTrue(false);
+             }
+         }
+         
+         assertTrue(ctaFound);
+         assertTrue(!metraFound);
+         assertTrue(!cta2Found);
+         assertEquals(1, feeds.length);
+         
+         // and make sure an entry was generated for it in the rebuild table
+         List<Date> rebuilds = DeploymentPlanScheduler.getRebuildsForMetro(chi);
+         SimpleDateFormat dates = new SimpleDateFormat("yyyy-MM-dd");
+         
+         // one for CTA, on for Metra
+         assertEquals(2, rebuilds.size());
+         
+         Collections.sort(rebuilds);
+         
+         // CTA: 2012-10-15, less 10 days for the window, less 1 day to get the previous day 
+         assertEquals("2012-10-04", dates.format(rebuilds.get(0)));
+         
+         // Metra
+         assertEquals("2012-11-04", dates.format(rebuilds.get(1)));
+         
+         // and clear them all to make sure they go away
+         DeploymentPlanScheduler.clearRebuilds(chi);
+         
+         rebuilds = DeploymentPlanScheduler.getRebuildsForMetro(chi);
+         assertEquals(0, rebuilds.size());
+     }
+     
+     /**
+      * Get a date
+      * @param year The year, as you would expect, e.g. 2012
+      * @param month The month, 1 based, i.e. 1 == January, 6 == June
+      * @param day The day of the month, 1 - 31
+      * @return A date representation of the given day
+      */
+     public static Date getDate (int year, int month, int day) {
+         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("gmt"));
+         cal.set(year, month, day);
+         return cal.getTime();
+     }
 }

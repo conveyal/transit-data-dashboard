@@ -1,6 +1,3 @@
-MetroArea(sf):
-        name: San Francisco, CA
-
 GtfsFeed(bart3):
         startDate: 2012-12-10
         expirationDate: 2013-4-10
@@ -25,13 +22,15 @@ GtfsFeed(muni):
         
 NtdAgency(bart):
         url: http://www.bart.gov
-        metroArea: sf
         feeds: [bart1, bart2, bart3]
         
 NtdAgency(muni):
         url: http://example.com
-        metroArea: sf
         feeds: [muni]
+
+MetroArea(sf):
+        name: San Francisco, CA
+        agencies: [muni, bart]
 
 GtfsFeed(sbmtd):
         startDate: 2012-11-01
@@ -83,6 +82,35 @@ NtdAgency(metrolink):
 MetroArea(la):
         name: Los Angeles, CA
         agencies: [metro, metrolink]
+
+# Chicago: used to test feeds beyond the window
+GtfsFeed(cta2):
+        startDate: 2012-10-15Z
+        expirationDate: 2014-01-01Z
+        storedId: cta2
+
+GtfsFeed(cta1):
+        startDate: 2012-01-01Z
+        expirationDate: 2013-03-01Z
+        storedId: cta1
+        supersededBy: cta2
+
+GtfsFeed(metra):
+        startDate: 2012-11-15Z
+        expirationDate: 2014-01-01Z
+        storedId: metra
+
+NtdAgency(cta):
+        url: http://www.transitchicago.com
+        feeds: [cta1, cta2]
+
+NtdAgency(metra):
+        url: http://www.metrarail.com
+        feeds: [metra]
+
+MetroArea(chi):
+        name: Chicago, IL
+        agencies: [cta, metra]
 
 BikeRentalSystem:
         type: CITYBIKES

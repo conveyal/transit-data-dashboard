@@ -29,6 +29,7 @@ import com.google.gson.Gson;
 
 import play.Play;
 import play.libs.WS;
+import play.modules.spring.Spring;
 
 import models.BikeRentalSystem;
 import models.BikeRentalSystemType;
@@ -53,6 +54,7 @@ public class DeploymentPlan {
 	private SimpleDateFormat isoDate;
 	private Calendar calendar;
 	private FeedDescriptor[] feeds;
+	private int window;
 	
 	/**
 	 * Create a plan for the given metro at the current time and for the default window.
@@ -80,6 +82,7 @@ public class DeploymentPlan {
 	 */
 	public DeploymentPlan(MetroArea area, Date date, int window) {
 		this.area = area;
+		this.window = window;
 		this.calendar = Calendar.getInstance(gmt);
 		this.isoDate = new SimpleDateFormat("yyyy-MM-dd");
 		this.startDate = date;
@@ -88,6 +91,10 @@ public class DeploymentPlan {
 		this.endDate = calendar.getTime();
 		
 		Set<FeedDescriptor> toInclude = new HashSet<FeedDescriptor>();
+		
+		// Clear all the scheduled rebuilds of this area; if still applicable, they will be
+		// recreated automatically.
+		DeploymentPlanScheduler.clearRebuilds(this.area);
 		
 		for (NtdAgency agency : area.agencies) {
 			// all the unsuperseded feeds for this agency
@@ -103,10 +110,10 @@ public class DeploymentPlan {
 				
 				addFeeds(agency.name + "_" + agency.id, feed, toInclude);
 			}
-			
-			this.feeds = new FeedDescriptor[toInclude.size()];
-			this.feeds = toInclude.toArray(this.feeds);
 		}
+		
+        this.feeds = new FeedDescriptor[toInclude.size()];
+        this.feeds = toInclude.toArray(this.feeds);
 	}
 	
 	/**
@@ -159,6 +166,15 @@ public class DeploymentPlan {
 				// if this feed is already present, there is no reason to continue the search
 				if (!toInclude.add(fd))
 				    return;
+			}
+			else {
+			    // the feed starts after the end of the window, so it shouldn't be included, but
+			    // the graph needs to be rebuilt on the day it comes into the window.
+			    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("gmt"));
+			    cal.setTime(feed.startDate);
+			    // - 1 so it will be sure to rebuild
+			    cal.add(Calendar.DAY_OF_YEAR, -this.window - 1);
+			    DeploymentPlanScheduler.scheduleRebuild(feed, cal.getTime());
 			}
 			
 			olderFeed = GtfsFeed.find(
