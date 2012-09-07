@@ -202,7 +202,12 @@ public class S3FeedStorer implements FeedStorer {
 	}
 	
 	public void deleteFeed (String id) {
+	    if (!uuidRe.matcher(id).matches())
+	        return;
 	    
+	    // even if object doesn't exist, will not throw error; only throws error when there is some
+	    // sort of communications hiccup
+	    s3Client.deleteObject(this.bucket, id);
 	}
 	
 	public String toString () {
