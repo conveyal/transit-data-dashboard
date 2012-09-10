@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -66,6 +67,7 @@ public class FeedStatsCalculator {
 	private File rawGtfs;
 	private GtfsDaoImpl store;
 	
+	// These dates are stored in agency local time 
 	private Date startDate;
 	private Date endDate;
 	private MultiPolygon the_geom;
@@ -107,6 +109,8 @@ public class FeedStatsCalculator {
 	}
 	
 	private void calculateStartAndEnd () throws Exception {
+	    TimeZone gmt = TimeZone.getTimeZone("gmt");
+	    
 		// First, read feed_info.txt
 	    // TODO is 1 ever not the correct value?
 	    FeedInfo feedInfo = store.getFeedInfoForId(1);
@@ -129,10 +133,7 @@ public class FeedStatsCalculator {
 		// calendar_dates.txt
 		// This code is lifted and slightly modified from
 		// https://github.com/demory/otp_gtfs/blob/master/java/gtfsmetrics/src/main/java/org/openplans/gtfsmetrics/CalendarStatus.java
-		
-
-        
-        Map<AgencyAndId, Set<ServiceDate>> addExceptions = new HashMap<AgencyAndId, Set<ServiceDate>>();
+		Map<AgencyAndId, Set<ServiceDate>> addExceptions = new HashMap<AgencyAndId, Set<ServiceDate>>();
         Map<AgencyAndId, Set<String>> removeExceptions = new HashMap<AgencyAndId, Set<String>>();
         for(ServiceCalendarDate date : store.getAllCalendarDates()) {
             if(date.getExceptionType() == ServiceCalendarDate.EXCEPTION_TYPE_ADD) {
@@ -194,7 +195,7 @@ public class FeedStatsCalculator {
         // now, expand based on calendar_dates.txt
         for(Set<ServiceDate> dateSet: addExceptions.values()) {
             for(ServiceDate sd : dateSet) {
-                DateTime dt = new DateTime(sd.getAsDate().getTime());
+                DateTime dt = new DateTime(sd.getAsDate(gmt).getTime());
                 if (dt.isAfter(latestEnd))
                 	latestEnd = dt;
                 if (dt.isBefore(earliestStart))

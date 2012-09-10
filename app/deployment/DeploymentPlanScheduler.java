@@ -1,10 +1,12 @@
 package deployment;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 
 import models.GtfsFeed;
 import models.MetroArea;
@@ -72,7 +74,7 @@ public class DeploymentPlanScheduler {
      * Return all the metros that need to be updated
      */
     public static Set<MetroArea> getMetroAreasNeedingUpdate () {
-        Date now = new Date();
+        Date now = Calendar.getInstance(TimeZone.getTimeZone("gmt")).getTime();
         Set<MetroArea> ret = new HashSet<MetroArea>();
         
         for (ScheduledRebuild rebuild : ScheduledRebuild.<ScheduledRebuild>findAll()) {

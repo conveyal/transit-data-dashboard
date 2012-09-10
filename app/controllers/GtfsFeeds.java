@@ -25,7 +25,9 @@ import com.vividsolutions.jts.io.ParseException;
 import java.util.Date;
 import play.data.binding.As;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 public class GtfsFeeds extends Controller {
     /**
@@ -56,8 +58,7 @@ public class GtfsFeeds extends Controller {
                                String geometry) {
         MultiPolygon the_geom;
 
-        // TODO: tz
-        Date now = new Date();
+        Date now = Calendar.getInstance(TimeZone.getTimeZone("gmt")).getTime();
         if (date_updated == null)
             date_updated = now;
         if (date_added == null)

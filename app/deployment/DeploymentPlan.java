@@ -61,7 +61,7 @@ public class DeploymentPlan {
 	 * @param area
 	 */
 	public DeploymentPlan(MetroArea area) {
-		this(area, new Date());
+		this(area, Calendar.getInstance(TimeZone.getTimeZone("gmt")).getTime());
 	}
 	
 	/**
