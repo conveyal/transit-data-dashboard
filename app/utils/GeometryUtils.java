@@ -21,6 +21,8 @@ package utils;
 
 import java.util.HashMap;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKTReader;
@@ -93,6 +95,23 @@ public class GeometryUtils {
         sb.append(bbox);
         sb.append(')');
         return sb.toString();
+    }
+    
+    /**
+     * Convert a polygon to a multipolygon
+     */
+    public static MultiPolygon forceToMultiPolygon (Geometry in) {
+        if (in instanceof Polygon) {
+            GeometryFactory factory = getGeometryFactoryForSrid(in.getSRID());
+            Polygon[] polygons = new Polygon[1];
+            polygons[0] = (Polygon) in;
+            return factory.createMultiPolygon(polygons);
+        }
+        else if (in instanceof MultiPolygon)
+            return (MultiPolygon) in;
+        else
+            return null;
+                    
     }
 }
             

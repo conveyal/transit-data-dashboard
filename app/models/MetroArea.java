@@ -186,10 +186,7 @@ public class MetroArea extends Model {
      * Merge two metro areas.
      */
     public void mergeAreas (MetroArea other) {
-        // we make a multipolygon with one member for the geometry
-        Polygon[] polygons;
         Geometry result;
-        GeometryFactory factory;
     
         for (NtdAgency agency : other.agencies) {
             this.agencies.add(agency);;
@@ -202,17 +199,11 @@ public class MetroArea extends Model {
         
         result = OverlayOp.overlayOp(this.the_geom, other.the_geom, OverlayOp.UNION);
         
-        // sometimes it's a polygon, not sure why
-        if (result instanceof Polygon) {
-            // TODO: assumptions about SRID of other here
-            factory = GeometryUtils.getGeometryFactoryForSrid(this.the_geom.getSRID());
-            polygons = new Polygon[1];
-            polygons[0] = (Polygon) result;
-            result = factory.createMultiPolygon(polygons);
-        }
-        
         // somewhere this gets lost
         result.setSRID(this.the_geom.getSRID());
+        
+        // sometimes it's a polygon, not sure why
+        result = GeometryUtils.forceToMultiPolygon(result);
     
         this.the_geom = (MultiPolygon) result;
         
@@ -291,6 +282,13 @@ public class MetroArea extends Model {
         }
     }
 
+    /**
+     * Find the metro area that contains the point given (in WGS84 coordinates). If more than one
+     * metro meets this criterion, one of them will be returned (no guarantee as to which one).
+     * @param lat
+     * @param lon
+     * @return
+     */
     public static MetroArea findByGeom(double lat, double lon) {
         Query q = JPA.em().createNativeQuery("SELECT m.id FROM MetroArea m WHERE ST_Within(ST_SetSRID(ST_Point(?, ?), 4326), m.the_geom) " +
         		"LIMIT 1");
@@ -304,6 +302,46 @@ public class MetroArea extends Model {
         }
         
         return MetroArea.findById(id);
+    }
+
+    public static List<MetroArea> getAllMetrosWithTransit() {
+        List<MetroArea> metrosWithTransit = new ArrayList<MetroArea>();
+        for (MetroArea m : 
+                MetroArea.find("SELECT m FROM MetroArea m WHERE size(m.agencies) > 0 ")
+                    .<MetroArea>fetch()) {
+            metrosWithTransit.add(m);
+        }
+        
+        return metrosWithTransit;
+    }
+
+    /**
+     * Automatically create geometries from the member agencies' GTFS feeds.
+     */
+    public void autogeom() {
+        Geometry out = null;
+        Geometry agencyGeom;
+        Integer srid = null;
+        
+        for (NtdAgency agency : agencies) {
+            agencyGeom = agency.getGeom();
+            if (agencyGeom == null)
+                continue;
+            
+            if (out == null) {
+                out = agencyGeom;
+                srid = agencyGeom.getSRID();
+            }
+            else
+                out = OverlayOp.overlayOp(out, agencyGeom, OverlayOp.UNION);
+        }
+        
+        if (srid == null)
+            the_geom = null;
+        else {
+            out.setSRID(srid);
+            the_geom = GeometryUtils.forceToMultiPolygon(out);
+        }
     }
 }
     

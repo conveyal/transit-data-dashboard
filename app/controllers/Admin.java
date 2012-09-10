@@ -26,6 +26,8 @@ import javax.persistence.Query;
 
 import com.vividsolutions.jts.geom.Geometry;
 
+import deployment.DeploymentPlan;
+
 import play.Logger;
 import play.db.jpa.JPA;
 import play.modules.spring.Spring;
@@ -33,6 +35,7 @@ import updaters.FeedStorer;
 
 import models.GtfsFeed;
 import models.MetroArea;
+import models.MetroAreaSource;
 import models.NtdAgency;
 import models.ReviewType;
 import models.UnmatchedMetroArea;
@@ -54,6 +57,9 @@ public class Admin extends Mapper {
         List<BigInteger> results = q.getResultList();
         int feedsNoAgency = results.get(0).intValue();
         
+        q = JPA.em().createNativeQuery("SELECT count(*) FROM NtdAgency WHERE review = 'NO_METRO'");
+        int agenciesNoMetro = ((BigInteger) q.getSingleResult()).intValue();
+        
         q = JPA.em().createNativeQuery("SELECT count(*) FROM NtdAgency WHERE review = 'AGENCY_MULTIPLE_AREAS'");
         results = q.getResultList();
         int agenciesMultiAreas = results.get(0).intValue();
@@ -61,7 +67,7 @@ public class Admin extends Mapper {
         long unmatchedPrivate = UnmatchedPrivateGtfsProvider.count();
         long unmatchedMetro = UnmatchedMetroArea.count();
         
-        render(feedsNoAgency, agenciesMultiAreas, unmatchedPrivate, unmatchedMetro);
+        render(feedsNoAgency, agenciesMultiAreas, agenciesNoMetro, unmatchedPrivate, unmatchedMetro);
     }
     
     /**
@@ -233,12 +239,32 @@ public class Admin extends Mapper {
                 metro.agencies.add(agency);
             }
             metro.autoname();
+            metro.autogeom();
+            metro.source = MetroAreaSource.GTFS;
             metro.save();
         }
         
         original.disabled = true;
         original.note = "superseded by split metro.";
         original.save();
+        
+        // note unmapped agencies now
+        for (NtdAgency agency : original.agencies) {
+            boolean isInSplitMetro = false;
+            SPLITS: for (NtdAgency[] split : splitAgencies) {
+                for (NtdAgency other : split) {
+                    if (agency.equals(other)) {
+                        isInSplitMetro = true;
+                        break SPLITS;
+                    }
+                }
+            }
+            
+            if (!isInSplitMetro) {
+                agency.review = ReviewType.NO_METRO;
+                agency.save();
+            }
+        }
     }
 
     /**
@@ -342,5 +368,19 @@ public class Admin extends Mapper {
          }
          
          unmatched.delete();
+     }
+     
+     /**
+      * Generate deployment plans for every single metro with transit
+      */
+     public static void generateDeploymentPlansForAllMetros () {
+         int count = 0;
+         DeploymentPlan dp;
+         for (MetroArea metro : MetroArea.getAllMetrosWithTransit()) {
+             dp = new DeploymentPlan(metro);
+             //dp.sendTo("http://example.com");
+             count++;
+         }
+         renderText("Deployed " + count + " metros.");
      }
 }
