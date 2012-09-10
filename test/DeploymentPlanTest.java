@@ -43,7 +43,7 @@ public class DeploymentPlanTest extends UnitTest {
         MetroArea sf = MetroArea.find("byName", "San Francisco, CA").first();
 
         // This should include all feeds, because it covers all BART feeds as well as the Muni feed
-        dp = new DeploymentPlan(sf, new Date(112, 5, 10), 420);
+        dp = new DeploymentPlan(sf, getDate(2012, 5, 10), 420);
         
         String[] feeds = new String[4];
 
@@ -82,7 +82,7 @@ public class DeploymentPlanTest extends UnitTest {
         
         // this should include bart2 and Muni: though it's after Muni has expired, we don't
         // eliminate expired data from graph builds if nothing replaces it
-        dp = new DeploymentPlan(sf, new Date(112, 9, 10), 20);
+        dp = new DeploymentPlan(sf, getDate(2012, 9, 10), 20);
         
         feeds = new String[2];
 
@@ -100,7 +100,7 @@ public class DeploymentPlanTest extends UnitTest {
         assertEquals("muni", feeds[1]);
         
         // This should include only BART, excluding feeds not yet valid
-        dp = new DeploymentPlan(sf, new Date(111, 11, 31), 1);
+        dp = new DeploymentPlan(sf, getDate(2011, 11, 31), 1);
         fd = dp.getFeeds();     
         assertEquals(1, fd.length);
         
@@ -117,7 +117,7 @@ public class DeploymentPlanTest extends UnitTest {
         // note that this implicitly tests Unicode in the DB.
         MetroArea sb = MetroArea.find("byName", "Santa Bárbara, CA").first();
         // sept 10, 2012
-        DeploymentPlan dp = new DeploymentPlan(sb, new Date(112, 6, 5), 365);
+        DeploymentPlan dp = new DeploymentPlan(sb, getDate(2012, 6, 5), 365);
         FeedDescriptor[] feeds = dp.getFeeds();
         
         boolean mtdFound = false, rtaFound = false, countyFound = false;
@@ -160,7 +160,7 @@ public class DeploymentPlanTest extends UnitTest {
     public void testMultipleGtfs () {
         MetroArea la = MetroArea.find("byName", "Los Angeles, CA").first();
         assertNotNull(la);
-        DeploymentPlan dp = new DeploymentPlan(la, new Date(112, 1, 1), 500);
+        DeploymentPlan dp = new DeploymentPlan(la, getDate(2012, 1, 1), 500);
         
         FeedDescriptor[] feeds = dp.getFeeds();
         assertEquals(2, feeds.length);
