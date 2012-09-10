@@ -415,11 +415,17 @@ public class Mapper extends Controller {
         
         String out = "<!-- total: " + feeds.size() + " feeds -->\n";
         
+        List<Long> ids = new ArrayList<Long>();
+        
         for (GtfsFeed feed : feeds) {
+            if (ids.contains(feed.id))
+                continue;
+                
             out = out + "<bean class=\"org.opentripplanner.graph_builder.model.GtfsBundle\">\n" +
                     "  <property name=\"url\" value=\"" + feed.downloadUrl + "\" />\n" +
                     "  <property name=\"defaultAgencyId\" value=\"" + feed.dataExchangeId + "\" />\n" +
                     "</bean>\n";
+            ids.add(feed.id);
         }
         
         renderText(out);
