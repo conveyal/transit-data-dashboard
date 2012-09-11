@@ -170,7 +170,7 @@ public class DeploymentPlan {
 			else {
 			    // the feed starts after the end of the window, so it shouldn't be included, but
 			    // the graph needs to be rebuilt on the day it comes into the window.
-			    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("gmt"));
+			    Calendar cal = Calendar.getInstance(feed.timezone);
 			    cal.setTime(feed.startDate);
 			    // - 1 so it will be sure to rebuild
 			    cal.add(Calendar.DAY_OF_YEAR, -this.window - 1);
@@ -367,7 +367,6 @@ public class DeploymentPlan {
 	    private String defaultAgencyId;
 	    private String realtimeUrl;
 	    private DefaultBikesAllowedType defaultBikesAllowed;
-
 	}
 
 	public FeedDescriptor[] getFeeds() {

@@ -70,8 +70,8 @@ public class FeedStatsCalculator {
 	private GtfsDaoImpl store;
 	private int stops;
 	
-	// These dates are stored in agency local time as if it were GMT; i.e. if a feed ends on
-	// 2012-07-09-0700 (a California agency, say), the date would be stored as 2012-07-09Z.
+	// These dates are stored in agency local time in this timezone
+	private TimeZone timezone;
 	private Date startDate;
 	private Date endDate;
 	private MultiPolygon the_geom;
@@ -99,9 +99,19 @@ public class FeedStatsCalculator {
 	    
 		this.startDate = null;
 		this.endDate = null;
+		
+		findTimeZone();
 		calculateStartAndEnd();
 		calculateGeometry();
 		calculateNumStops();
+	}
+	
+	private void findTimeZone () {
+        for (Agency agency : store.getAllAgencies()) {
+            // TODO: Multiple agencies with different time zones
+            this.timezone = TimeZone.getTimeZone(agency.getTimezone());
+            break;
+        }
 	}
 	
 	private void calculateNumStops() {
@@ -116,15 +126,7 @@ public class FeedStatsCalculator {
 		feed.expirationDate = this.endDate;
 		feed.the_geom = this.the_geom;
 		feed.stops = this.stops;
-		
-        for (Agency agency : store.getAllAgencies()) {
-            try {
-                feed.timezone = TimeZone.getTimeZone(agency.getTimezone());
-            } catch (Exception e) {
-                feed.timezone = null;
-            }
-            break;
-        }
+		feed.timezone = this.timezone;
 	}
 	
 	/**
@@ -132,16 +134,14 @@ public class FeedStatsCalculator {
 	 */
 	
 	private void calculateStartAndEnd () throws Exception {
-	    TimeZone gmt = TimeZone.getTimeZone("gmt");
-	    
-		// First, read feed_info.txt
+	    // First, read feed_info.txt
 	    // TODO is 1 ever not the correct value?
 	    FeedInfo feedInfo = store.getFeedInfoForId(1);
 	    if (feedInfo != null) {
 	        ServiceDate d;
 	        d = feedInfo.getStartDate();
 	        if (d != null) {
-	            Calendar c = d.getAsCalendar(gmt);
+	            Calendar c = d.getAsCalendar(timezone);
 	            // move to GTFS noon, which will always be during the day. This accounts for both
 	            // multitimezone feeds and for daylight savings time 
 	            c.add(Calendar.HOUR_OF_DAY, 12);
@@ -150,7 +150,7 @@ public class FeedStatsCalculator {
 	        
 	        d = feedInfo.getEndDate();
 	        if (d != null) {
-	            Calendar c = d.getAsCalendar(gmt);
+	            Calendar c = d.getAsCalendar(timezone);
 	            c.add(Calendar.HOUR_OF_DAY, 12);
 	            endDate = c.getTime();
 	        }
@@ -191,11 +191,11 @@ public class FeedStatsCalculator {
         for (ServiceCalendar svcCal : store.getAllCalendars()) {
         
             Calendar c;
-            c = svcCal.getStartDate().getAsCalendar(gmt);
+            c = svcCal.getStartDate().getAsCalendar(timezone);
             c.add(Calendar.HOUR_OF_DAY, 12);
             DateTime start = new DateTime(c.getTime());
             
-            c = svcCal.getEndDate().getAsCalendar(gmt);
+            c = svcCal.getEndDate().getAsCalendar(timezone);
             c.add(Calendar.HOUR_OF_DAY, 12);
             DateTime end = new DateTime(c.getTime());
             
@@ -232,7 +232,7 @@ public class FeedStatsCalculator {
         // now, expand based on calendar_dates.txt
         for(Set<ServiceDate> dateSet: addExceptions.values()) {
             for(ServiceDate sd : dateSet) {
-                DateTime dt = new DateTime(sd.getAsDate(gmt).getTime());
+                DateTime dt = new DateTime(sd.getAsDate(timezone).getTime());
                 if (dt.isAfter(latestEnd))
                 	latestEnd = dt;
                 if (dt.isBefore(earliestStart))
