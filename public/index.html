@@ -16,6 +16,7 @@
 <html>
   <head>
     <title>Transit Data Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="javascripts/leaflet/leaflet.css" />
     <!--[if lte IE 8]>
         <link rel="stylesheet" href="javascripts/leaflet/leaflet.ie.css" />
@@ -236,48 +237,45 @@
                 <a href="http://transit.google.com">Google</a>, and the many transit agencies
                 providing open data!
             </p>
-            <p><a class="btn" href="#feedback" data-toggle="modal">Send feedback</a></p>
+            <p><a class="btn" id="feedbackLink" href="#feedback" data-toggle="modal">Send feedback</a></p>
         </div>
       </div>
     </div>
 
     <div class="modal hidden" id="feedback" tabindex="-1" role="dialog">
         <span class="hidden508">Begin simulated dialog</span>
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h3>Send feedback</h3>
+	<div class="float-right badge badge-important close darkclose" data-dismiss="modal" title="close simulated dialog">&times;</div>
+
+        <div class="modal-body" id="wufoo-z7r3m3">
+	        Fill out my <a href="http://livablestreets.wufoo.com/forms/z7r3m3">online form</a>.
         </div>
-        <div class="modal-body">
-            <form class="xhr" action="http://example.com/test" method="get" 
-                class="form-horizontal">
-                <div class="control-group">
-                    <label class="control-label" for="fbName">Your name</label>
-                    <div class="controls">
-                        <input type="text" name="name" id="fbName" placeholder="Name" />
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label" for="fbEmail">Your email</label>
-                    <div class="controls">
-                        <input type="text" name="email" id="fbEmail" placeholder="Email" />
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label" for="fbComments">Your comments</label>
-                    <div class="controls">
-                        <textarea rows="7" name="comments" id="fbComments"></textarea>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <div class="controls">
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Send feedback</button>
-                            <button class="btn" data-dismiss="modal">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            </form>
+            <script type="text/javascript">var z7r3m3;(function(d, t) {
+      var s = d.createElement(t), options = {
+      'userName':'livablestreets', 
+      'formHash':'z7r3m3', 
+      'autoResize':true,
+      'height':'577',
+      'async':true,
+      'header':'show', 
+      'ssl':true};
+      s.src = ('https:' == d.location.protocol ? 'https://' : 'http://') + 'wufoo.com/scripts/embed/form.js';
+      s.onload = s.onreadystatechange = function() {
+      var rs = this.readyState; if (rs) if (rs != 'complete') if (rs != 'loaded') return;
+      try { z7r3m3 = new WufooForm();z7r3m3.initialize(options);z7r3m3.display(); } catch (e) {}};
+      var scr = d.getElementsByTagName(t)[0], par = scr.parentNode; par.insertBefore(s, scr);
+      })(document, 'script');
+	      var interval;
+	      interval = setInterval(function () {
+	          var wufooform = $('#wufoo-z7r3m3 iframe');
+	          if (wufooform.length != 0 && wufooform.attr('height') == "0") {
+	              wufooform.attr('height', '525');
+                      clearInterval(interval);
+                  }
+              }, 250);
+          </script>
+
         </div>
+        <div class="clear"></div>
         <span class="hidden508">End simulated dialog</span>
     </div>
 

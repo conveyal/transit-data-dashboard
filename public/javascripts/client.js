@@ -1,3 +1,4 @@
+
 /* 
   This program is free software: you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public License
@@ -128,7 +129,7 @@ function DataController (mapController) {
 DataController.PAGE_SIZE = 100;
 
 // The location of the vote API.
-DataController.API_LOCATION = "http://localhost:9200/";
+DataController.API_LOCATION = "";
 DataController.VOTE_NAMESPACE = "gtfsDataDashboard";
 
 DataController.prototype.sortBy = function (field, desc) {
@@ -656,6 +657,13 @@ $(document).ready(function () {
     			$(this).serialize()
     	});
     });
+
+    if ($(window).height() < 600) {
+	// we redefine the feedback link to point at a new tab
+	$('#feedbackLink').attr('data-toggle', '')
+	    .attr('href', 'http://livablestreets.wufoo.com/forms/z7r3m3')
+	    .attr('target', '_blank');
+    }
 });
 
     
