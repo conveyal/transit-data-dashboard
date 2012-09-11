@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,7 +70,8 @@ public class FeedStatsCalculator {
 	private GtfsDaoImpl store;
 	private int stops;
 	
-	// These dates are stored in agency local time 
+	// These dates are stored in agency local time as if it were GMT; i.e. if a feed ends on
+	// 2012-07-09-0700 (a California agency, say), the date would be stored as 2012-07-09Z.
 	private Date startDate;
 	private Date endDate;
 	private MultiPolygon the_geom;
@@ -129,12 +131,20 @@ public class FeedStatsCalculator {
 	    if (feedInfo != null) {
 	        ServiceDate d;
 	        d = feedInfo.getStartDate();
-	        if (d != null)
-	            startDate = d.getAsDate();
+	        if (d != null) {
+	            Calendar c = d.getAsCalendar(gmt);
+	            // move to GTFS noon, which will always be during the day. This accounts for both
+	            // multitimezone feeds and for daylight savings time 
+	            c.add(Calendar.HOUR_OF_DAY, 12);
+	            startDate = c.getTime();
+	        }
 	        
 	        d = feedInfo.getEndDate();
-	        if (d != null)
-	            endDate = d.getAsDate();
+	        if (d != null) {
+	            Calendar c = d.getAsCalendar(gmt);
+	            c.add(Calendar.HOUR_OF_DAY, 12);
+	            endDate = c.getTime();
+	        }
 	    }
 	    
 		
@@ -171,8 +181,14 @@ public class FeedStatsCalculator {
         
         for (ServiceCalendar svcCal : store.getAllCalendars()) {
         
-            DateTime start = new DateTime(svcCal.getStartDate().getAsDate().getTime());
-            DateTime end = new DateTime(svcCal.getEndDate().getAsDate().getTime());
+            Calendar c;
+            c = svcCal.getStartDate().getAsCalendar(gmt);
+            c.add(Calendar.HOUR_OF_DAY, 12);
+            DateTime start = new DateTime(c.getTime());
+            
+            c = svcCal.getEndDate().getAsCalendar(gmt);
+            c.add(Calendar.HOUR_OF_DAY, 12);
+            DateTime end = new DateTime(c.getTime());
             
             int totalDays = Days.daysBetween(start, end).getDays();
             for(int d=0; d < totalDays; d++) {
