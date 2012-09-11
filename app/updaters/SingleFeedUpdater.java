@@ -101,6 +101,7 @@ public class SingleFeedUpdater implements Updater {
             if (downloadFeed) {
                 String feedId = storer.storeFeed(downloadUrl);
                 File feedData = storer.getFeed(feedId);
+                feed.storedId = feedId;
                 FeedStatsCalculator stats;
                 
                 feed.downloadUrl = this.downloadUrl;
