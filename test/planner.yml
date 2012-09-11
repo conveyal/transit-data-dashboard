@@ -1,6 +1,7 @@
 GtfsFeed(bart3):
         startDate: 2012-12-10Z
-        expirationDate: 2013-4-10Z
+        expirationDate: 2013-04-10Z
+        timezone: America/Los_Angeles
         storedId: bart3
 
 GtfsFeed(bart2):
@@ -8,24 +9,27 @@ GtfsFeed(bart2):
         expirationDate: 2012-12-31Z
         storedId: bart2
         supersededBy: bart3
+        timezone: America/Los_Angeles
 
 GtfsFeed(bart1):
         startDate: 2012-01-01Z
         expirationDate: 2012-09-15Z
         storedId: bart1
         supersededBy: bart2
+        timezone: America/Los_Angeles
         
 GtfsFeed(muni):
         startDate: 2012-05-16Z
         expirationDate: 2012-10-10Z
         storedId: muni
+        timezone: America/Los_Angeles
         
 NtdAgency(bart):
         url: http://www.bart.gov
         feeds: [bart1, bart2, bart3]
         
 NtdAgency(muni):
-        url: http://example.com
+        url: http://sfmta.com
         feeds: [muni]
 
 MetroArea(sf):
@@ -36,17 +40,20 @@ GtfsFeed(sbmtd):
         startDate: 2012-11-01Z
         expirationDate: 2014-10-10Z
         storedId: sbmtd
+        timezone: America/Los_Angeles
 
 GtfsFeed(slorta):
         startDate: 2012-10-09Z
         expirationDate: 2014-10-10Z
         storedId: slorta
+        timezone: America/Los_Angeles
 
 GtfsFeed(sbcounty):
         startDate: 2011-10-10Z
         expirationDate: 2015-10-10Z
         storedId: sbcounty
         supersededBy: sbmtd
+        timezone: America/Los_Angeles
 
 NtdAgency(sbmtd):
         url: http://www.sbmtd.gov
@@ -64,12 +71,14 @@ GtfsFeed(lacombined2):
         startDate: 2012-09-05Z
         expirationDate: 2014-01-01Z
         storedId: lacombined2
+        timezone: America/Los_Angeles
 
 GtfsFeed(lacombined1):
         startDate: 2011-09-05Z
         expirationDate: 2014-01-01Z
         storedId: lacombined1
         supersededBy: lacombined2
+        timezone: America/Los_Angeles
 
 NtdAgency(metro):
         url: http://www.metro.net
@@ -88,16 +97,19 @@ GtfsFeed(cta2):
         startDate: 2012-10-15Z
         expirationDate: 2014-01-01Z
         storedId: cta2
+        timezone: America/Chicago
 
 GtfsFeed(cta1):
         startDate: 2012-01-01Z
         expirationDate: 2013-03-01Z
         storedId: cta1
         supersededBy: cta2
+        timezone: America/Chicago
 
 GtfsFeed(metra):
         startDate: 2012-11-15Z
         expirationDate: 2014-01-01Z
+        timezone: America/Chicago
         storedId: metra
 
 NtdAgency(cta):
@@ -111,6 +123,29 @@ NtdAgency(metra):
 MetroArea(chi):
         name: Chicago, IL
         agencies: [cta, metra]
+
+# Kiribati: used because Pacific/Kiribati is GMT+14 and thus dates are frequently different between there and Zulu.
+GtfsFeed(k2):
+        startDate: 2012-10-15T22:00:00Z # should be 2012-10-16 in local time
+        expirationDate: 2020-02-20Z
+        timezone: Pacific/Kiribati
+        storedId: k2
+
+GtfsFeed(k1):
+        startDate: 2011-10-15T22:00:00Z # should be 2011-10-16 in local time
+        expirationDate: 2020-02-20Z
+        timezone: Pacific/Kiribati
+        storedId: k1
+        supersededBy: k2
+
+NtdAgency(kt):
+        url: http://example.com
+        feeds: [k1, k2]
+
+MetroArea(kiribati):
+        name: Kiribati
+        agencies: [kt]
+
 
 BikeRentalSystem:
         type: CITYBIKES
