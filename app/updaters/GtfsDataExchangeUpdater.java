@@ -51,10 +51,8 @@ import com.google.gson.JsonObject;
  * It also handles hooks, calling them with the feeds that have changed.
  * @author mattwigway
  */
-public class GtfsDataExchangeUpdater implements Updater {
-	public FeedStorer storer;
-	
-	public Set<MetroArea> update () {	    
+public class GtfsDataExchangeUpdater implements Updater {	
+	public Set<MetroArea> update (FeedStorer storer) {	    
 		Set<MetroArea> updated = new HashSet<MetroArea>();
 		
 		// First, fetch the RSS feed
@@ -152,7 +150,7 @@ public class GtfsDataExchangeUpdater implements Updater {
 
                 // don't supersede anything
                 newFeed.save();
-                JPA.em().getTransaction().commit();
+                JPAPlugin.closeTx(false);
 
                 continue;
             }

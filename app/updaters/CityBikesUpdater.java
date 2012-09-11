@@ -35,7 +35,7 @@ import models.ReviewType;
 public class CityBikesUpdater implements Updater {
 
     @Override
-    public Set<MetroArea> update() {
+    public Set<MetroArea> update(FeedStorer storer) {
         Set<MetroArea> updated = new HashSet<MetroArea>();
 
         JPAPlugin.startTx(false);

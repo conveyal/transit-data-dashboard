@@ -25,5 +25,5 @@ import models.MetroArea;
  *
  */
 public interface Updater {
-	public Set<MetroArea> update();
+	public Set<MetroArea> update(FeedStorer storer);
 }

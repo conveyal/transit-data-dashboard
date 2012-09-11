@@ -19,33 +19,61 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import lombok.Data;
 import models.MetroArea;
 
 public class UpdaterFactory {
-	private List<Updater> updaters;
+	/**
+     * @return the updaters
+     */
+    public List<Updater> getUpdaters() {
+        return updaters;
+    }
+
+    /**
+     * @param updaters the updaters to set
+     */
+    public void setUpdaters(List<Updater> updaters) {
+        this.updaters = updaters;
+    }
+
+    /**
+     * @return the hooks
+     */
+    public List<UpdaterHook> getHooks() {
+        return hooks;
+    }
+
+    /**
+     * @param hooks the hooks to set
+     */
+    public void setHooks(List<UpdaterHook> hooks) {
+        this.hooks = hooks;
+    }
+
+    /**
+     * @return the storer
+     */
+    public FeedStorer getStorer() {
+        return storer;
+    }
+
+    /**
+     * @param storer the storer to set
+     */
+    public void setStorer(FeedStorer storer) {
+        this.storer = storer;
+    }
+
+    private List<Updater> updaters;
 	private List<UpdaterHook> hooks;
-	
-	public List<UpdaterHook> getHooks() {
-		return hooks;
-	}
-	
-	public void setHooks(List<UpdaterHook> hooks) {
-		this.hooks = hooks;
-	}
-	
-	public List<Updater> getUpdaters() {
-		return updaters;
-	}
-	
-	public void setUpdaters(List<Updater> updaters) {
-		this.updaters = updaters;
-	}
+	private FeedStorer storer;
 	
 	public void update () {
 		Set<MetroArea> metros = new HashSet<MetroArea>();
 		
 		for (Updater updater : updaters) {
-			metros.addAll(updater.update());
+			metros.addAll(updater.update(storer));
 		}
 		
 		for (UpdaterHook hook : hooks) {
