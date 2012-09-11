@@ -141,6 +141,11 @@ public class GtfsFeed extends Model implements Cloneable {
      * The ID of this file in storage. Exact contents is storage backend dependent.
      */
 	public String storedId;
+	
+	/**
+	 * The number of stops in this GTFS.
+	 */
+	public Integer stops;
 
 	/**
 	 * The date this schedule becomes valid.
@@ -190,8 +195,9 @@ public class GtfsFeed extends Model implements Cloneable {
         this.downloadUrl = null;
         this.defaultBikesAllowed = DefaultBikesAllowedType.WARN;
         this.realtimeUrl = null;
-	this.disabled = false;
+        this.disabled = false;
         this.status = null;
+        this.stops = null;
 
     }
     
@@ -219,9 +225,10 @@ public class GtfsFeed extends Model implements Cloneable {
     	ret.storedId = this.storedId;
     	ret.realtimeUrl = this.realtimeUrl;
     	ret.defaultBikesAllowed = this.defaultBikesAllowed;
-	ret.disabled = this.disabled;
+    	ret.disabled = this.disabled;
     	// this should always be overwritten
     	ret.status = this.status;
+    	ret.stops = this.stops;
     	
     	// add it to agencies as appropriate
     	for (NtdAgency agency : getAgencies()) {

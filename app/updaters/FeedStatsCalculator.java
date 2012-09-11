@@ -35,6 +35,7 @@ import java.util.zip.ZipFile;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
+import org.onebusaway.gtfs.model.Agency;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FeedInfo;
 import org.onebusaway.gtfs.model.ServiceCalendar;
@@ -66,6 +67,7 @@ import au.com.bytecode.opencsv.CSVReader;
 public class FeedStatsCalculator {
 	private File rawGtfs;
 	private GtfsDaoImpl store;
+	private int stops;
 	
 	// These dates are stored in agency local time 
 	private Date startDate;
@@ -97,16 +99,26 @@ public class FeedStatsCalculator {
 		this.endDate = null;
 		calculateStartAndEnd();
 		calculateGeometry();
+		calculateNumStops();
 	}
 	
-	/**
+	private void calculateNumStops() {
+	    stops = store.getAllStops().size();
+    }
+
+    /**
 	 * Apply the calculated feed stats to the appropriate fields of the given GtfsFeed
 	 */
 	public void apply (GtfsFeed feed) {
 		feed.startDate = this.startDate;
 		feed.expirationDate = this.endDate;
 		feed.the_geom = this.the_geom;
+		feed.stops = this.stops;
 	}
+	
+	/**
+	 * Apply not just the feed stats, but also the 
+	 */
 	
 	private void calculateStartAndEnd () throws Exception {
 	    TimeZone gmt = TimeZone.getTimeZone("gmt");
@@ -256,6 +268,18 @@ public class FeedStatsCalculator {
         }
 
         this.the_geom = (MultiPolygon) geom;		
+    }
+
+    /**
+     * Apply not just the stats, but other GTFS-derived info.
+     * @param feed
+     */
+    public void applyExtended(GtfsFeed feed) {
+        this.apply(feed);
+        for (Agency agency : store.getAllAgencies()) {
+            feed.agencyName = agency.getName();
+            break;
+        }
     }
 }
 
