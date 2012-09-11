@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.io.File;
 import java.math.BigInteger;
 
+import jobs.RecalculateFeedStats;
 import jobs.UpdateGtfs;
 
 import com.google.gson.Gson;
@@ -651,6 +652,14 @@ public class Mapper extends Controller {
         }
         
         renderText("Success");
+    }
+    
+    /**
+     * This reads all files back from storage and runs stats on them.
+     */
+    public static void recalculateFeedStats () {
+        new RecalculateFeedStats().now();
+        renderJSON("{\"status\":\"running\"}");
     }
 }
             
