@@ -78,10 +78,10 @@ table tr td, table tr th { padding-right: 2em }
 .numVotes { padding-right: 7px }
 
 /* http://stackoverflow.com/questions/9416985 */
-.modal { overflow: hidden; max-height: 100%; overflow: auto; }
-.modal-body { max-height: 600px }
+.modal { overflow: hidden; max-height: 100%;  }
+.modal-body { max-height: 100%; overflow: hidden }
 
-.modal > iframe { max-height: 75% }
+.modal > iframe { max-height: 100%; overflow: hidden }
 
 .darkclose { font-size: 20px; font-weight: bold; margin: 5px; 
 	     line-height: 20px; opacity: 0.8; }
