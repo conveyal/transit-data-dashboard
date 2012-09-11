@@ -43,8 +43,8 @@ public class DeploymentPlanTest extends UnitTest {
 	 */
 	private static void fixupTimezones () {
 	    String[] americaChicagoKeys = new String[] {"cta1", "cta2", "metra"};
-	    String[] pacificKiribatiKeys = new String[] {"k1", "k2"};
-	    TimeZone pacificKiribati = TimeZone.getTimeZone("Pacific/Kiribati");
+	    String[] pacificKiritimatiKeys = new String[] {"k1", "k2"};
+	    TimeZone pacificKiritimati = TimeZone.getTimeZone("Pacific/Kiritimati");
 	    TimeZone americaChicago = TimeZone.getTimeZone("America/Chicago");
 	    TimeZone americaLosAngeles = TimeZone.getTimeZone("America/Los_Angeles");
 
@@ -52,8 +52,8 @@ public class DeploymentPlanTest extends UnitTest {
 	        if (Arrays.binarySearch(americaChicagoKeys, feed.storedId) >= 0) {
 	            feed.timezone = americaChicago;
 	        }
-	        else if (Arrays.binarySearch(pacificKiribatiKeys, feed.storedId) >= 0) {
-                feed.timezone = pacificKiribati;
+	        else if (Arrays.binarySearch(pacificKiritimatiKeys, feed.storedId) >= 0) {
+                feed.timezone = pacificKiritimati;
             }
 	        else {
 	            feed.timezone = americaLosAngeles;
@@ -233,7 +233,7 @@ public class DeploymentPlanTest extends UnitTest {
      */
     @Test
     public void testFeedExpirationsAreReportedInLocalTime () {
-        MetroArea k = MetroArea.find("byName", "Kiribati").first();
+        MetroArea k = MetroArea.find("byName", "Kiritimati").first();
         assertNotNull(k);
         
         DeploymentPlan dp = new DeploymentPlan(k, getDate(2012, 8, 10), 1000);
@@ -257,7 +257,7 @@ public class DeploymentPlanTest extends UnitTest {
     
     /**
      * Test the case of a GTFS feed beyond the window; make sure it is both (a) not included in the
-     *  current build and (b) there is a scheduled rebuild of the graph
+     * current build and (b) there is a scheduled rebuild of the graph
      */ 
      @Test
      public void testDeploymentScheduler () {

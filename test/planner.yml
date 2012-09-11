@@ -124,17 +124,17 @@ MetroArea(chi):
         name: Chicago, IL
         agencies: [cta, metra]
 
-# Kiribati: used because Pacific/Kiribati is GMT+14 and thus dates are frequently different between there and Zulu.
+# Kiribati: used because Pacific/Kiritimati is GMT+14 and thus dates are frequently different between there and Zulu.
 GtfsFeed(k2):
-        startDate: 2012-10-15T22:00:00Z # should be 2012-10-16 in local time
+        startDate: 2012-10-15T11:00:00Z # should be 2012-10-16 in local time
         expirationDate: 2020-02-20Z
-        timezone: Pacific/Kiribati
+        timezone: Pacific/Kiritimati
         storedId: k2
 
 GtfsFeed(k1):
-        startDate: 2011-10-15T22:00:00Z # should be 2011-10-16 in local time
+        startDate: 2011-10-15T11:00:00Z # should be 2011-10-16 in local time
         expirationDate: 2020-02-20Z
-        timezone: Pacific/Kiribati
+        timezone: Pacific/Kiritimati
         storedId: k1
         supersededBy: k2
 
@@ -142,8 +142,8 @@ NtdAgency(kt):
         url: http://example.com
         feeds: [k1, k2]
 
-MetroArea(kiribati):
-        name: Kiribati
+MetroArea(kiritimati):
+        name: Kiritimati
         agencies: [kt]
 
 
