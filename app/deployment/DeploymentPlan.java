@@ -51,7 +51,6 @@ public class DeploymentPlan {
 	private Date endDate;
 	private MetroArea area;
 	private static TimeZone gmt = TimeZone.getTimeZone("GMT");
-	private SimpleDateFormat isoDate;
 	private Calendar calendar;
 	private FeedDescriptor[] feeds;
 	private int window;
@@ -84,7 +83,6 @@ public class DeploymentPlan {
 		this.area = area;
 		this.window = window;
 		this.calendar = Calendar.getInstance(gmt);
-		this.isoDate = new SimpleDateFormat("yyyy-MM-dd");
 		this.startDate = date;
 		calendar.setTime(date);
 		calendar.add(Calendar.DAY_OF_YEAR, window);
@@ -137,6 +135,10 @@ public class DeploymentPlan {
 	private void addFeeds(String agency, GtfsFeed feed, Set<FeedDescriptor> toInclude, int iteration) {
 		FeedDescriptor fd;
 		GtfsFeed olderFeed;
+		Calendar local = Calendar.getInstance(feed.timezone);
+		SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd");
+		// expiration dates are in feed-local time, because they are used to shorten feeds.
+		isoDate.setTimeZone(feed.timezone);
 		
 		if (this.startDate.compareTo(feed.startDate) < 0) {
 			// Feed starts after today
@@ -150,10 +152,10 @@ public class DeploymentPlan {
 				// force expire before the next one starts, if it's not already
 				if (feed.supersededBy != null && 
 						feed.expirationDate.compareTo(feed.supersededBy.startDate) >= 0) {
-					calendar.setTime(feed.supersededBy.startDate);
+					local.setTime(feed.supersededBy.startDate);
 					// Go back 12 hours, this should be yesterday since we have date at 00:00:00
-					calendar.add(Calendar.HOUR, -12);
-					fd.expireOn = isoDate.format(calendar.getTime());
+					local.add(Calendar.HOUR, -12);
+					fd.expireOn = isoDate.format(local.getTime());
 				}
 				// otherwise, let it expire normally
 				else {
@@ -170,11 +172,10 @@ public class DeploymentPlan {
 			else {
 			    // the feed starts after the end of the window, so it shouldn't be included, but
 			    // the graph needs to be rebuilt on the day it comes into the window.
-			    Calendar cal = Calendar.getInstance(feed.timezone);
-			    cal.setTime(feed.startDate);
+			    local.setTime(feed.startDate);
 			    // - 1 so it will be sure to rebuild
-			    cal.add(Calendar.DAY_OF_YEAR, -this.window - 1);
-			    DeploymentPlanScheduler.scheduleRebuild(feed, cal.getTime());
+			    local.add(Calendar.DAY_OF_YEAR, -this.window - 1);
+			    DeploymentPlanScheduler.scheduleRebuild(feed, local.getTime());
 			}
 			
 			olderFeed = GtfsFeed.find(
@@ -202,10 +203,10 @@ public class DeploymentPlan {
 			// force expire if necessary
 			if (feed.supersededBy != null &&
 					feed.expirationDate.compareTo(feed.supersededBy.startDate) >= 0) {
-				calendar.setTime(feed.supersededBy.startDate);
+				local.setTime(feed.supersededBy.startDate);
 				// Go back 12 hours, this should be yesterday since we have date at 00:00:00
-				calendar.add(Calendar.HOUR, -12);
-				fd.expireOn = isoDate.format(calendar.getTime());
+				local.add(Calendar.HOUR, -12);
+				fd.expireOn = isoDate.format(local.getTime());
 			}
 			
 			toInclude.add(fd);

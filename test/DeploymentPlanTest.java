@@ -35,7 +35,50 @@ public class DeploymentPlanTest extends UnitTest {
 	    JPA.em().getTransaction().rollback();
 	    JPA.em().getTransaction().begin(); 
         Fixtures.loadModels("planner.yml");
+        fixupTimezones();
     }
+	
+	/**
+	 * The play YAML loader can't handle time zones, so we patch up the db here.
+	 */
+	private static void fixupTimezones () {
+	    String[] americaChicagoKeys = new String[] {"cta1", "cta2", "metra"};
+	    String[] pacificKiribatiKeys = new String[] {"k1", "k2"};
+	    TimeZone pacificKiribati = TimeZone.getTimeZone("Pacific/Kiribati");
+	    TimeZone americaChicago = TimeZone.getTimeZone("America/Chicago");
+	    TimeZone americaLosAngeles = TimeZone.getTimeZone("America/Los_Angeles");
+
+	    for (GtfsFeed feed : GtfsFeed.<GtfsFeed>findAll()) {
+	        if (Arrays.binarySearch(americaChicagoKeys, feed.storedId) >= 0) {
+	            feed.timezone = americaChicago;
+	        }
+	        else if (Arrays.binarySearch(pacificKiribatiKeys, feed.storedId) >= 0) {
+                feed.timezone = pacificKiribati;
+            }
+	        else {
+	            feed.timezone = americaLosAngeles;
+	        }
+	        feed.save();
+	    }
+	}
+	
+	@Test
+	public void testTimeZoneStorage () {
+	    GtfsFeed feedWithTz = new GtfsFeed();
+	    feedWithTz.timezone = TimeZone.getTimeZone("America/Los_Angeles");
+	    feedWithTz.storedId = "feedWithTimeZone";
+	    feedWithTz.save();
+	    JPA.em().getTransaction().commit();
+	    JPA.em().getTransaction().begin();
+	    
+	    feedWithTz = GtfsFeed.find("byStoredId", "feedWithTimeZone").first();
+	    assertNotNull(feedWithTz);
+	    assertNotNull(feedWithTz.timezone);
+	    
+	    for (GtfsFeed feed : GtfsFeed.<GtfsFeed>findAll()) {
+	        assertNotNull(feed.timezone);
+	    }
+	}
     
     @Test
     public void testMultipleConcurrentFeeds () {
@@ -183,6 +226,33 @@ public class DeploymentPlanTest extends UnitTest {
         assertTrue(comb1Found);
         assertTrue(comb2Found);
         assertEquals(2, feeds.length);
+    }
+    
+    /**
+     * Test that feed expirations are reported in local time.
+     */
+    @Test
+    public void testFeedExpirationsAreReportedInLocalTime () {
+        MetroArea k = MetroArea.find("byName", "Kiribati").first();
+        assertNotNull(k);
+        
+        DeploymentPlan dp = new DeploymentPlan(k, getDate(2012, 8, 10), 1000);
+        
+        FeedDescriptor[] feeds = dp.getFeeds();
+        
+        assertEquals(2, feeds.length);
+        
+        boolean k1Found = false;
+        for (FeedDescriptor feed : feeds) {
+            if ("k1".equals(feed.getFeedId())) {
+                assertFalse(k1Found);
+                k1Found = true;
+                // would be 2012-10-14 in GMT
+                assertEquals("2012-10-15", feed.getExpireOn());
+            }
+        }
+        
+        assertTrue(k1Found);
     }
     
     /**
