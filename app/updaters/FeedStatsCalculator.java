@@ -116,6 +116,15 @@ public class FeedStatsCalculator {
 		feed.expirationDate = this.endDate;
 		feed.the_geom = this.the_geom;
 		feed.stops = this.stops;
+		
+        for (Agency agency : store.getAllAgencies()) {
+            try {
+                feed.timezone = TimeZone.getTimeZone(agency.getTimezone());
+            } catch (Exception e) {
+                feed.timezone = null;
+            }
+            break;
+        }
 	}
 	
 	/**
@@ -294,6 +303,7 @@ public class FeedStatsCalculator {
         this.apply(feed);
         for (Agency agency : store.getAllAgencies()) {
             feed.agencyName = agency.getName();
+            feed.agencyUrl = agency.getUrl();
             break;
         }
     }

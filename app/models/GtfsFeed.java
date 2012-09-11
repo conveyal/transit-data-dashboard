@@ -46,6 +46,9 @@ public class GtfsFeed extends Model implements Cloneable {
     /** The GTFS Data Exchange URL */
     @URL
     public String dataExchangeUrl;
+    
+    /** The time zone */
+    public TimeZone timezone;
 
     // TODO: on these dates, should they be relative to GTFS Data Exchange or to this site?
     /** The date added to Data Exchange */
@@ -198,7 +201,7 @@ public class GtfsFeed extends Model implements Cloneable {
         this.disabled = false;
         this.status = null;
         this.stops = null;
-
+        this.timezone = null;
     }
     
     public GtfsFeed clone () {
@@ -229,15 +232,16 @@ public class GtfsFeed extends Model implements Cloneable {
     	// this should always be overwritten
     	ret.status = this.status;
     	ret.stops = this.stops;
+    	ret.timezone = this.timezone;
     	
+    	// TODO if the clone is not saved, will this leave the DB in an inconsistent state?
     	// add it to agencies as appropriate
     	for (NtdAgency agency : getAgencies()) {
     		agency.feeds.add(ret);
     		agency.save();
     	}    	
     	
-    	return ret;
-    			
+    	return ret;	
     }
 
     /**
