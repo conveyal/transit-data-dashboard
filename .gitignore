@@ -1,13 +1,21 @@
-<<<<<<< HEAD
 .#*
-#*#
+\#*\#
 *~
-tmp/*
-db/*
+tmp
+db
 *.class
 # Package Files #
 *.jar
 *.war
 *.ear
-
+hs_err_pid*
+modules
+precompiled
+eclipse
+.classpath
+.project
+.settings
+test-result
+test_data
+utils/node_modules
 conf/s3config.xml
