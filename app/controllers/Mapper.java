@@ -22,11 +22,14 @@ package controllers;
 import play.*;
 import play.modules.spring.Spring;
 import play.mvc.*;
+import play.data.binding.As;
 import play.db.jpa.JPA;
 import javax.persistence.Query;
 import javax.persistence.NoResultException;
 import models.*;
 import proxies.NtdAgencyProxy;
+
+import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
@@ -391,11 +394,22 @@ public class Mapper extends Controller {
     	renderJSON("{\"status\":\"running\"}");
     }
     
-    public static void createDeploymentPlan (MetroArea metroArea, String send) {
-    	DeploymentPlan dp = new DeploymentPlan(metroArea);
+    public static void createDeploymentPlan (MetroArea metroArea, @As("yyyy-MM-dd") Date date,
+            Integer window, String send) {
+        
+        DeploymentPlan dp;
+        if (date == null) {
+            dp = new DeploymentPlan(metroArea);
+        }
+        else if (window == null) {
+            dp = new DeploymentPlan(metroArea, date);
+        }
+        else {
+            dp = new DeploymentPlan(metroArea, date, window);
+        }
     	
     	if (send != null) {
-    	    dp.sendTo(send);
+    	    dp.sendTo(send);   
     	}
     	
     	renderJSON(dp.toJson());
