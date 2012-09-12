@@ -5,17 +5,18 @@
 	<!-- <import resource="file://${application.path}/conf/s3config.xml" /> -->
 
 	<bean id="updaters" class="updaters.UpdaterFactory">
+	    <property name="storer">
+	        <bean class="updaters.FileFeedStorer">
+		        <property name="path" value="/extra/matthewc/gtfs-data" />
+	        </bean>
+        </property>
+	
 		<property name="updaters">
 			<list>
-				<bean class="updaters.GtfsDataExchangeUpdater">
-					<property name="storer">
-						<!-- <ref bean="s3" /> -->
-						<bean class="updaters.FileFeedStorer">
-							<property name="path" value="/extra/matthewc/gtfs-data" />
-						</bean>
-					</property>
+				<bean class="updaters.SingleFeedUpdater">
+				    <property name="downloadUrl" value="http://localhost:8000/google_transit.zip" />
 				</bean>
-			</list>
+		    </list>
 		</property>
 		
 		<property name="hooks">
