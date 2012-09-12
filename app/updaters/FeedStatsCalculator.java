@@ -159,85 +159,92 @@ public class FeedStatsCalculator {
 	    
 		
 		// we have an authoritative answer
-		if (startDate != null && endDate != null) return;
+		if (startDate != null && endDate != null)
+		    return;
 	
-		// let OBA deal with the complexities of interactions between calendar.txt and 
-		// calendar_dates.txt
-		// This code is lifted and slightly modified from
-		// https://github.com/demory/otp_gtfs/blob/master/java/gtfsmetrics/src/main/java/org/openplans/gtfsmetrics/CalendarStatus.java
-		Map<AgencyAndId, Set<ServiceDate>> addExceptions = new HashMap<AgencyAndId, Set<ServiceDate>>();
+        // let OBA deal with the complexities of interactions between
+        // calendar.txt and
+        // calendar_dates.txt
+        // This code is lifted and slightly modified from
+        // https://github.com/demory/otp_gtfs/blob/master/java/gtfsmetrics/src/main/java/org/openplans/gtfsmetrics/CalendarStatus.java
+        Map<AgencyAndId, Set<ServiceDate>> addExceptions = new HashMap<AgencyAndId, Set<ServiceDate>>();
         Map<AgencyAndId, Set<String>> removeExceptions = new HashMap<AgencyAndId, Set<String>>();
-        for(ServiceCalendarDate date : store.getAllCalendarDates()) {
-            if(date.getExceptionType() == ServiceCalendarDate.EXCEPTION_TYPE_ADD) {
-                Set<ServiceDate> dateSet = addExceptions.get(date.getServiceId());
-                if(dateSet == null) {
+        for (ServiceCalendarDate date : store.getAllCalendarDates()) {
+            if (date.getExceptionType() == ServiceCalendarDate.EXCEPTION_TYPE_ADD) {
+                Set<ServiceDate> dateSet = addExceptions.get(date
+                        .getServiceId());
+                if (dateSet == null) {
                     dateSet = new HashSet<ServiceDate>();
                     addExceptions.put(date.getServiceId(), dateSet);
                 }
                 dateSet.add(date.getDate());
-            }
-            else if(date.getExceptionType() == ServiceCalendarDate.EXCEPTION_TYPE_REMOVE) {
+            } else if (date.getExceptionType() == ServiceCalendarDate.EXCEPTION_TYPE_REMOVE) {
                 Set<String> dateSet = removeExceptions.get(date.getServiceId());
-                if(dateSet == null) {
+                if (dateSet == null) {
                     dateSet = new HashSet<String>();
                     removeExceptions.put(date.getServiceId(), dateSet);
                 }
                 dateSet.add(constructMDYString(date.getDate()));
             }
         }
-        
+
         DateTime latestEnd = new DateTime(0);
         DateTime earliestStart = null;
-        
+
         for (ServiceCalendar svcCal : store.getAllCalendars()) {
-        
+
             Calendar c;
             c = svcCal.getStartDate().getAsCalendar(timezone);
             c.add(Calendar.HOUR_OF_DAY, 12);
             DateTime start = new DateTime(c.getTime());
-            
+
             c = svcCal.getEndDate().getAsCalendar(timezone);
             c.add(Calendar.HOUR_OF_DAY, 12);
             DateTime end = new DateTime(c.getTime());
-            
+
             int totalDays = Days.daysBetween(start, end).getDays();
-            for(int d=0; d < totalDays; d++) {
+            for (int d = 0; d < totalDays; d++) {
                 int gd = getDay(svcCal, end.dayOfWeek().get());// dateCal.get(Calendar.DAY_OF_WEEK));
                 boolean removeException = false;
-                Set<String> dateSet = removeExceptions.get(svcCal.getServiceId());
-                if(dateSet != null) {
-                 removeException = dateSet.contains(constructMDYString(end));
+                Set<String> dateSet = removeExceptions.get(svcCal
+                        .getServiceId());
+                if (dateSet != null) {
+                    removeException = dateSet.contains(constructMDYString(end));
                 }
-                if(gd == 1 && !removeException) break;
+                if (gd == 1 && !removeException)
+                    break;
                 end = end.minusDays(1);
             }
             if (end.isAfter(latestEnd))
-            	latestEnd = end;
-            
+                latestEnd = end;
+
             totalDays = Days.daysBetween(start, end).getDays();
-            for(int d=0; d < totalDays; d++) {
+            for (int d = 0; d < totalDays; d++) {
                 int gd = getDay(svcCal, start.dayOfWeek().get());// dateCal.get(Calendar.DAY_OF_WEEK));
                 boolean removeException = false;
-                Set<String> dateSet = removeExceptions.get(svcCal.getServiceId());
-                if(dateSet != null) {
-                 removeException = dateSet.contains(constructMDYString(start));
+                Set<String> dateSet = removeExceptions.get(svcCal
+                        .getServiceId());
+                if (dateSet != null) {
+                    removeException = dateSet
+                            .contains(constructMDYString(start));
                 }
-                if(gd == 1 && !removeException) break;
+                if (gd == 1 && !removeException)
+                    break;
                 start = start.plusDays(1);
             }
             if (earliestStart == null || start.isBefore(earliestStart))
-            	earliestStart = start;
-            
+                earliestStart = start;
+
         }
-        
+
         // now, expand based on calendar_dates.txt
-        for(Set<ServiceDate> dateSet: addExceptions.values()) {
-            for(ServiceDate sd : dateSet) {
+        for (Set<ServiceDate> dateSet : addExceptions.values()) {
+            for (ServiceDate sd : dateSet) {
                 DateTime dt = new DateTime(sd.getAsDate(timezone).getTime());
                 if (dt.isAfter(latestEnd))
-                	latestEnd = dt;
+                    latestEnd = dt;
                 if (dt.isBefore(earliestStart))
-                	earliestStart = dt;
+                    earliestStart = dt;
             }
         }
         
