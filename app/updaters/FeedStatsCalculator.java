@@ -96,6 +96,7 @@ public class FeedStatsCalculator {
 	    this.store = new GtfsDaoImpl();
 	    reader.setEntityStore(this.store);
 	    reader.run();
+	    reader.close();
 	    
 		this.startDate = null;
 		this.endDate = null;
