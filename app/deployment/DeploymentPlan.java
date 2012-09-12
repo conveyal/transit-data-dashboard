@@ -196,6 +196,13 @@ public class DeploymentPlan {
 			// Feed does not start after today. Presumably we'll be following feeds
 			// through supersession in roughly chronological order, so we don't need
 			// to continue searching for older feeds.
+		    
+		    // if it expires before today also, don't even bother to include it. Don't continue the
+		    // search either. TODO: if an older feed accidentally supersedes a newer one, the newer
+		    // one will not be included.
+		    if (this.startDate.compareTo(feed.expirationDate) > 0)
+		        return;
+		    
 			fd = new FeedDescriptor();
 			fd.feedId = feed.storedId;
 			fd.expireOn = isoDate.format(feed.expirationDate);
