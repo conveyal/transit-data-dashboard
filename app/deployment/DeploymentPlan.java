@@ -156,7 +156,8 @@ public class DeploymentPlan {
 				if (feed.supersededBy != null && 
 						feed.expirationDate.compareTo(feed.supersededBy.startDate) >= 0) {
 					local.setTime(feed.supersededBy.startDate);
-					// Go back 12 hours, this should be yesterday since we have date at 00:00:00
+					// Go back 12 hours, this should be yesterday since we have date at 00:00:00,
+					// or potentially it is off by one hour due to Daylight Savings Time
 					local.add(Calendar.HOUR, -12);
 					fd.expireOn = isoDate.format(local.getTime());
 				}
@@ -276,16 +277,8 @@ public class DeploymentPlan {
         public int hashCode() {
             final int prime = 31;
             int result = 1;
-            result = prime
-                    * result
-                    + ((defaultBikesAllowed == null) ? 0 : defaultBikesAllowed
-                            .hashCode());
-            result = prime * result
-                    + ((expireOn == null) ? 0 : expireOn.hashCode());
             result = prime * result
                     + ((feedId == null) ? 0 : feedId.hashCode());
-            result = prime * result
-                    + ((realtimeUrl == null) ? 0 : realtimeUrl.hashCode());
             return result;
         }
 
@@ -301,22 +294,10 @@ public class DeploymentPlan {
             if (getClass() != obj.getClass())
                 return false;
             FeedDescriptor other = (FeedDescriptor) obj;
-            if (defaultBikesAllowed != other.defaultBikesAllowed)
-                return false;
-            if (expireOn == null) {
-                if (other.expireOn != null)
-                    return false;
-            } else if (!expireOn.equals(other.expireOn))
-                return false;
             if (feedId == null) {
                 if (other.feedId != null)
                     return false;
             } else if (!feedId.equals(other.feedId))
-                return false;
-            if (realtimeUrl == null) {
-                if (other.realtimeUrl != null)
-                    return false;
-            } else if (!realtimeUrl.equals(other.realtimeUrl))
                 return false;
             return true;
         }
@@ -324,48 +305,6 @@ public class DeploymentPlan {
         public String getFeedId() {
 	        return feedId;
 	    }
-
-	    /**
-	     * Add a feed to the set if it is advisable to do so, removing other feeds that are in
-	     * the way.
-	     * @param toInclude
-	     * @param fd
-	     */
-	    public static void addAndRemoveIfAdvisable(
-	            Set<FeedDescriptor> toInclude, FeedDescriptor fd) {
-	        if (toInclude.contains(fd))
-	            return;
-
-	        List<FeedDescriptor> toRemove = new ArrayList<FeedDescriptor>();
-	        boolean foundSameFeedWithLaterExpiration = false;
-	        String id = fd.getFeedId();
-
-	        for (FeedDescriptor o : toInclude) {
-	            if (id.equals(o.feedId)) {
-	                int comparison = fd.getExpireOn().compareTo(o.getExpireOn());
-
-	                // it expires later, it should be added and the other removed
-	                if (comparison > 0) {
-	                    toRemove.add(o);
-	                    break;
-	                }
-	                else if (comparison == 0) {
-	                    // do nothing; it will be added
-	                }
-	                else if (comparison < 0) {
-	                    foundSameFeedWithLaterExpiration = true;
-	                }   
-	            }
-	        }
-
-	        for (FeedDescriptor o : toRemove) {
-	            toInclude.remove(o);
-	        }
-
-	        if (!foundSameFeedWithLaterExpiration)
-	            toInclude.add(fd);
-	    }
-
 
 	    public String getExpireOn() {
 	        return expireOn;
