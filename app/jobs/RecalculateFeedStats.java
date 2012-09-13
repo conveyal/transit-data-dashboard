@@ -24,18 +24,17 @@ public class RecalculateFeedStats extends Job {
                 // no reason to reparse a failed feed
                 continue;
             
-            feedFile = storer.getFeed(feed.storedId);
             try {
+                feedFile = storer.getFeed(feed.storedId);
                 stats = new FeedStatsCalculator(feedFile);
                 stats.apply(feed);
+                storer.releaseFeed(feed.storedId);
             } catch (Exception e) {
                 Logger.error("Error calculating feed stats for agency %s, this must be an OBA " +
                 		"change or file system error", feed.agencyName);
                 e.printStackTrace();
                 continue;
             }
-            
-            storer.releaseFeed(feed.storedId);
             
             feed.save();
        }
