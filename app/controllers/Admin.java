@@ -98,9 +98,9 @@ public class Admin extends Mapper {
      */
     public static void newAgencyFromFeed(GtfsFeed feed) {
         NtdAgency agency = new NtdAgency(feed);
-        agency.feeds.add(feed);
         feed.review = null;
         feed.save();
+        agency.feeds.add(feed);
         // agency is saved in here
         agency.findAndAssignMetroArea();
     }
