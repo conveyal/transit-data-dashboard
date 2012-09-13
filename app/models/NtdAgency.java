@@ -266,17 +266,27 @@ public class NtdAgency extends Model {
      * @return the metro areas that were changed in this process, which may be none.
      */
     public Set<MetroArea> findAndAssignMetroArea () {
+        Set<MetroArea> changedMetros = new HashSet<MetroArea>();
+        
         // find metro area(s)
         String query = "SELECT m.id FROM MetroArea m WHERE " + 
                 "ST_DWithin(m.the_geom, transform(ST_GeomFromText(?, ?), ST_SRID(m.the_geom)), 0.04)";
         Query ids = JPA.em().createNativeQuery(query);
         Geometry geom = this.getGeom();
+        
+        if (geom == null) {
+            if (this.getMetroAreas().size() == 0)
+                this.review = ReviewType.NO_METRO;
+            
+            this.save();
+            return changedMetros;
+        }
+        
         ids.setParameter(1, geom.toText());
         ids.setParameter(2, geom.getSRID());
         List<BigInteger> metroIds = ids.getResultList();            
         List<MetroArea> metros = new ArrayList<MetroArea>();
         MetroArea metro;
-        Set<MetroArea> changedMetros = new HashSet<MetroArea>();
 
         for (BigInteger id : metroIds) {
             metros.add(MetroArea.<MetroArea>findById(id.longValue()));
