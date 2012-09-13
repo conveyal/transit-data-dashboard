@@ -101,6 +101,10 @@ public class Admin extends Mapper {
         feed.review = null;
         feed.save();
         agency.feeds.add(feed);
+        
+        // basically, for the findAndAssignToMetroArea, the feed has to be in the DB, so we flush
+        // to make sure there is nothing in the JPA cache
+        JPA.em().flush();
         // agency is saved in here
         agency.findAndAssignMetroArea();
     }
