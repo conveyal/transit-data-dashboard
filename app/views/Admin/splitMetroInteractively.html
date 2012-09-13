@@ -32,7 +32,7 @@ Select the agencies to include in each resulting metro:
     <tbody>
     %{ for (agency in original.agencies) { }%
         <tr>
-            <td title="%{ for (uzaName in agency.uzaNames) }%${uzaName}, %{ } }%">${agency.name}</td>
+            <td title="%{ for (uzaName in agency.uzaNames) { }%${uzaName}, %{ } }%">${agency.name}</td>
             %{ for (int i = 1; i <= splits; i++) { }%
                 <td><input type="checkbox" name="metro${i}" value="${agency.id}" /></td>
             %{ } }%
