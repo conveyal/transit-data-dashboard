@@ -213,4 +213,20 @@ public class S3FeedStorer implements FeedStorer {
 	public String toString () {
 	    return "S3FeedStorer with bucket " + bucket;
 	}
+
+    public String getBucket() {
+        return this.bucket;
+    }
+
+    /**
+     * Copy a feed in the current bucket to a UUID-named feed. This is only present in 
+     * S3FeedStorer, and is a stopgap to allow the use of authwalled feeds.
+     */
+    public String copy(String fn) {
+        String uuid = UUID.randomUUID().toString();
+        
+        s3Client.copyObject(this.bucket, fn, this.bucket, uuid);
+        
+        return uuid;
+    }
 }
