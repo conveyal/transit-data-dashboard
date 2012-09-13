@@ -79,7 +79,8 @@ public class GtfsDataExchangeUpdater implements Updater {
             if (dataExchangeId == null || dataExchangeId.equals(""))
                 continue;
 
-            GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? AND supersededBy IS NULL",
+            // ORDER BY ...: so failed feeds aren't continuously refetched.
+            GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? AND supersededBy IS NULL ORDER BY dateUpdated DESC",
                     dataExchangeId).first();
 
             // convert to ms
