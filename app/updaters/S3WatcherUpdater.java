@@ -91,7 +91,8 @@ public class S3WatcherUpdater implements Updater {
                 String s3Url = buildS3Url(fn);
 
                 boolean newFeed;
-                GtfsFeed oldFeed = GtfsFeed.find("byDownloadUrl", s3Url).first();
+                GtfsFeed oldFeed = GtfsFeed.find("downloadUrl = ? AND supersededBy IS NULL ORDER BY dateUpdated DESC",
+                        s3Url).first();
                 GtfsFeed feed;
 
                 if (oldFeed == null) {
