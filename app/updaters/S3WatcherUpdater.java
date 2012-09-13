@@ -103,11 +103,8 @@ public class S3WatcherUpdater implements Updater {
                     feed = oldFeed.clone();
                 }
                 
-                if (newFeed) {
-                    if (oldFeed.dateUpdated.compareTo(meta.getLastModified()) >= 0) {
-                        continue;
-                    }
-                }
+                if (!newFeed && oldFeed.dateUpdated.compareTo(meta.getLastModified()) >= 0)
+                    continue;
 
                 feed.downloadUrl = s3Url;
 
@@ -120,9 +117,13 @@ public class S3WatcherUpdater implements Updater {
                 
                 storer.releaseFeed(feedId);
                 
-                if (newFeed)
+                feed.dateUpdated = meta.getLastModified();
+                
+                if (newFeed) {
                     if (!feed.findAgency())
                         feed.review = ReviewType.NO_AGENCY;
+                    feed.dateAdded = meta.getLastModified();
+                }
                 
                 feed.save();
                 
