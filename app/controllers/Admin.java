@@ -98,14 +98,31 @@ public class Admin extends Mapper {
      */
     public static void newAgencyFromFeed(GtfsFeed feed) {
         NtdAgency agency = new NtdAgency(feed);
-        agency.review = ReviewType.NO_METRO;
-        agency.save();
+        agency.feeds.add(feed);
+        feed.review = null;
+        feed.save();
+        // agency is saved in here
+        agency.findAndAssignMetroArea();
+    }
+    
+    
+    /**
+     * Handle agencies with no metros.
+     */
+    public static void agenciesNoMetros () {
+        for (NtdAgency agency : NtdAgency.find("byReview", ReviewType.NO_METRO)
+                .<NtdAgency>fetch()) {
+            agency.review = null;
+            agency.findAndAssignMetroArea();
+        }
+        index();
     }
     
     /**
      * This is just a proxy to serialize the important parts of a metro to JSON.
      */
     private static class MetroAreaWithGeom {
+        @SuppressWarnings("unused")
         private String name;
         // in GeoJSON format
         private String geom;
