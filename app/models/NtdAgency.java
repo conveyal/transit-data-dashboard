@@ -22,6 +22,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.operation.overlay.OverlayOp;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -246,5 +247,110 @@ public class NtdAgency extends Model {
         
         first.agencies.add(this);
         first.save();
-    }      
+    }
+    
+    /**
+     * Find the metro area this agency belongs in and assign to that metro area. There are several
+     * things this may do:
+     * - if there is exactly one metro area that this agency touches, this agency is assigned to
+     *   that metro area
+     * - if there is more than one metro area, but only one has transit, all of the metro areas
+     *   are merged
+     * - if there are multiple transit-containing metros, the agency is flagged for review (nothing
+     *   is done automatically, to prevent, say, an Amtrak feed from merging New York, Chicago, 
+     *   San Francisco, Los Angeles and intermediate points into one metro)
+     * - if there are no matched metros whatsoever, a new one is created.
+     * 
+     * When this function completes, everything has been saved.
+     * 
+     * @return the metro areas that were changed in this process, which may be none.
+     */
+    public Set<MetroArea> findAndAssignMetroArea () {
+        // find metro area(s)
+        String query = "SELECT m.id FROM MetroArea m WHERE " + 
+                "ST_DWithin(m.the_geom, transform(ST_GeomFromText(?, ?), ST_SRID(m.the_geom)), 0.04)";
+        Query ids = JPA.em().createNativeQuery(query);
+        Geometry geom = this.getGeom();
+        ids.setParameter(1, geom.toText());
+        ids.setParameter(2, geom.getSRID());
+        List<BigInteger> metroIds = ids.getResultList();            
+        List<MetroArea> metros = new ArrayList<MetroArea>();
+        MetroArea metro;
+        Set<MetroArea> changedMetros = new HashSet<MetroArea>();
+
+        for (BigInteger id : metroIds) {
+            metros.add(MetroArea.<MetroArea>findById(id.longValue()));
+        }
+
+        // easy case
+        if (metros.size() == 1) {
+            metro = metros.get(0);
+            this.note = "Found single metro.";
+            this.save();
+            metro.agencies.add(this);
+            metro.save();
+            changedMetros.add(metro);
+        }
+
+        else if (metros.size() > 1) {
+            MetroArea metroWithTransit = null;
+            boolean isSingleMetroWithTransit = true;
+            for (MetroArea m : metros) {
+                if (m.agencies.size() > 0) {
+                    if (metroWithTransit != null) {
+                        isSingleMetroWithTransit = false;
+                        break;
+                    }
+                    else {
+                        metroWithTransit = m;
+                    }
+                }
+            }
+            
+            // merge into the metro with transit, or the first metro if none have transit
+            if (isSingleMetroWithTransit) {
+                if (metroWithTransit == null) {
+                    metroWithTransit = metros.get(0);
+                }
+                
+                for (MetroArea m : metros) {
+                    if (m == metroWithTransit)
+                        continue;
+                    
+                    metroWithTransit.mergeAreas(m);
+                    m.disabled = true;
+                    m.save();
+                    changedMetros.add(m);
+                }
+                
+                this.note = "Merged several non-transit metros.";
+                this.save();
+                metroWithTransit.agencies.add(this);                    
+                metroWithTransit.save();
+                changedMetros.add(metroWithTransit);
+            }
+            else {
+                this.note = "Too many metro areas";
+                this.review = ReviewType.AGENCY_MULTIPLE_AREAS;
+                this.save();
+            }
+        }
+        
+        // no metro areas found: create one
+        else {
+            this.note = "No metro areas found, created from feed geometry.";
+ 
+            MetroArea area = new MetroArea(null, null);
+            area.source = MetroAreaSource.GTFS;
+            area.agencies.add(this);
+            area.autogeom();
+            area.autoname();
+            this.save();
+            area.save();
+            changedMetros.add(area);
+        }
+        
+        return changedMetros;
+    }
+     
 }
