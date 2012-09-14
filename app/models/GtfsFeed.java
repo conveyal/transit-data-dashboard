@@ -84,7 +84,14 @@ public class GtfsFeed extends Model implements Cloneable {
      * The URL of the GTFS Realtime feed for this feed, if available.
      */
     @URL
+    @Deprecated
     public String realtimeUrl;
+    
+    /**
+     * The URLs of the GTFS Realtime feeds for this feed, if available.
+     */
+    @ElementCollection
+    public List<String> realtimeUrls;
     
     /**
      * Does this feed allow bikes on transit with unspecified bike rules in GTFS?
@@ -198,6 +205,7 @@ public class GtfsFeed extends Model implements Cloneable {
         this.downloadUrl = null;
         this.defaultBikesAllowed = DefaultBikesAllowedType.WARN;
         this.realtimeUrl = null;
+        this.realtimeUrls = new ArrayList<String>();
         this.disabled = false;
         this.status = null;
         this.stops = null;
@@ -233,6 +241,7 @@ public class GtfsFeed extends Model implements Cloneable {
     	ret.status = this.status;
     	ret.stops = this.stops;
     	ret.timezone = this.timezone;
+    	ret.realtimeUrls = new ArrayList<String>(this.realtimeUrls);
     	
     	// TODO if the clone is not saved, will this leave the DB in an inconsistent state?
     	// add it to agencies as appropriate
