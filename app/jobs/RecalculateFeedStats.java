@@ -37,6 +37,6 @@ public class RecalculateFeedStats extends Job {
             }
             
             feed.save();
-       }
+        }
     }
 }
