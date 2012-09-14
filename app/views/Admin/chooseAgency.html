@@ -1,0 +1,62 @@
+*{
+  This program is free software: you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public License
+  as published by the Free Software Foundation, either version 3 of
+  the License, or (props, at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>. 
+}*
+#{extends 'main.html' /} #{set title:'Choose agency' /}
+
+<h2>Choose agency</h2>
+<h4>Start typing below, then click on an agency</h4>
+<input type="text" class="typeahead-agency"/>
+
+*{TODO: factor out code which appears in many places }*
+<script type="text/javascript">
+agencies = [
+	#{list items:agencies, as:'agency'}
+	    *{ note: will fail if there is a " in name }*
+	    {name: "${agency.name}", id: "${agency.id}"},
+	#{/list}
+];
+
+function agencyMatcher (agency) {
+	var filter = this.query.toLowerCase();
+	var ret = (agency.name.toLowerCase().indexOf(filter) > -1 || 
+            (agency.url != undefined && agency.url.toLowerCase().indexOf(filter) > -1) ||
+            (agency.metro != undefined && agency.metro.toLowerCase().indexOf(filter) > -1));
+    return ret;
+}
+
+function agencyHighlighter(item) {
+	return '<a onclick="selectAgency(' + item.id +
+			')">' + item.name + '</a>';
+}
+
+function agencySorter(agencies) {
+	agencies.sort(function (a1, a2) {
+		if (a1 > a2) return 1;
+		else if (a1 < a2) return -1;
+		else return 0;
+	});
+	return agencies;
+}
+
+function selectAgency (agencyId) {
+	document.location = "${redirectTo}" + agencyId; 
+}
+
+$('.typeahead-agency').typeahead({
+	source: agencies,
+	highlighter: agencyHighlighter,
+	matcher: agencyMatcher,
+	sorter: agencySorter
+});
+</script>

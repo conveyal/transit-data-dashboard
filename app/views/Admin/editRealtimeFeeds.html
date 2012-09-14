@@ -1,0 +1,62 @@
+*{
+  This program is free software: you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public License
+  as published by the Free Software Foundation, either version 3 of
+  the License, or (props, at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>. 
+}*
+
+#{extends 'main.html' /}
+#{set title:'Split Metro Area' /}
+
+<h2>Editing real-time feeds for agency ${agency.name}</h2>
+
+<h4>You can edit only one GTFS feed at a time (multiple GTFSr feeds are OK)</h4>
+
+%{ for (feed in feeds) { }%
+  <div>
+    <h4>${feed.toString()}</h4>
+    <form action="saveRealtimeFeeds" method="get">
+        <input type="hidden" name="feed.id" value="${feed.id}" />
+        
+        <ul>
+            #{list items:feed.realtimeUrls, as:'url'}
+                <li><input type="text" name="feedUrls" value="${url}" />
+                    <button class="close rmfeed" title="remove feed">&times;</button></li>
+            #{/list}
+        </ul>
+        
+        <a class="btn addfeed">Add feed</a>
+        
+        <input type="submit" class="btn" value="Save this feed" />
+    </form>
+  </div>
+%{ } }%
+
+<script type="text/javascript">
+function removeFeed (e) {
+	e.preventDefault();
+	
+	$(this).parent().remove();
+}
+
+$(".rmfeed").click(removeFeed);
+
+$('.addfeed').click(function (e) {
+	e.preventDefault();
+	
+	var newRow = $('<li><input type="text" name="feedUrls" value="${url}" />' +
+    '<button class="close rmfeed" title="remove feed">&times;</button></li>');
+	newRow.find('button').click(removeFeed);
+	
+	// this is the list
+	$(this).parent().find('ul').append(newRow);
+})
+</script>

@@ -33,6 +33,7 @@ import play.db.jpa.JPA;
 import play.modules.spring.Spring;
 import updaters.FeedStorer;
 
+import models.FeedParseStatus;
 import models.GtfsFeed;
 import models.MetroArea;
 import models.MetroAreaSource;
@@ -68,6 +69,39 @@ public class Admin extends Mapper {
         long unmatchedMetro = UnmatchedMetroArea.count();
         
         render(feedsNoAgency, agenciesMultiAreas, agenciesNoMetro, unmatchedPrivate, unmatchedMetro);
+    }
+    
+    /**
+     * Choose an agency and send the user on to the given URL.
+     */
+    public static void chooseAgency (String redirectTo) {
+        List<NtdAgency> agencies = NtdAgency.findAll();
+        render(agencies, redirectTo);
+    }
+    
+    /**
+     * Edit the realtime feeds for an agency
+     */
+    public static void editRealtimeFeeds(NtdAgency agency) {
+        // it would be a lot nicer to do this in the template on render, but I (MWC) can't figure
+        // out how to import the enum there
+        List<GtfsFeed> feeds = new ArrayList<GtfsFeed>();
+        
+        for (GtfsFeed feed : agency.feeds) {
+            if (feed.status == FeedParseStatus.SUCCESSFUL && feed.supersededBy == null)
+                feeds.add(feed);
+        }
+        
+        render(agency, feeds);
+    }
+    
+    /**
+     * Save the realtime feeds for an agency
+     */
+    public static void saveRealtimeFeeds(GtfsFeed feed, List<String> feedUrls) {
+        feed.realtimeUrls = feedUrls;
+        feed.save();
+        index();
     }
     
     /**

@@ -166,7 +166,11 @@ public class DeploymentPlan {
 					fd.expireOn = isoDate.format(feed.expirationDate);
 				}
 				
-				fd.realtimeUrl = feed.realtimeUrl;
+	            if (feed.realtimeUrls != null && feed.realtimeUrls.size() > 0) {
+	                fd.realtimeUrls = new String[feed.realtimeUrls.size()];
+	                fd.realtimeUrls = feed.realtimeUrls.toArray(fd.realtimeUrls);
+	            }   
+				
 				fd.defaultAgencyId = agency;
 				
 				// if this feed is already present, there is no reason to continue the search
@@ -207,7 +211,12 @@ public class DeploymentPlan {
 			fd = new FeedDescriptor();
 			fd.feedId = feed.storedId;
 			fd.expireOn = isoDate.format(feed.expirationDate);
-			fd.realtimeUrl = feed.realtimeUrl;
+			
+			if (feed.realtimeUrls != null && feed.realtimeUrls.size() > 0) {
+			    fd.realtimeUrls = new String[feed.realtimeUrls.size()];
+			    fd.realtimeUrls = feed.realtimeUrls.toArray(fd.realtimeUrls);
+			}			    
+			
 			fd.defaultAgencyId = agency;
 			fd.defaultBikesAllowed = feed.defaultBikesAllowed;
 			
@@ -312,10 +321,15 @@ public class DeploymentPlan {
 	    public String getDefaultAgencyId() {
 	        return defaultAgencyId;
 	    }
+	    
+	    public FeedDescriptor () {
+	        realtimeUrls = null;
+	    }
+	    
 	    private String feedId;
 	    private String expireOn;
 	    private String defaultAgencyId;
-	    private String realtimeUrl;
+	    private String[] realtimeUrls;
 	    private DefaultBikesAllowedType defaultBikesAllowed;
 	}
 
