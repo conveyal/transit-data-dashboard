@@ -139,24 +139,13 @@ public class DeploymentPlanTest extends UnitTest {
         
         assertEquals("2012-12-09", bart2expiration);
         
-        // this should include bart2 and Muni: though it's after Muni has expired, we don't
-        // eliminate expired data from graph builds if nothing replaces it
+        // this should include bart2: Muni has expired
         dp = new DeploymentPlan(sf, getDate(2012, 9, 10), 20);
-        
-        feeds = new String[2];
 
         fd = dp.getFeeds(); 
         
-        assertEquals(2, fd.length);
-        
-        for (int i = 0; i < 2; i++) {
-        	feeds[i] = fd[i].getFeedId();
-        }
-        
-        Arrays.sort(feeds);
-        
-        assertEquals("bart2", feeds[0]);
-        assertEquals("muni", feeds[1]);
+        assertEquals(1, fd.length);
+        assertEquals("bart2", fd[0].getFeedId());
         
         // This should include only BART, excluding feeds not yet valid
         dp = new DeploymentPlan(sf, getDate(2011, 11, 31), 1);
