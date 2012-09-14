@@ -149,9 +149,14 @@ public class DeploymentPlan {
 	     *  
 	     * Feeds that are disabled are just like any other feed in that they take part in normal
 	     * supersession of feeds; if the deployment plan generator encounters any such feeds, it
-	     * to simply skip them and continue using other feed. Feeds that failed parsing should
-	     * never supersede anything or be superseded by anything; however, the generator should handle
-	     * this case gracefully by just skipping them.
+	     * to simply skip them and continue using other feed. Feeds that failed parsing are treated
+	     * like disabled feeds; however, they have to be skipped at the top of this function
+	     * because they don't have expirationDate &c.
+	     * 
+	     * It used to be that superseded feeds were left hanging, but this created problems
+	     * because they were always considered "current" ad infinitum. Also, if changes to OBA
+	     * make a feed parseable, it did not have a place in the chain of supersession under this
+	     * strategy.
 	     */
 	    
 		FeedDescriptor fd;
@@ -159,7 +164,8 @@ public class DeploymentPlan {
 		GtfsFeed nextSupersession;
 		Calendar local = Calendar.getInstance(feed.timezone);
 		SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd");
-		// expiration dates are in feed-local time, because they are used to shorten feeds.
+		// expiration dates are in feed-local time, because they are used to shorten feeds, and
+		// deployer shouldn't need to know about time zone transformations.
 		isoDate.setTimeZone(feed.timezone);
 		
 		if (feed.status == FeedParseStatus.FAILED) {
@@ -177,7 +183,7 @@ public class DeploymentPlan {
 				// Feed starts before the end of the window, include it
 				fd = new FeedDescriptor();
 				fd.feedId = feed.storedId;
-				fd.defaultBikesAllowed = feed.defaultBikesAllowed;
+				fd.setDefaultBikesAllowed(feed.defaultBikesAllowed);
 				
 				nextSupersession = findNextSupersession(feed);
 				
@@ -248,7 +254,7 @@ public class DeploymentPlan {
 			}			    
 			
 			fd.defaultAgencyId = agency;
-			fd.defaultBikesAllowed = feed.defaultBikesAllowed;
+			fd.setDefaultBikesAllowed(feed.defaultBikesAllowed);
 
 			nextSupersession = findNextSupersession(feed);
 			
@@ -297,6 +303,7 @@ public class DeploymentPlan {
 	}
 	
 	// This is serialized to JSON and sent to deployer.
+	@SuppressWarnings("unused")
 	private class DeploymentPlanProxy {
 		private long metroId;
 		private String metro;
@@ -304,6 +311,7 @@ public class DeploymentPlan {
 		private List<BikeRentalSystemProxy> bikeRentalSystems;
 	}
 	
+	@SuppressWarnings("unused")
 	private class BikeRentalSystemProxy {
 	    private String name;
 	    private BikeRentalSystemType type;
@@ -370,7 +378,15 @@ public class DeploymentPlan {
 	        realtimeUrls = null;
 	    }
 	    
-	    private String feedId;
+	    public DefaultBikesAllowedType getDefaultBikesAllowed() {
+            return defaultBikesAllowed;
+        }
+
+        public void setDefaultBikesAllowed(DefaultBikesAllowedType defaultBikesAllowed) {
+            this.defaultBikesAllowed = defaultBikesAllowed;
+        }
+
+        private String feedId;
 	    private String expireOn;
 	    private String defaultAgencyId;
 	    private String[] realtimeUrls;

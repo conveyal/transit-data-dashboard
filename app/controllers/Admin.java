@@ -160,8 +160,8 @@ public class Admin extends Mapper {
     /**
      * This is just a proxy to serialize the important parts of a metro to JSON.
      */
+    @SuppressWarnings("unused")
     private static class MetroAreaWithGeom {
-        @SuppressWarnings("unused")
         private String name;
         // in GeoJSON format
         private String geom;
