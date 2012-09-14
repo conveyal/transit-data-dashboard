@@ -13,10 +13,6 @@
   along with this program. If not, see <http://www.gnu.org/licenses/>. 
 */
 
-/**
- * Attempt to automatically match loaded data sets to metro areas and feeds
- */
-
 package controllers;
 
 import play.*;
@@ -49,6 +45,13 @@ import updaters.FeedStatsCalculator;
 import updaters.FeedStorer;
 import utils.DbUtils;
 
+/**
+ * This is a place for a lot of functions and DB maintenance things that don't belong anywhere
+ * else. It was originally used as a place for functions that connect multiple entities, but it
+ * also contains functions for things like generating deployment plans &c. 
+ * @author mattwigway
+ *
+ */
 public class Mapper extends Controller {
     /**
      * Attempt to automatch feeds to agencies by URL.

@@ -39,14 +39,6 @@ public class MetroArea extends Model {
      * City 1-City 2-City 3, State 1-State 2-State 3
      */
     public String name;
-    // note that this ID is not serial, because we don't want
-    // to have trouble if we add more GTFS to an urban area; they
-    // id should stay the same.
-    /** The ID of this area */
-    /*@Required
-    @Unique
-    @Id
-    public int id;*/
     
     @Type(type = "org.hibernatespatial.GeometryUserType")
     public MultiPolygon the_geom;
