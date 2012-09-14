@@ -178,7 +178,9 @@ public class GtfsFeed extends Model implements Cloneable {
         return "GTFS for " + agencyName;
     }
 
-    public GtfsFeed () {};
+    public GtfsFeed () {
+        this(null, null, null, null, null, null, null, null, null, null, false, null, null, null);
+    };
 
     public GtfsFeed (String agencyName, String agencyUrl, String country, 
                      String dataExchangeId, String dataExchangeUrl, Date dateAdded, 
