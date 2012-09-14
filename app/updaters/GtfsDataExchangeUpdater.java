@@ -148,9 +148,13 @@ public class GtfsDataExchangeUpdater implements Updater {
 
                 // still save it in the DB
                 newFeed.status = FeedParseStatus.FAILED;
-
-                // don't supersede anything
                 newFeed.save();
+                
+                if (originalFeed != null) {
+                    originalFeed.supersededBy = newFeed;
+                    originalFeed.save();
+                }
+               
                 JPAPlugin.closeTx(false);
 
                 continue;

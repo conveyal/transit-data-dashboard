@@ -15,6 +15,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
+import models.FeedParseStatus;
 import models.GtfsFeed;
 import models.MetroArea;
 import models.ReviewType;
@@ -113,8 +114,17 @@ public class S3WatcherUpdater implements Updater {
                 feed.storedId = feedId;
                 
                 File gtfs = storer.getFeed(feedId);
-                FeedStatsCalculator stats = new FeedStatsCalculator(gtfs);
-                stats.applyExtended(feed);
+                try {
+                    FeedStatsCalculator stats = new FeedStatsCalculator(gtfs);
+                    stats.applyExtended(feed);
+                    feed.status = FeedParseStatus.SUCCESSFUL;
+                } catch (Exception e) {
+                    Logger.error("Exception calculating feed stats for " + fn);
+                    e.printStackTrace();
+                    feed.status = FeedParseStatus.FAILED;
+                }
+                
+                
                 
                 storer.releaseFeed(feedId);
                 
