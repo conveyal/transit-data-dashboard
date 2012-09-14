@@ -77,7 +77,6 @@ public class GtfsFeed extends Model implements Cloneable {
      * This is the URL to download this feed. Generally it's a GTFS Data Exchange
      * file URL.
      */
-    @URL
     public String downloadUrl;
     
     /**
