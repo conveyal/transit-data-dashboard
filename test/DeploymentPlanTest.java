@@ -36,6 +36,7 @@ public class DeploymentPlanTest extends UnitTest {
 	    JPA.em().getTransaction().begin(); 
         Fixtures.loadModels("planner.yml");
         fixupTimezones();
+        fixupStatuses();
     }
 	
 	/**
@@ -61,6 +62,21 @@ public class DeploymentPlanTest extends UnitTest {
 	        feed.save();
 	    }
 	}
+	
+	/**
+	 * Add FeedParseStatus.FAILED where the YAML loader left it off.
+	 */
+	public void fixupStatuses () {
+	    GtfsFeed feed;
+	    
+	    feed = GtfsFeed.find("byStoredId", "SC2").first();
+	    feed.status = FeedParseStatus.FAILED;
+	    feed.save();
+	    
+	    feed = GtfsFeed.find("byStoredId", "MAX2").first();
+	    feed.status = FeedParseStatus.FAILED;
+	    feed.save();
+	}	 
 	
 	@Test
 	public void testTimeZoneStorage () {
@@ -297,7 +313,7 @@ public class DeploymentPlanTest extends UnitTest {
          List<Date> rebuilds = DeploymentPlanScheduler.getRebuildsForMetro(chi);
          SimpleDateFormat dates = new SimpleDateFormat("yyyy-MM-dd");
          
-         // one for CTA, on for Metra
+         // one for CTA, one for Metra
          assertEquals(2, rebuilds.size());
          
          Collections.sort(rebuilds);
@@ -313,6 +329,91 @@ public class DeploymentPlanTest extends UnitTest {
          
          rebuilds = DeploymentPlanScheduler.getRebuildsForMetro(chi);
          assertEquals(0, rebuilds.size());
+     }
+     
+     /**
+      * Test that disabled feeds work properly
+      * A disabled feed at the end should have the previous feed included
+      * A disabled feed in the middle should leave one feed enabled for the period of validity.
+      * A failed feed should behave the same as a disabled one
+      */
+     @Test
+     public void testFeedDisabling () {
+         MetroArea pdx = MetroArea.find("byName", "Portland, OR").first();
+         assertNotNull(pdx);
+         
+         DeploymentPlan dp = new DeploymentPlan(pdx, getDate(2011, 2, 2), 1400);
+         
+         String trimet1 = null, trimet2 = null,
+                 wes1 = null, wes2 = null, wes3 = null,
+                 max1 = null, max2 = null,
+                 sc1 = null, sc2 = null, sc3 = null;
+         
+         for (FeedDescriptor fd : dp.getFeeds()) {
+             if ("TriMet1".equals(fd.getFeedId())) {
+                 assertNull(trimet1);
+                 trimet1 = fd.getExpireOn();
+             }
+             else if ("TriMet2".equals(fd.getFeedId())) {
+                 assertNull(trimet2);
+                 trimet2 = fd.getExpireOn();
+             }
+             else if ("WES1".equals(fd.getFeedId())) {
+                 assertNull(wes1);
+                 wes1 = fd.getExpireOn();
+             }
+             else if ("WES2".equals(fd.getFeedId())) {
+                 assertNull(wes2);
+                 wes2 = fd.getExpireOn();
+             }
+             else if ("WES3".equals(fd.getFeedId())) {
+                 assertNull(wes3);
+                 wes3 = fd.getExpireOn();
+             }
+             else if ("MAX1".equals(fd.getFeedId())) {
+                 assertNull(max1);
+                 max1 = fd.getExpireOn();
+             }
+             else if ("MAX2".equals(fd.getFeedId())) {
+                 assertNull(max2);
+                 max2 = fd.getExpireOn();
+             }
+             else if ("SC1".equals(fd.getFeedId())) {
+                 assertNull(sc1);
+                 sc1 = fd.getExpireOn();
+             }
+             else if ("SC2".equals(fd.getFeedId())) {
+                 assertNull(sc2);
+                 sc2 = fd.getExpireOn();
+             }
+             else if ("SC3".equals(fd.getFeedId())) {
+                 assertNull(sc3);
+                 sc3 = fd.getExpireOn();
+             }
+             else {
+                 fail("Unexpected agency ID " + fd.getFeedId());
+             }
+         }
+         
+         // check that the correct feeds are included
+         assertNotNull(trimet1);
+         assertNull(trimet2);
+         assertNotNull(wes1);
+         assertNull(wes2);
+         assertNotNull(wes3);
+         assertNotNull(max1);
+         assertNull(max2);
+         assertNotNull(sc1);
+         assertNull(sc2);
+         assertNotNull(sc3);
+         
+         // Check that expiration dates are correct
+         assertEquals("2013-01-01", trimet1);
+         assertEquals("2012-03-02", wes1);
+         assertEquals("2013-01-01", wes3);
+         assertEquals("2013-01-01", max1);
+         assertEquals("2012-03-02", sc1);
+         assertEquals("2013-01-01", sc3);
      }
      
      /**

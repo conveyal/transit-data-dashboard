@@ -95,6 +95,9 @@ public class DeploymentPlan {
 		DeploymentPlanScheduler.clearRebuilds(this.area);
 		
 		for (NtdAgency agency : area.agencies) {
+		    if (agency.disabled)
+		        continue;
+		    
 			// all the unsuperseded feeds for this agency
 			
 			for (GtfsFeed feed : agency.feeds) {
@@ -102,9 +105,13 @@ public class DeploymentPlan {
 					continue;
 				}
 				
-				if (feed.status == FeedParseStatus.FAILED) {
-				    continue;
-				}
+				// This is now handled by the same code that handles disabled and failed feeds when
+				// they occcur in a supersession sequence
+				// handling it here is bad because, if the _last_ feed in a chain of supersession was disabled or
+				// failed, the whole chain would get thrown out (needless to say undesirable)
+				//if (feed.status == FeedParseStatus.FAILED || feed.disabled) {
+				//    continue;
+				//}
 				
 				// We use the feed ID of the latest feed in this chain of supersession to prevent
 				// "parallel" feeds from being merged (e.g. to prevent Metro-North from being
@@ -136,12 +143,32 @@ public class DeploymentPlan {
 	}
 	
 	private void addFeeds(String agency, GtfsFeed feed, Set<FeedDescriptor> toInclude, int iteration) {
+	    /*
+	     * I figure there needs to be an explanation of how feeds are supposed to be superseded in
+	     * the database, and this seems as good a place for that as any.
+	     *  
+	     * Feeds that are disabled are just like any other feed in that they take part in normal
+	     * supersession of feeds; if the deployment plan generator encounters any such feeds, it
+	     * to simply skip them and continue using other feed. Feeds that failed parsing should
+	     * never supersede anything or be superseded by anything; however, the generator should handle
+	     * this case gracefully by just skipping them.
+	     */
+	    
 		FeedDescriptor fd;
 		GtfsFeed olderFeed;
+		GtfsFeed nextSupersession;
 		Calendar local = Calendar.getInstance(feed.timezone);
 		SimpleDateFormat isoDate = new SimpleDateFormat("yyyy-MM-dd");
 		// expiration dates are in feed-local time, because they are used to shorten feeds.
 		isoDate.setTimeZone(feed.timezone);
+		
+		if (feed.status == FeedParseStatus.FAILED) {
+		    olderFeed = GtfsFeed.find("supersededBy = ? ORDER BY expirationDate DESC", feed)
+		            .first();
+		    if (olderFeed != null)
+		        addFeeds(agency, olderFeed, toInclude, iteration + 1);
+		        return;
+		}
 		
 		if (this.startDate.compareTo(feed.startDate) < 0) {
 			// Feed starts after today
@@ -152,10 +179,12 @@ public class DeploymentPlan {
 				fd.feedId = feed.storedId;
 				fd.defaultBikesAllowed = feed.defaultBikesAllowed;
 				
+				nextSupersession = findNextSupersession(feed);
+				
 				// force expire before the next one starts, if it's not already
-				if (feed.supersededBy != null && 
-						feed.expirationDate.compareTo(feed.supersededBy.startDate) >= 0) {
-					local.setTime(feed.supersededBy.startDate);
+				if (nextSupersession != null && 
+						feed.expirationDate.compareTo(nextSupersession.startDate) >= 0) {
+					local.setTime(nextSupersession.startDate);
 					// Go back 12 hours, this should be yesterday since we have date at 00:00:00,
 					// or potentially it is off by one hour due to Daylight Savings Time
 					local.add(Calendar.HOUR, -12);
@@ -174,8 +203,9 @@ public class DeploymentPlan {
 				fd.defaultAgencyId = agency;
 				
 				// if this feed is already present, there is no reason to continue the search
-				if (!toInclude.add(fd))
-				    return;
+				if (!feed.disabled)
+				    if (!toInclude.add(fd))
+				        return;
 			}
 			else {
 			    // the feed starts after the end of the window, so it shouldn't be included, but
@@ -187,7 +217,7 @@ public class DeploymentPlan {
 			}
 			
 			olderFeed = GtfsFeed.find(
-			        "supersededBy = ? ORDER BY startDate DESC WHERE status <> 'FAILED'",
+			        "supersededBy = ? ORDER BY startDate DESC",
 			        feed).first();
 			if (olderFeed == null) {
 				// Data doesn't go back far enough
@@ -219,17 +249,31 @@ public class DeploymentPlan {
 			
 			fd.defaultAgencyId = agency;
 			fd.defaultBikesAllowed = feed.defaultBikesAllowed;
+
+			nextSupersession = findNextSupersession(feed);
 			
 			// force expire if necessary
-			if (feed.supersededBy != null &&
-					feed.expirationDate.compareTo(feed.supersededBy.startDate) >= 0) {
-				local.setTime(feed.supersededBy.startDate);
+			if (nextSupersession != null &&
+					nextSupersession.startDate.compareTo(nextSupersession.startDate) >= 0) {
+				local.setTime(nextSupersession.startDate);
 				// Go back 12 hours, this should be yesterday since we have date at 00:00:00
 				local.add(Calendar.HOUR, -12);
 				fd.expireOn = isoDate.format(local.getTime());
 			}
 			
-			toInclude.add(fd);
+			if (!feed.disabled)
+			    toInclude.add(fd);
+			else {
+			    // if the feed is disabled, try the feed it superseded.
+			    // This is in case an agency releases new, bad GTFS that supersedes older but
+			    // working GTFS
+			    olderFeed = GtfsFeed.find(
+	                    "supersededBy = ? ORDER BY startDate DESC",
+	                    feed).first();
+			    
+			    if (olderFeed != null) 
+			        addFeeds(agency, olderFeed, toInclude, iteration + 1);
+			}
 			return;
 		}
 	}
@@ -335,6 +379,23 @@ public class DeploymentPlan {
 
 	public FeedDescriptor[] getFeeds() {
 	    return feeds;
+	}
+	
+	/**
+	 * Find the feed that supersedes this one. This is complicated because if the next feed is
+	 * disabled, we need the one after that, &c., &c.
+	 * @return
+	 */
+	private static GtfsFeed findNextSupersession (GtfsFeed feed) {
+	    GtfsFeed ret = feed.supersededBy;
+	    
+	    // if we get to an unsuperseded disabled feed, ret will be null, this loop will end,
+	    // function will return null. If this is an unsuperseded feed, ret will be null from
+	    // the start and this loop will not execute at all.
+	    while (ret != null && (ret.disabled || ret.status == FeedParseStatus.FAILED))
+	        ret = ret.supersededBy;
+	    
+	    return ret;
 	}
 }
 
