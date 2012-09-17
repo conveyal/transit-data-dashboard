@@ -35,13 +35,14 @@
     <li><a href="chooseAgency?redirectTo=editRealtimeFeeds%3Fagency.id%3D">Configure real time updates</a></li>
     <li><a href="removeUnreferencedStoredFeeds">Remove unreferenced stored feeds</a></li>
     <li><a href="/admin/mapfeeds.html">Map feeds to agencies</a></li>
+    <li><a href="../mapper/fetchGtfs">Fetch new GTFS</a></li>
     <li>
         <form action="splitMetroInteractively" method="GET">
             Split metro <input type="text" name="metroId" placeholder="metro area ID" /> into 
             <input type="text" name="splits" placeholder="number" /> parts.
             <input type="submit" class="btn btn-link" value="Go!"/>
         </form>
-    </li>
+    </li>    
     <li>
         <form action="../mapper/createDeploymentPlan" method="GET">
             Create deployment plan for <input type="text" name="metroArea.id" placeholder="metro area id">
@@ -50,6 +51,7 @@
             <input type="text" name="send" placeholder="URL" />
             <input type="submit" class="btn" value="Go!" />
         </form>
+    </li>
 </ul>
         
         
