@@ -25,7 +25,7 @@ public class DeploymentPlanScheduler {
      * Schedule a rebuild for all metros associated with feed feed on date date.
      */
     public static void scheduleRebuild(GtfsFeed feed, Date date) {
-        for (NtdAgency agency : feed.getAgencies()) {
+        for (NtdAgency agency : feed.getEnabledAgencies()) {
             scheduleRebuild(agency, date);
         }
     }
@@ -34,7 +34,7 @@ public class DeploymentPlanScheduler {
      * Schedule a rebuild for all agencies associated with the given agency on the given date.
      */
     public static void scheduleRebuild(NtdAgency agency, Date date) {
-        for (MetroArea area : agency.getMetroAreas()) {
+        for (MetroArea area : agency.getEnabledMetroAreas()) {
             scheduleRebuild(area, date);
         }
     }

@@ -91,7 +91,7 @@ public class NtdAgencyProxy implements Proxy {
 
         // choose a representative metro
         metro = null;
-        for (MetroArea m : agency.getMetroAreas()) {
+        for (MetroArea m : agency.getEnabledMetroAreas()) {
             metro = m.toString();
             break;
         }

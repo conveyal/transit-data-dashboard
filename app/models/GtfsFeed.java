@@ -173,6 +173,16 @@ public class GtfsFeed extends Model implements Cloneable {
                               this)
             .fetch();
     }
+    
+    /**
+     * Get the enabled agencies this feed refers to.
+     */
+    public List<NtdAgency> getEnabledAgencies () {
+        // modified from http://stackoverflow.com/questions/7898960
+        return NtdAgency.find("SELECT a FROM NtdAgency a INNER JOIN a.feeds feeds WHERE ? IN feeds AND a.disabled <> true",
+                              this)
+            .fetch();
+    }
 
     public String toString () {
         return "GTFS for " + agencyName;

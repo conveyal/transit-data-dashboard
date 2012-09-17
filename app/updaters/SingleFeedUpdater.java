@@ -136,8 +136,8 @@ public class SingleFeedUpdater implements Updater {
                 feed.save();
                 JPAPlugin.closeTx(false);
 
-                for (NtdAgency agency : agencies) {
-                    for (MetroArea area : agency.getMetroAreas()) {
+                for (NtdAgency agency : feed.getEnabledAgencies()) {
+                    for (MetroArea area : agency.getEnabledMetroAreas()) {
                         changed.add(area);
                     }
                 }

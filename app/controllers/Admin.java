@@ -126,8 +126,8 @@ public class Admin extends Mapper {
         feed.realtimeUrls = feedUrls;
         feed.save();
         
-        for (NtdAgency agency : feed.getAgencies()) {
-            for (MetroArea metro : agency.getMetroAreas()) {
+        for (NtdAgency agency : feed.getEnabledAgencies()) {
+            for (MetroArea metro : agency.getEnabledMetroAreas()) {
                 metro.needsUpdate = true;
                 metro.save();
             }
@@ -157,7 +157,7 @@ public class Admin extends Mapper {
         feed.save();
         agency.save();
         
-        for (MetroArea metro : agency.getMetroAreas()) {
+        for (MetroArea metro : agency.getEnabledMetroAreas()) {
             metro.needsUpdate = true;
             metro.save();
         }
@@ -180,7 +180,7 @@ public class Admin extends Mapper {
         // agency is saved in here
         agency.findAndAssignMetroArea();
         
-        for (MetroArea metro : agency.getMetroAreas()) {
+        for (MetroArea metro : agency.getEnabledMetroAreas()) {
             metro.needsUpdate = true;
             metro.save();
         }
@@ -272,7 +272,7 @@ public class Admin extends Mapper {
     public static void mergeAllAreas (NtdAgency agency) {
         try {
             agency.mergeAllAreas();
-            for (MetroArea metro : agency.getMetroAreas()) {
+            for (MetroArea metro : agency.getEnabledMetroAreas()) {
                 metro.needsUpdate = true;
                 metro.save();
             }
@@ -295,7 +295,7 @@ public class Admin extends Mapper {
     public static void splitToAreas (NtdAgency agency) {
         try {
             agency.splitToAreas();
-            for (MetroArea metro : agency.getMetroAreas()) {
+            for (MetroArea metro : agency.getEnabledMetroAreas()) {
                 metro.needsUpdate = true;
                 metro.save();
             }

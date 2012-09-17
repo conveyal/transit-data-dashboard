@@ -175,8 +175,8 @@ public class GtfsDataExchangeUpdater implements Updater {
                 newFeed.save();
             }
 
-            for (NtdAgency ntd : newFeed.getAgencies()) {
-                for (MetroArea metro : ntd.getMetroAreas()) {
+            for (NtdAgency ntd : newFeed.getEnabledAgencies()) {
+                for (MetroArea metro : ntd.getEnabledMetroAreas()) {
                     updated.add(metro);
                 }
             }

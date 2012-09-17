@@ -92,6 +92,14 @@ public class NtdAgency extends Model {
                     this).fetch();  
     }
     
+    /**
+     * A list of enabled metro areas that contain this agency
+     */
+    public List<MetroArea> getEnabledMetroAreas () {
+        return MetroArea.find("SELECT m FROM MetroArea m INNER JOIN m.agencies agencies WHERE ? in agencies AND m.disabled <> true",
+                    this).fetch();  
+    }
+    
     @ManyToMany(cascade=CascadeType.PERSIST)
     public Set<GtfsFeed> feeds;
 
@@ -269,7 +277,7 @@ public class NtdAgency extends Model {
         Set<MetroArea> changedMetros = new HashSet<MetroArea>();
         
         // find metro area(s)
-        String query = "SELECT m.id FROM MetroArea m WHERE " + 
+        String query = "SELECT m.id FROM MetroArea m WHERE m.disabled <> false AND " + 
                 "ST_DWithin(m.the_geom, transform(ST_GeomFromText(?, ?), ST_SRID(m.the_geom)), 0.04)";
         Query ids = JPA.em().createNativeQuery(query);
         Geometry geom = this.getGeom();

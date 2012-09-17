@@ -18,6 +18,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import models.FeedParseStatus;
 import models.GtfsFeed;
 import models.MetroArea;
+import models.NtdAgency;
 import models.ReviewType;
 
 /**
@@ -134,6 +135,12 @@ public class S3WatcherUpdater implements Updater {
                     if (!feed.findAgency())
                         feed.review = ReviewType.NO_AGENCY;
                     feed.dateAdded = meta.getLastModified();
+                }
+                
+                for (NtdAgency agency : feed.getEnabledAgencies()) {
+                    for (MetroArea area : agency.getEnabledMetroAreas()) {
+                        changed.add(area);
+                    }
                 }
                 
                 feed.save();
