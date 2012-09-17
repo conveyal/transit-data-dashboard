@@ -19,6 +19,7 @@ import javax.persistence.*;
 import java.util.*;
 import java.math.BigInteger;
 
+import play.Play;
 import play.db.jpa.*;
 import play.data.validation.*;
 import utils.GeometryUtils;
@@ -28,6 +29,8 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.operation.overlay.OverlayOp;
+
+import deployment.DeploymentPlan;
 
 import org.hibernate.annotations.Type;
 
@@ -58,6 +61,11 @@ public class MetroArea extends Model {
      * Is this metro disabled?
      */
     public boolean disabled;
+    
+    /**
+     * Have updates been made to this metro that would necessitate a graph rebuild?
+     */
+    public Boolean needsUpdate;
     
     /**
      * Human readable note.
@@ -334,6 +342,26 @@ public class MetroArea extends Model {
             out.setSRID(srid);
             the_geom = GeometryUtils.forceToMultiPolygon(out);
         }
+    }
+
+    /**
+     * Generate and send a deployment plan for this metro to the deployer.
+     * @return the deployment plan, or null if there is no deployment plan.
+     */
+    // pass the illegal state exception up the tree
+    public DeploymentPlan rebuild() throws IllegalStateException {
+        if (!this.disabled) {
+            if (Boolean.parseBoolean(
+                    Play.configuration.getProperty("dashboard.send_requests_automatically"))) {
+                // generate the plan
+                DeploymentPlan plan = new DeploymentPlan(this);
+
+                // and dispatch the JSON
+                plan.sendTo(Play.configuration.getProperty("dashboard.send_deployer_requests_to"));
+                return plan;
+            }
+        }
+        return null;
     }
 }
     

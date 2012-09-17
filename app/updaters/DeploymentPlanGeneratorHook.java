@@ -19,6 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
 
+import play.Play;
 import play.db.jpa.JPAPlugin;
 
 import deployment.DeploymentPlan;
@@ -37,22 +38,7 @@ public class DeploymentPlanGeneratorHook implements UpdaterHook {
 	    JPAPlugin.startTx(true);
 	    
 		for (MetroArea area : areas) {
-		    if (!area.disabled) {
-
-		        // generate the plan
-		        DeploymentPlan plan = new DeploymentPlan(area);
-
-		        // and dispatch the JSON
-		        /*
-			try {
-				FileWriter writer = new FileWriter("/tmp/" + area.name + ".json");
-				writer.write(plan.toJson());
-				writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		         */
-		    }
+		    area.rebuild();
 		}
 		JPAPlugin.closeTx(false);
 	}

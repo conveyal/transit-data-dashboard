@@ -23,12 +23,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.jar.JarException;
 import java.net.URL;
 
 import com.google.gson.Gson;
 
 import play.Play;
 import play.libs.WS;
+import play.libs.WS.HttpResponse;
+import play.libs.WS.WSRequest;
 import play.modules.spring.Spring;
 
 import models.BikeRentalSystem;
@@ -137,9 +140,17 @@ public class DeploymentPlan {
 	 * Send this to the given URL.
 	 * 
 	 * @param url
+	 * @throws IllegalStateException if the Deployer server returned a non-success status.
 	 */
-	public void sendTo(String url) {
-	    WS.url(url).setParameter("data", this.toJson()).get();
+	public void sendTo(String url) throws IllegalStateException {
+	    WSRequest req = WS.url(url);
+	    req.setParameter("data", this.toJson());
+	    HttpResponse res = req.post();
+	    
+	    if (!res.success()) {
+	        throw new IllegalStateException("Deployer returned a status of " + res.getStatus() +
+	                " for request to [re]build metro " + this.area.toString() + "(id " + this.area.id + ")");
+	    }
 	}
 	
 	private void addFeeds(String agency, GtfsFeed feed, Set<FeedDescriptor> toInclude, int iteration) {
@@ -156,7 +167,7 @@ public class DeploymentPlan {
 	     * It used to be that superseded feeds were left hanging, but this created problems
 	     * because they were always considered "current" ad infinitum. Also, if changes to OBA
 	     * make a feed parseable, it did not have a place in the chain of supersession under this
-	     * strategy.
+	     * strategy. There are still some feeds in the database like this.
 	     */
 	    
 		FeedDescriptor fd;
