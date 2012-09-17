@@ -329,6 +329,10 @@ public class Admin extends Mapper {
         for (int i = 1; i <= splits; i++) {
             // get all of the agencies with the metro of this index
             currentAgencies = params.getAll("metro" + i);
+	    
+	    if (currentAgencies == null)
+		continue;
+
             splitAgencies[i - 1] = new NtdAgency[currentAgencies.length];
             
             // loop through each one, getting the agencies
@@ -340,6 +344,9 @@ public class Admin extends Mapper {
         // now, create new metros for each
         MetroArea metro;
         for (NtdAgency[] agencies: splitAgencies) {
+	    if (agencies == null)
+		continue;
+
             metro = new MetroArea();
             for (NtdAgency agency : agencies) {
                 metro.agencies.add(agency);
@@ -359,6 +366,9 @@ public class Admin extends Mapper {
         for (NtdAgency agency : original.agencies) {
             boolean isInSplitMetro = false;
             SPLITS: for (NtdAgency[] split : splitAgencies) {
+		if (split == null)
+		    continue;
+
                 for (NtdAgency other : split) {
                     if (agency.equals(other)) {
                         isInSplitMetro = true;
