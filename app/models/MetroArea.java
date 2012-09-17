@@ -25,6 +25,7 @@ import utils.GeometryUtils;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.operation.overlay.OverlayOp;
@@ -312,7 +313,8 @@ public class MetroArea extends Model {
      */
     public void autogeom() {
         Geometry out = null;
-        Geometry agencyGeom;
+        List<Geometry> agencyGeoms = new ArrayList<Geometry>();
+	Geometry agencyGeom;
         Integer srid = null;
         
         for (NtdAgency agency : agencies) {
@@ -320,17 +322,20 @@ public class MetroArea extends Model {
             if (agencyGeom == null)
                 continue;
             
-            if (out == null) {
-                out = agencyGeom;
-                srid = agencyGeom.getSRID();
-            }
-            else
-                out = OverlayOp.overlayOp(out, agencyGeom, OverlayOp.UNION);
+	    if (srid != null)
+		srid = agencyGeom.getSRID();
+
+	    agencyGeoms.add(agencyGeom);
         }
         
         if (srid == null)
             the_geom = null;
         else {
+	    Geometry[] geoms = new Geometry[agencyGeoms.size()];
+	    geoms = agencyGeoms.toArray(geoms);
+	    GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
+	    GeometryCollection gc = new GeometryCollection(geoms, gf);
+	    out = gc.buffer(0.0000001);
             out.setSRID(srid);
             the_geom = GeometryUtils.forceToMultiPolygon(out);
         }
