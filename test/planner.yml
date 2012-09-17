@@ -146,6 +146,86 @@ MetroArea(kiritimati):
         name: Kiritimati
         agencies: [kt]
 
+# Portland: we're going to pretend these are all different agencies
+GtfsFeed(TriMet2):
+        startDate: 2012-03-03Z
+        expirationDate: 2013-01-01Z
+        storedId: TriMet2
+        disabled: true
+
+GtfsFeed(TriMet1):
+        startDate: 2011-03-03Z
+        expirationDate: 2013-01-01Z
+        storedId: TriMet1
+        supersededBy: TriMet2
+
+NtdAgency(TriMet):
+        url: http://trimet.org
+        feeds: [TriMet1, TriMet2]
+
+GtfsFeed(WES3):
+        startDate: 2012-03-03Z
+        expirationDate: 2013-01-01Z
+        storedId: WES3
+
+GtfsFeed(WES2):
+        startDate: 2011-03-03Z
+        expirationDate: 2012-08-01Z
+        storedId: WES2
+        disabled: true
+        supersededBy: WES3
+
+GtfsFeed(WES1):
+        startDate: 2011-01-03Z
+        expirationDate: 2012-05-01Z
+        storedId: WES1
+        supersededBy: WES2
+
+NtdAgency(WES):
+        url: http://trimet.org/wes
+        feeds: [WES1, WES2, WES3]
+
+GtfsFeed(MAX2):
+        startDate: 2012-03-03Z
+        expirationDate: 2013-01-01Z
+        storedId: MAX2
+        status: FAILED
+
+GtfsFeed(MAX1):
+        startDate: 2011-03-03Z
+        expirationDate: 2013-01-01Z
+        storedId: MAX1
+        supersededBy: MAX2
+        
+NtdAgency(MAX):
+        url: http://trimet.org/max
+        feeds: [MAX1, MAX2]
+
+GtfsFeed(SC3):
+        startDate: 2012-03-03Z
+        expirationDate: 2013-01-01Z
+        storedId: SC3
+
+GtfsFeed(SC2):
+        startDate: 2011-03-03Z
+        expirationDate: 2012-08-01Z
+        storedId: SC2
+        status: FAILED
+        supersededBy: SC3
+
+GtfsFeed(SC1):
+        startDate: 2011-01-03Z
+        expirationDate: 2012-05-01Z
+        storedId: SC1
+        supersededBy: SC2
+
+NtdAgency(SC):
+        url: http://trimet.org/wes
+        feeds: [SC1, SC2, SC3]
+
+MetroArea(pdx):
+        name: Portland, OR
+        agencies: [SC, MAX, WES, TriMet]
 
 BikeRentalSystem:
         type: CITYBIKES
