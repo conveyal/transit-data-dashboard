@@ -241,6 +241,7 @@ public class DeploymentPlan {
 		    // if it expires before today also, don't even bother to include it. Don't continue the
 		    // search either. TODO: if an older feed accidentally supersedes a newer one, the newer
 		    // one will not be included.
+		    
 		    if (this.startDate.compareTo(feed.expirationDate) > 0)
 		        return;
 		    
@@ -280,6 +281,7 @@ public class DeploymentPlan {
 			    if (olderFeed != null) 
 			        addFeeds(agency, olderFeed, toInclude, iteration + 1);
 			}
+			
 			return;
 		}
 	}
