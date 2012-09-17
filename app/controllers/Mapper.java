@@ -153,7 +153,6 @@ public class Mapper extends Controller {
         long agencyId;
         long metroId;
         long agencyCount = NtdAgency.count();
-        GtfsFeed feed;
 
         // TODO: how does this query behave when an agency touches multiple metros?
         String qs =
@@ -315,7 +314,6 @@ public class Mapper extends Controller {
     public static void setGoogleGtfsFromParse (String name, String areaName, double lat, double lon) {
         long metroId;
         MetroArea metro;
-        List<Object> results;
         List<NtdAgencyProxy> agencies = new ArrayList<NtdAgencyProxy>();
         NtdAgency agency;
         UnmatchedPrivateGtfsProvider provider;
@@ -411,7 +409,7 @@ public class Mapper extends Controller {
             dp = new DeploymentPlan(metroArea, date, window);
         }
     	
-    	if (send != null) {
+    	if (send != null && !send.equals("")) {
     	    dp.sendTo(send);   
     	}
     	
@@ -483,7 +481,6 @@ public class Mapper extends Controller {
         MetroArea toCheck = null;
         MetroArea other;
         MetroArea areaMergeInto;
-        List<MetroArea> allAreas;
         boolean changed;
         // init only the outer; inner is inited on each iteration
         List<List<String>> toMerge = new ArrayList<List<String>>();
@@ -568,7 +565,7 @@ public class Mapper extends Controller {
                         continue;
     
                     // for each of the UZAs in this area, see if there is overlap with the other
-                    // areas
+                    // area
                     for (String uza : mergeArea) {
                         if (otherMergeArea.contains(uza)) {
                             // they need to be merged. mark them as such, and end the iteration
@@ -585,6 +582,9 @@ public class Mapper extends Controller {
             // if one was marked for update
             if (toDelete != null) {
                 for (String uza : toDelete) {
+                    // Eclipse is telling me that toAddTo can only be null here, but if that were the
+                    // case it would be throwing NPEs, I think. This code is getting called, because
+                    // otherwise nothing would get merged -MWC
                     if (!toAddTo.contains(uza)) {
                         toAddTo.add(uza);
                     }

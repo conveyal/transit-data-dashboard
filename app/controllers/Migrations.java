@@ -29,6 +29,7 @@ public class Migrations extends Controller {
     /**
      * Migrate a database structure from a single metro area per agency to multiple metros per agency
      */
+    @SuppressWarnings("deprecation")
     public static void metroAreaSingleToMany () {
         MetroArea metro;
         
