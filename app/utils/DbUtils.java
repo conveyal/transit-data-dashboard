@@ -36,7 +36,6 @@ public class DbUtils {
         Set<MetroArea> changedMetros = new HashSet<MetroArea>();
         
         NtdAgency agency;
-        MetroArea metro;
         for (GtfsFeed feed : GtfsFeed.<GtfsFeed>findAll()) {
             if (feed.getAgencies().size() != 0)
                 continue;
