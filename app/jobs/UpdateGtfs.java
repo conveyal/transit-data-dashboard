@@ -18,6 +18,7 @@ package jobs;
 import play.Logger;
 import play.db.jpa.NoTransaction;
 import play.jobs.Job;
+import play.jobs.On;
 import updaters.UpdaterFactory;
 import play.modules.spring.Spring;
 
@@ -26,7 +27,8 @@ import play.modules.spring.Spring;
  * @author mattwigway
  *
  */
-//@Every('24h')
+// run at 8am GMT (3/4 am EST/EDT, 12/1 am PST/PDT)
+@On("0 0 15 * * ?")
 @NoTransaction
 public class UpdateGtfs extends Job {
     /** Is this job currently running? This prevents trying to update GTFS twice at the same time */
