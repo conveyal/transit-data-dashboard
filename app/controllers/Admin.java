@@ -29,6 +29,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import deployment.DeploymentPlan;
 
 import play.Logger;
+import play.Play;
 import play.db.jpa.JPA;
 import play.modules.spring.Spring;
 import updaters.FeedStorer;
@@ -64,11 +65,34 @@ public class Admin extends Mapper {
         q = JPA.em().createNativeQuery("SELECT count(*) FROM NtdAgency WHERE review = 'AGENCY_MULTIPLE_AREAS'");
         results = q.getResultList();
         int agenciesMultiAreas = results.get(0).intValue();
-     
+
+        q = JPA.em().createNativeQuery("SELECT count(*) FROM MetroArea WHERE needsUpdate = true");
+        results = q.getResultList();
+        int metrosNeedingUpdate = results.get(0).intValue();
+        
         long unmatchedPrivate = UnmatchedPrivateGtfsProvider.count();
         long unmatchedMetro = UnmatchedMetroArea.count();
         
-        render(feedsNoAgency, agenciesMultiAreas, agenciesNoMetro, unmatchedPrivate, unmatchedMetro);
+        render(feedsNoAgency, agenciesMultiAreas, agenciesNoMetro, unmatchedPrivate,
+                unmatchedMetro, metrosNeedingUpdate);
+    }
+    
+    /**
+     * Rebuild metros needing rebuild.
+     */
+    public static void rebuildMetrosNeedingRebuild () {
+        // TODO: only a POST request should be able to trigger this
+        for (MetroArea metro : MetroArea.find("byNeedsUpdate", true).<MetroArea>fetch()) {
+            try {
+                metro.rebuild();
+                metro.needsUpdate = false;
+                metro.save();
+                
+            // do nothing if we can't rebuild; leave it flagged
+            } catch (IllegalStateException e) {};
+        }
+        
+        index();
     }
     
     /**
@@ -101,6 +125,14 @@ public class Admin extends Mapper {
     public static void saveRealtimeFeeds(GtfsFeed feed, List<String> feedUrls) {
         feed.realtimeUrls = feedUrls;
         feed.save();
+        
+        for (NtdAgency agency : feed.getAgencies()) {
+            for (MetroArea metro : agency.getMetroAreas()) {
+                metro.needsUpdate = true;
+                metro.save();
+            }
+        }
+        
         index();
     }
     
@@ -124,6 +156,11 @@ public class Admin extends Mapper {
         feed.review = null;
         feed.save();
         agency.save();
+        
+        for (MetroArea metro : agency.getMetroAreas()) {
+            metro.needsUpdate = true;
+            metro.save();
+        }
     }
     
     /**
@@ -142,6 +179,11 @@ public class Admin extends Mapper {
         JPA.em().flush();
         // agency is saved in here
         agency.findAndAssignMetroArea();
+        
+        for (MetroArea metro : agency.getMetroAreas()) {
+            metro.needsUpdate = true;
+            metro.save();
+        }
     }
     
     
@@ -230,6 +272,10 @@ public class Admin extends Mapper {
     public static void mergeAllAreas (NtdAgency agency) {
         try {
             agency.mergeAllAreas();
+            for (MetroArea metro : agency.getMetroAreas()) {
+                metro.needsUpdate = true;
+                metro.save();
+            }
         } catch (NullPointerException e) {
             flash("error", "invalid geometry for agency");
             showAgenciesMultiAreas();
@@ -249,6 +295,10 @@ public class Admin extends Mapper {
     public static void splitToAreas (NtdAgency agency) {
         try {
             agency.splitToAreas();
+            for (MetroArea metro : agency.getMetroAreas()) {
+                metro.needsUpdate = true;
+                metro.save();
+            }
         } catch (NullPointerException e) {
             flash("error", "agency has no valid geometry");
             showAgenciesMultiAreas();
@@ -297,6 +347,7 @@ public class Admin extends Mapper {
             metro.autoname();
             metro.autogeom();
             metro.source = MetroAreaSource.GTFS;
+            metro.needsUpdate = true;
             metro.save();
         }
         
@@ -434,7 +485,7 @@ public class Admin extends Mapper {
          DeploymentPlan dp;
          for (MetroArea metro : MetroArea.getAllMetrosWithTransit()) {
              dp = new DeploymentPlan(metro);
-             //dp.sendTo("http://example.com");
+             dp.sendTo(Play.configuration.getProperty("send_deployer_requests_to"));
              count++;
          }
          renderText("Deployed " + count + " metros.");
