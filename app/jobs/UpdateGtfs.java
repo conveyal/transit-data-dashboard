@@ -15,6 +15,7 @@
 
 package jobs;
 
+import play.Logger;
 import play.db.jpa.NoTransaction;
 import play.jobs.Job;
 import updaters.UpdaterFactory;
@@ -28,8 +29,23 @@ import play.modules.spring.Spring;
 //@Every('24h')
 @NoTransaction
 public class UpdateGtfs extends Job {
+    /** Is this job currently running? This prevents trying to update GTFS twice at the same time */
+    private static boolean running = false;
+    
 	public void doJob () {
-		UpdaterFactory factory = Spring.getBeanOfType(UpdaterFactory.class);
-		factory.update();
+	    if (UpdateGtfs.running) {
+	        Logger.warn("Not running updater more than once concurrently!");
+	        return;
+	    }
+	    
+	    try {
+	        UpdateGtfs.running = true;
+	    
+	        UpdaterFactory factory = Spring.getBeanOfType(UpdaterFactory.class);
+	        factory.update();
+	    }
+	    finally {
+	        UpdateGtfs.running = false;
+	    }
 	}
 }
