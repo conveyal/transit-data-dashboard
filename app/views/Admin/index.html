@@ -33,7 +33,23 @@
 <h2>Other tasks</h2>
 <ul>
     <li><a href="chooseAgency?redirectTo=editRealtimeFeeds%3Fagency.id%3D">Configure real time updates</a></li>
-    <li><a href="removeUnreferencedStoredFeeds">Remove unreferenced stored feeds</a></li> 
+    <li><a href="removeUnreferencedStoredFeeds">Remove unreferenced stored feeds</a></li>
+    <li><a href="/admin/mapfeeds.html">Map feeds to agencies</a></li>
+    <li>
+        <form action="splitMetroInteractively" method="GET">
+            Split metro <input type="text" name="metroId" placeholder="metro area ID" /> into 
+            <input type="text" name="splits" placeholder="number" /> parts.
+            <input type="submit" class="btn btn-link" value="Go!"/>
+        </form>
+    </li>
+    <li>
+        <form action="../mapper/createDeploymentPlan" method="GET">
+            Create deployment plan for <input type="text" name="metroArea.id" placeholder="metro area id">
+            using a window starting <input type="text" name="date" placeholder="yyyy-MM-dd" />
+            and lasting <input type="text" name="window" placeholder="n" /> days, and send it to
+            <input type="text" name="send" placeholder="URL" />
+            <input type="submit" class="btn" value="Go!" />
+        </form>
 </ul>
         
         
