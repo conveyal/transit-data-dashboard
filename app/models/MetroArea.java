@@ -165,7 +165,7 @@ public class MetroArea extends Model {
      */
     public String toString () {
         if (name != null && !name.equals("")) {
-            return (this.disabled ? "disabled " : "") + name + "(" + agencies.size() + " agencies)";
+            return (this.disabled ? "disabled " : "") + name + " (" + agencies.size() + " agencies)";
         }
         else if (agencies.size() != 0) {
             return "Metro including " + agencies.size() + " agencies.";
@@ -189,7 +189,7 @@ public class MetroArea extends Model {
         Geometry result;
     
         for (NtdAgency agency : other.agencies) {
-            this.agencies.add(agency);;
+            this.agencies.add(agency);
         }
         
         // erase all other's agencies
