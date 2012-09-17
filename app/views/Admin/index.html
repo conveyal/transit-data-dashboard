@@ -24,6 +24,11 @@
         <span class="badge badge-info">${agenciesNoMetro}</span></a></li>
     <li><a href="agenciesMultiAreas">Agencies matching multiple metro areas
         <span class="badge badge-info">${agenciesMultiAreas}</span></a></li>
+    <li>Metro areas needing rebuild
+        <form action="rebuildMetrosNeedingRebuild" method="POST">
+            <input type="submit" class="btn btn-mini" value="Rebuild all" />
+        </form> 
+        <span class="badge badge-info">${metrosNeedingUpdate}</span></a></li>
     <li><a href="unmatchedMetro">Unmatched metro areas
         <span class="badge badge-info">${unmatchedMetro}</span></a></li>
     <li><a href="unmatchedPrivate">Unmatched private GTFS agencies 
@@ -36,6 +41,9 @@
     <li><a href="removeUnreferencedStoredFeeds">Remove unreferenced stored feeds</a></li>
     <li><a href="/admin/mapfeeds.html">Map feeds to agencies</a></li>
     <li><a href="../mapper/fetchGtfs">Fetch new GTFS</a></li>
+    <li><a href="../mapper/generateDeploymentPlansForAllMetros">Generate deployment plans for
+        <i>all</i> enabled metros with transit</a></li>
+    <li><a href="/crud">CRUD DB interface</a></li>
     <li>
         <form action="splitMetroInteractively" method="GET">
             Split metro <input type="text" name="metroId" placeholder="metro area ID" /> into 
