@@ -276,49 +276,29 @@
                 <a href="http://transit.google.com">Google</a>, and the many transit agencies
                 providing open data!
             </p>
-            <p><a class="btn" id="feedbackLink" href="#feedback" data-toggle="modal">Send feedback</a></p>
         </div>
       </div>
     </div>
-
-    <div class="modal hidden" id="feedback" tabindex="-1" role="dialog">
-        <span class="hidden508">Begin simulated dialog</span>
-	<div class="float-right badge badge-important close darkclose" data-dismiss="modal" title="close simulated dialog">&times;</div>
-
-        <div class="modal-body" id="wufoo-z7r3m3">
-	        Fill out my <a href="http://livablestreets.wufoo.com/forms/z7r3m3">online form</a>.
-        </div>
-            <script type="text/javascript">var z7r3m3;(function(d, t) {
-      var s = d.createElement(t), options = {
-      'userName':'livablestreets', 
-      'formHash':'z7r3m3', 
-      'autoResize':true,
-      'height':'577',
-      'async':true,
-      'header':'show', 
-      'ssl':true};
-      s.src = ('https:' == d.location.protocol ? 'https://' : 'http://') + 'wufoo.com/scripts/embed/form.js';
-      s.onload = s.onreadystatechange = function() {
-      var rs = this.readyState; if (rs) if (rs != 'complete') if (rs != 'loaded') return;
-      try { z7r3m3 = new WufooForm();z7r3m3.initialize(options);z7r3m3.display(); } catch (e) {}};
-      var scr = d.getElementsByTagName(t)[0], par = scr.parentNode; par.insertBefore(s, scr);
-      })(document, 'script');
-	      var interval;
-	      interval = setInterval(function () {
-	          var wufooform = $('#wufoo-z7r3m3 iframe');
-	          if (wufooform.length != 0 && wufooform.attr('height') == "0") {
-	              wufooform.attr('height', '525');
-                      clearInterval(interval);
-                  }
-              }, 250);
-          </script>
-
-        </div>
-        <div class="clear"></div>
-        <span class="hidden508">End simulated dialog</span>
-    </div>
     
-    <!-- AddThis -->
+    <!-- ZenDesk Feedback -->
+	<script type="text/javascript"
+		src="//assets.zendesk.com/external/zenbox/v2.5/zenbox.js"></script>
+	<style type="text/css" media="screen, projection">
+        @import url(//assets.zendesk.com/external/zenbox/v2.5/zenbox.css);
+    </style>
+	<script type="text/javascript">
+		if (typeof (Zenbox) !== "undefined") {
+			Zenbox.init({
+				dropboxID : "20085051",
+				url : "https://openplans.zendesk.com",
+				tabID : "Feedback",
+				tabColor : "black",
+				tabPosition : "Left"
+			});
+		}
+	</script>
+
+	<!-- AddThis -->
     <script type="text/javascript" src="http://s7.addthis.com/js/300/addthis_widget.js#pubid=xa-50589af07e9895c9"></script>
     <!-- Twitter direct -->
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
