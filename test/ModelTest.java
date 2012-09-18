@@ -17,13 +17,16 @@ import org.junit.*;
 import java.util.*;
 import play.test.*;
 import models.*;
+import play.db.jpa.JPA;
 import play.db.jpa.Model;
 
 public class ModelTest extends UnitTest {
     @Before
     public void setUp () {
         // TODO: this seems to only delete the ones loaded from fixtures.
-        Fixtures.deleteAll();
+        Fixtures.deleteAllModels();
+        JPA.em().getTransaction().rollback();
+        JPA.em().getTransaction().begin();
         Fixtures.loadModels("relationships.yml");
     }
 
@@ -210,9 +213,12 @@ public class ModelTest extends UnitTest {
         MetroArea sf = MetroArea.find("byName", "San Francisco-Oakland-San José, CA").first();
         
         assertNotNull(sf);
-        assertEquals(1, sf.getAgencies().size());
+        assertEquals(1, sf.agencies.size());
 
-        assertEquals("BART", sf.getAgencies().get(0).name);
+        for (NtdAgency agency : sf.agencies) {
+            assertEquals("BART", agency.name);
+            break;
+        }
     }
 
     @Test
@@ -258,8 +264,8 @@ public class ModelTest extends UnitTest {
         assertEquals(feed, agency.feeds.toArray()[0]);
 
         // confirm that the bidirectionality worked correctly
-        assertEquals(1, metro.getAgencies().size());
-        assertEquals(agency, metro.getAgencies().get(0));
+        assertEquals(1, metro.agencies.size());
+        assertTrue(metro.agencies.contains(agency));
 
         assertEquals(1, feed.getAgencies().size());
         assertEquals(agency, feed.getAgencies().get(0));
