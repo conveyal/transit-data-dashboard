@@ -28,7 +28,6 @@ import play.Logger;
 import play.db.jpa.JPA;
 import play.db.jpa.JPAPlugin;
 import play.db.jpa.NoTransaction;
-import play.db.jpa.Transactional;
 import play.exceptions.JPAException;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
@@ -69,139 +68,128 @@ public class GtfsDataExchangeUpdater implements Updater {
 		JsonObject feed;
 		
 		for (JsonElement rawFeed : data) {
+		    // this doesn't seem to cause a problem if there is no active transaction
+		    JPAPlugin.closeTx(true);
+            JPAPlugin.startTx(false);
+
             feed = rawFeed.getAsJsonObject();
-            
-            try {
-                calculateAndSave(feed, storer, updated);
-            } catch (Exception e) {
-                Logger.error("Error fetching/saving feed %s",
-                        feed.get("dataexchange_id").getAsString());
+
+            String dataExchangeId = feed.get("dataexchange_id").getAsString();
+
+            if (dataExchangeId == null || dataExchangeId.equals(""))
+                continue;
+
+            // ORDER BY ...: so failed feeds aren't continuously refetched.
+            GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? AND supersededBy IS NULL ORDER BY dateUpdated DESC",
+                    dataExchangeId).first();
+
+            // convert to ms
+            long lastUpdated = ((long) feed.get("date_last_updated").getAsDouble()) * 1000L;
+
+            // do we need to fetch?
+            if (originalFeed != null) {
+                // difference of less than 2000ms: ignore
+                if ((lastUpdated - originalFeed.dateUpdated.getTime()) < 2000) {
+                    continue;
+                }
             }
+
+            // get the data file URL
+            res = WS.url("http://www.gtfs-data-exchange.com/agency/" + 
+                    dataExchangeId + "/json").get();
+            status = res.getStatus();
+            if (status != 200) {
+                Logger.error("Error fetching agency %s, status %s", dataExchangeId, status);
+                continue;
+            }
+
+            JsonObject agency = res.getJson().getAsJsonObject();
+            JsonArray files = agency.get("data").getAsJsonObject()
+                    .get("datafiles").getAsJsonArray();
+            JsonObject firstFile = files.get(0).getAsJsonObject();
+            String url = firstFile.get("file_url").getAsString();
+
+            // Download the feed
+            String feedId = storer.storeFeed(url);
+            if (feedId == null) {
+                Logger.error("Could not retrieve feed %s", url);
+                // feed will be redownloaded on next attempt
+                continue;
+            }
+
+            GtfsFeed newFeed;
+            boolean isNew;
+            // copy over all the data.
+            if (originalFeed != null) {
+                isNew = false;
+                newFeed = originalFeed.clone();
+            }
+            else {
+                newFeed = new GtfsFeed();
+                newFeed.note = "new feed";
+                isNew = true;
+            }
+
+            // update all fields
+            FeedUtils.copyFromJson(feed, newFeed);
+            newFeed.downloadUrl = url;
+            newFeed.storedId = feedId;
+
+            // Calculate feed stats
+            File feedFile = storer.getFeed(feedId);
+
+            FeedStatsCalculator stats;
+            try {
+                stats = new FeedStatsCalculator(feedFile);
+            } catch (Exception e) {
+                // TODO be more descriptive
+                Logger.error("Error calculating feed stats for feed %s", url);
+                e.printStackTrace();
+
+                // still save it in the DB
+                newFeed.status = FeedParseStatus.FAILED;
+                newFeed.save();
+                
+                if (originalFeed != null) {
+                    originalFeed.supersededBy = newFeed;
+                    originalFeed.save();
+                }
+               
+                JPAPlugin.closeTx(false);
+
+                continue;
+            }
+
+            storer.releaseFeed(feedId);
+
+            // save the stats
+            stats.apply(newFeed);
+            newFeed.status = FeedParseStatus.SUCCESSFUL;
+            newFeed.save();
+
+            // if it's a new feed, find an agency.
+            if (isNew) {
+                if (!newFeed.findAgency())
+                    newFeed.review = ReviewType.NO_AGENCY;
+
+                newFeed.save();
+            }
+
+            for (NtdAgency ntd : newFeed.getEnabledAgencies()) {
+                for (MetroArea metro : ntd.getEnabledMetroAreas()) {
+                    updated.add(metro);
+                }
+            }
+
+            if (originalFeed != null) {
+                originalFeed.supersededBy = newFeed;
+                originalFeed.save();
+            }
+
+            // https://groups.google.com/forum/?fromgroups=#!topic/play-framework/qaIaMOIjpMM
+            JPAPlugin.closeTx(false);
 		}
 		
 		return updated;
-	}
-	
-	/**
-	 * Download the GTFS Data Exchange feed described by feed and save it to the DB and to
-	 * the storer named in storer, putting any updated metro areas into updated (which will be 
-	 * modified)
-	 * @param feed
-	 * @param storer
-	 * @param updated
-	 */
-	@Transactional(readOnly=false)
-	private void calculateAndSave(JsonObject feed, FeedStorer storer, Set<MetroArea> updated) {
-	    String dataExchangeId = feed.get("dataexchange_id").getAsString();
-
-	    if (dataExchangeId == null || dataExchangeId.equals(""))
-	        return;
-
-	    // ORDER BY ...: so failed feeds aren't continuously refetched.
-	    GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? AND supersededBy IS NULL ORDER BY dateUpdated DESC",
-	            dataExchangeId).first();
-
-	    // convert to ms
-	    long lastUpdated = ((long) feed.get("date_last_updated").getAsDouble()) * 1000L;
-
-	    // do we need to fetch?
-	    if (originalFeed != null) {
-	        // difference of less than 2000ms: ignore
-	        if ((lastUpdated - originalFeed.dateUpdated.getTime()) < 2000) {
-	            return;
-	        }
-	    }
-
-	    // get the data file URL
-	    HttpResponse res = WS.url("http://www.gtfs-data-exchange.com/agency/" + 
-	            dataExchangeId + "/json").get();
-	    if (!res.success()) {
-	        Logger.error("Error fetching agency %s, status %s", dataExchangeId, res.getStatus());
-	        return;
-	    }
-
-	    JsonObject agency = res.getJson().getAsJsonObject();
-	    JsonArray files = agency.get("data").getAsJsonObject()
-	            .get("datafiles").getAsJsonArray();
-	    JsonObject firstFile = files.get(0).getAsJsonObject();
-	    String url = firstFile.get("file_url").getAsString();
-
-	    // Download the feed
-	    String feedId = storer.storeFeed(url);
-	    if (feedId == null) {
-	        Logger.error("Could not retrieve feed %s", url);
-	        // feed will be redownloaded on next attempt
-	        return;
-	    }
-
-	    GtfsFeed newFeed;
-	    boolean isNew;
-	    // copy over all the data.
-	    if (originalFeed != null) {
-	        isNew = false;
-	        newFeed = originalFeed.clone();
-	    }
-	    else {
-	        newFeed = new GtfsFeed();
-	        newFeed.note = "new feed";
-	        isNew = true;
-	    }
-
-	    // update all fields
-	    FeedUtils.copyFromJson(feed, newFeed);
-	    newFeed.downloadUrl = url;
-	    newFeed.storedId = feedId;
-
-	    // Calculate feed stats
-	    File feedFile = storer.getFeed(feedId);
-
-	    FeedStatsCalculator stats;
-	    try {
-	        stats = new FeedStatsCalculator(feedFile);
-	    } catch (Exception e) {
-	        // TODO be more descriptive
-	        Logger.error("Error calculating feed stats for feed %s", url);
-	        e.printStackTrace();
-
-	        // still save it in the DB
-	        newFeed.status = FeedParseStatus.FAILED;
-	        newFeed.save();
-
-	        if (originalFeed != null) {
-	            originalFeed.supersededBy = newFeed;
-	            originalFeed.save();
-	        }
-
-	        JPAPlugin.closeTx(false);
-
-	        return;
-	    }
-
-	    storer.releaseFeed(feedId);
-
-	    // save the stats
-	    stats.apply(newFeed);
-	    newFeed.status = FeedParseStatus.SUCCESSFUL;
-	    newFeed.save();
-
-	    // if it's a new feed, find an agency.
-	    if (isNew) {
-	        if (!newFeed.findAgency())
-	            newFeed.review = ReviewType.NO_AGENCY;
-
-	        newFeed.save();
-	    }
-
-	    for (NtdAgency ntd : newFeed.getEnabledAgencies()) {
-	        for (MetroArea metro : ntd.getEnabledMetroAreas()) {
-	            updated.add(metro);
-	        }
-	    }
-
-	    if (originalFeed != null) {
-	        originalFeed.supersededBy = newFeed;
-	        originalFeed.save();
-	    }
-
 	}
 }

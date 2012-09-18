@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import play.Logger;
-import play.db.jpa.Transactional;
+import play.db.jpa.JPAPlugin;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -76,88 +76,84 @@ public class S3WatcherUpdater implements Updater {
         S3FeedStorer storer = (S3FeedStorer) storerRaw;
         
         for (String fn : this.watchedFiles) {
+            JPAPlugin.startTx(false);
             try {
-                fetchFeed(fn, storer, changed);
+                // TODO what does this do if the file does not exist
+                ObjectMetadata meta;
+                try {
+                    meta = s3Client.getObjectMetadata(this.bucket, fn);
+                } catch (Exception e) {
+                    Logger.warn("Exception fetching s3:%s/%s ; perhaps it does not exist.", 
+                            this.bucket, fn);
+                    JPAPlugin.closeTx(true);
+                    continue;
+                }
+
+                // check if we have a new feed
+                String s3Url = buildS3Url(fn);
+
+                boolean newFeed;
+                GtfsFeed oldFeed = GtfsFeed.find("downloadUrl = ? AND supersededBy IS NULL ORDER BY dateUpdated DESC",
+                        s3Url).first();
+                GtfsFeed feed;
+
+                if (oldFeed == null) {
+                    feed = new GtfsFeed();
+                    newFeed = true;
+                }
+                else {
+                    newFeed = false;
+                    feed = oldFeed.clone();
+                }
+                
+                if (!newFeed && oldFeed.dateUpdated.compareTo(meta.getLastModified()) >= 0)
+                    continue;
+
+                feed.downloadUrl = s3Url;
+
+                String feedId = storer.copy(fn);
+                feed.storedId = feedId;
+                
+                File gtfs = storer.getFeed(feedId);
+                try {
+                    FeedStatsCalculator stats = new FeedStatsCalculator(gtfs);
+                    stats.applyExtended(feed);
+                    feed.status = FeedParseStatus.SUCCESSFUL;
+                } catch (Exception e) {
+                    Logger.error("Exception calculating feed stats for " + fn);
+                    e.printStackTrace();
+                    feed.status = FeedParseStatus.FAILED;
+                }
+                
+                
+                
+                storer.releaseFeed(feedId);
+                
+                feed.dateUpdated = meta.getLastModified();
+                
+                if (newFeed) {
+                    if (!feed.findAgency())
+                        feed.review = ReviewType.NO_AGENCY;
+                    feed.dateAdded = meta.getLastModified();
+                }
+                
+                for (NtdAgency agency : feed.getEnabledAgencies()) {
+                    for (MetroArea area : agency.getEnabledMetroAreas()) {
+                        changed.add(area);
+                    }
+                }
+                
+                feed.save();
+                
+                JPAPlugin.closeTx(false);
             } catch (Exception e) {
-                Logger.error("fetch failed for S3 manual feed %s", fn);
+                JPAPlugin.closeTx(true);
+                Logger.error("Exception reading %s", buildS3Url(fn));
+                e.printStackTrace();
             }
         }
         
         return changed;
-    }
-    
-    /**
-     * Grab the feed with filename fn, store it with storer storer, and put updated metros in
-     * changed.
-     * @param fn
-     * @param storer
-     * @param changed
-     */
-    @Transactional(readOnly=false)
-    private void fetchFeed (String fn, S3FeedStorer storer, Set<MetroArea> changed) {
-        // TODO what does this do if the file does not exist
-        ObjectMetadata meta;
-        try {
-            meta = s3Client.getObjectMetadata(this.bucket, fn);
-        } catch (Exception e) {
-            Logger.warn("Exception fetching s3:%s/%s ; perhaps it does not exist.", 
-                    this.bucket, fn);
-            return;
-        }
-
-        // check if we have a new feed
-        String s3Url = buildS3Url(fn);
-
-        boolean newFeed;
-        GtfsFeed oldFeed = GtfsFeed.find("downloadUrl = ? AND supersededBy IS NULL ORDER BY dateUpdated DESC",
-                s3Url).first();
-        GtfsFeed feed;
-
-        if (oldFeed == null) {
-            feed = new GtfsFeed();
-            newFeed = true;
-        }
-        else {
-            newFeed = false;
-            feed = oldFeed.clone();
-        }
-        
-        if (!newFeed && oldFeed.dateUpdated.compareTo(meta.getLastModified()) >= 0)
-            return;
-
-        feed.downloadUrl = s3Url;
-
-        String feedId = storer.copy(fn);
-        feed.storedId = feedId;
-        
-        File gtfs = storer.getFeed(feedId);
-        try {
-            FeedStatsCalculator stats = new FeedStatsCalculator(gtfs);
-            stats.applyExtended(feed);
-            feed.status = FeedParseStatus.SUCCESSFUL;
-        } catch (Exception e) {
-            Logger.error("Exception calculating feed stats for " + fn);
-            e.printStackTrace();
-            feed.status = FeedParseStatus.FAILED;
-        }  
-        
-        storer.releaseFeed(feedId);
-        
-        feed.dateUpdated = meta.getLastModified();
-        
-        if (newFeed) {
-            if (!feed.findAgency())
-                feed.review = ReviewType.NO_AGENCY;
-            feed.dateAdded = meta.getLastModified();
-        }
-        
-        for (NtdAgency agency : feed.getEnabledAgencies()) {
-            for (MetroArea area : agency.getEnabledMetroAreas()) {
-                changed.add(area);
-            }
-        }
-        
-        feed.save();
     }
     
     private String buildS3Url (String filename) {

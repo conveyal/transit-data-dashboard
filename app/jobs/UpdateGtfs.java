@@ -32,6 +32,7 @@ import updaters.UpdaterFactory;
 // the reason for the odd time is because it seems likely that a good number of people
 // start cron jobs on the hour on AWS; this will fall between those.
 @On("0 37 7 * * ?")
+@NoTransaction
 public class UpdateGtfs extends Job {
     /** Is this job currently running? This prevents trying to update GTFS twice at the same time */
     private static boolean running = false;
