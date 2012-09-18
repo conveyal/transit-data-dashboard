@@ -251,14 +251,15 @@ DataController.prototype.sortBy = function (field, desc) {
         	// and the upvote button
         	var upvote = create('a').attr('href', '#')
         		.addClass('float-left')
-        		.addClass('icon-thumbs-up')
+        		.text("Vote")
         		.attr('title', 'Vote for ' + agency.name + ' to release their data!')
-        		.data('id', agency.id)
+        		.data('agency', agency)
         		.click(function (e) {
         			e.preventDefault();
         			
         			var voteButton = $(this);
-        			var id = voteButton.data('id');
+        			var agency = voteButton.data('agency');
+        			var id = agency.id;
         			
         			// prevent multiple voting
         			if (instance.votedForAgencies.indexOf(id) == -1) {
@@ -273,6 +274,7 @@ DataController.prototype.sortBy = function (field, desc) {
         					title: "",
         					content: 
         						'<div class="hidden508">Begin simulated dialog</div>' +
+        						'<div id="vote-inner">' +
         						'<form id="voteform" class="control-horizontal" action="' + DataController.API_LOCATION + 
         						'upvote" method="get">' +
         						'<div class="alert alert-success">' +
@@ -311,6 +313,7 @@ DataController.prototype.sortBy = function (field, desc) {
         						'    </div>' +
         						'  </div>' +
         						'</div>' +
+        						'</div>' +
         						'</form>' +
         						'<div class="hidden508">End simulated dialog</div>'
         				});
@@ -330,12 +333,47 @@ DataController.prototype.sortBy = function (field, desc) {
         					// make them think it happened right away
             				numVotes.text(Number(numVotes.text()) + 1);
             				instance.votedForAgencies.push(id);
-            				voteButton.popover('hide');
             				
-            				// restore focus
-            				voteButton.focus();
+            				// lock the height
+            				$('#vote-inner').parent().css('height', ($('#vote-inner').parent().height() + 18) + 'px');
             				
+            				// remove the vote form
             				$('#voteform').remove();
+            				
+            				var text = 'I just voted for ' + agency.name.slice(0, 70) + 
+    							' to release #transpo data';
+            				
+            				// add the Twitter share button
+            				$('#vote-inner').append(
+            						'<div id="postvote-share">' +
+            						'  <div class="clear"></div>' +
+            						'  <div class="leftbar">' +
+            		                '  <iframe allowtransparency="true" frameborder="0" scrolling="no"' +
+            						' src="https://platform.twitter.com/widgets/tweet_button.html?' +
+            		                'url=http%3A%2F%2Ftransitdata.openplans.org&text=' + encodeURIComponent(text) +
+            		                '&countUrl=http%3A%2F%2Ftransitdata.openplans.org#' + agency.id +
+            		                '&count=vertical"' + 
+            		                '  style="width: 55px; height: 62px; position: relative; top: -45px" />' +
+            		                '  </div>' +
+            						'  <p>' + text + ' <a href="http://transitdata.openplans.org">http://transitdata.openplans.org</a>' +
+            						'  </p>' +
+            						'  <div class="clear"></div><br/>' +
+            						'  <a class="btn bottom">Close</a>' +
+            						'</div>'
+            						);
+            				
+            				$('#postvote-share').click(function (e) {
+            					e.preventDefault();
+            					
+                				voteButton.popover('hide');
+                				
+                				// restore focus
+                				voteButton.focus();
+                				voteButton.addClass('disabledLink');
+                				
+                				$('#postvote-share').remove();
+                				$('#voteform').remove();
+            				});
         				});
         				
         				$('#closeform').click(function (e) {
@@ -345,6 +383,7 @@ DataController.prototype.sortBy = function (field, desc) {
             				voteButton.focus();
         					
         					$('#voteform').remove();
+        					$('#postvote-share').remove();
         				});
         			}
         		});

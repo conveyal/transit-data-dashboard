@@ -42,6 +42,22 @@
             <li class="active"><a href="#mapTab" class="tabButton" data-toggle="tab" 
                                   id="mapTabToggle">Map</a></li>
             <li><a href="#dataTab" class="tabButton" data-toggle="tab">Data</a></li>
+            <li>
+              <span class="shareTop shareTopTweet">
+                <a href="#" class="addthis_button_tweet" 
+                   tw:url="http://transitdata.openplans.org" tw:text="Check out @OpenPlans site tracking open #transpo data"></a>
+              </span>
+            <li>
+              <span class="shareTop shareTopLike">
+                <a href="#" class="addthis_button_facebook_like" fb:href="http://transitdata.openplans.org" 
+                   fb:layout="button_count"></a>
+              </span>
+            </li>
+            <li>
+              <span class="shareTop shareTopPlusOne">                
+                <a href="#" class="addthis_button_google_plusone"></a>
+              </span>
+            </li>
           </ul>
         </div>
       </div>
@@ -301,7 +317,11 @@
         <div class="clear"></div>
         <span class="hidden508">End simulated dialog</span>
     </div>
-
+    
+    <!-- AddThis -->
+    <script type="text/javascript" src="http://s7.addthis.com/js/300/addthis_widget.js#pubid=xa-50589af07e9895c9"></script>
+    <!-- Twitter direct -->
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
     <script src="bootstrap/js/bootstrap.js"></script>
   </body>
 </html>
