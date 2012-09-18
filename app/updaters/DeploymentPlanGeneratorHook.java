@@ -21,6 +21,7 @@ import java.util.Set;
 
 import play.Play;
 import play.db.jpa.JPAPlugin;
+import play.db.jpa.Transactional;
 
 import deployment.DeploymentPlan;
 
@@ -34,6 +35,8 @@ import models.MetroArea;
 public class DeploymentPlanGeneratorHook implements UpdaterHook {
 
 	@Override
+	// this is not read only because rebuild scheduling needs a read-write transaction.
+	@Transactional(readOnly=false)
 	public void update(Set<MetroArea> areas) {
 	    JPAPlugin.startTx(true);
 	    
