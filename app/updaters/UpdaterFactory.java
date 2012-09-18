@@ -19,6 +19,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import play.db.jpa.JPA;
+
 import lombok.Data;
 import models.MetroArea;
 
@@ -69,7 +71,7 @@ public class UpdaterFactory {
 	private List<UpdaterHook> hooks;
 	private FeedStorer storer;
 	
-	public void update () {
+	public void update () {	    
 		Set<MetroArea> metros = new HashSet<MetroArea>();
 		
 		for (Updater updater : updaters) {

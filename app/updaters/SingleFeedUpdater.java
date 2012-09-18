@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import play.Logger;
-import play.db.jpa.JPAPlugin;
+import play.db.jpa.JPA;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 
@@ -49,7 +49,7 @@ public class SingleFeedUpdater implements Updater {
         // find the old feed, if it exists
         Set<MetroArea> changed = new HashSet<MetroArea>();
         
-        JPAPlugin.startTx(false);
+        JPA.em().getTransaction().begin();
         try {
             GtfsFeed original = GtfsFeed.find("byDownloadUrl", this.downloadUrl).first();
             GtfsFeed feed;
@@ -134,7 +134,6 @@ public class SingleFeedUpdater implements Updater {
                     feed.review = ReviewType.NO_AGENCY;
 
                 feed.save();
-                JPAPlugin.closeTx(false);
 
                 for (NtdAgency agency : feed.getEnabledAgencies()) {
                     for (MetroArea area : agency.getEnabledMetroAreas()) {
@@ -142,9 +141,18 @@ public class SingleFeedUpdater implements Updater {
                     }
                 }
             }
+        } catch (Exception e) {
+            Logger.error("Exception during update");
+            e.printStackTrace();
+            if (JPA.em().getTransaction().isActive())
+                JPA.em().getTransaction().rollback();
         } finally {
-            // roll it back if not committed
-            JPAPlugin.closeTx(true);
+            if (JPA.em().getTransaction().isActive()) {
+                if (JPA.em().getTransaction().getRollbackOnly())
+                    JPA.em().getTransaction().rollback();
+                else
+                    JPA.em().getTransaction().commit();
+            }
         }
         
         return changed;

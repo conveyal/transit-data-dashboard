@@ -18,9 +18,10 @@ package updaters;
 import java.util.Set;
 
 import play.Logger;
-import play.db.jpa.JPAPlugin;
+import play.db.jpa.JPA;
 
 import models.MetroArea;
+import models.NtdAgency;
 
 /**
  * An updater hook that just logs all the updated metros.
@@ -29,22 +30,22 @@ import models.MetroArea;
  */
 public class LoggingUpdaterHook implements UpdaterHook {
 
-	@Override
-	public void update(Set<MetroArea> areas) {
-	    JPAPlugin.startTx(true);
-	    
-		String out = "";
-		boolean needsComma = false;
-		for (MetroArea area : areas) {
-			if (needsComma)
-				out += ", ";
-			else
-				needsComma = true;
-			
-			out += area.toString();
-		}
-		
-		JPAPlugin.closeTx(false);
-		Logger.info("Updated areas: " + out);
-	}
+    @Override
+    public void update(Set<MetroArea> areas) {
+
+        String out = "";
+        boolean needsComma = false;
+        for (MetroArea area : areas) {
+            for (NtdAgency agency : area.agencies) {}
+
+            if (needsComma)
+                out += ", ";
+            else
+                needsComma = true;
+
+            out += area.toString();
+        }
+
+        Logger.info("Updated areas: " + out);
+    }
 }
