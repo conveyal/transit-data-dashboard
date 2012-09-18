@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import play.Logger;
 import play.db.jpa.JPA;
 
 import lombok.Data;
@@ -75,11 +76,19 @@ public class UpdaterFactory {
 		Set<MetroArea> metros = new HashSet<MetroArea>();
 		
 		for (Updater updater : updaters) {
-			metros.addAll(updater.update(storer));
+		    try {
+		        metros.addAll(updater.update(storer));
+		    } catch (Exception e) {
+		        Logger.error("Updater failed: ", updater);
+		    }
 		}
 		
 		for (UpdaterHook hook : hooks) {
-			hook.update(metros);
+		    try {
+		        hook.update(metros);
+		    } catch (Exception e) {
+		        Logger.error("Hook failed: ", hook);
+		    }
 		}
 	}
 }
