@@ -32,12 +32,9 @@ public class LoggingUpdaterHook implements UpdaterHook {
 
     @Override
     public void update(Set<MetroArea> areas) {
-
         String out = "";
         boolean needsComma = false;
         for (MetroArea area : areas) {
-            for (NtdAgency agency : area.agencies) {}
-
             if (needsComma)
                 out += ", ";
             else
