@@ -29,7 +29,6 @@ import play.db.jpa.JPA;
 import play.db.jpa.JPAPlugin;
 import play.db.jpa.NoTransaction;
 import play.exceptions.JPAException;
-import play.jobs.Job;
 import play.libs.WS;
 import play.libs.WS.HttpResponse;
 import play.libs.XPath;
@@ -52,30 +51,29 @@ import com.google.gson.JsonObject;
  * It also handles hooks, calling them with the feeds that have changed.
  * @author mattwigway
  */
-public class GtfsDataExchangeUpdater implements Updater {
-    /**
-     * This inner job fetches a single feed off the exchange. This is in its own job
-     * so that Play will automatically handle creating a new transaction for it. This job is run
-     * synchronously from the updater 
-     * @author mattwigway
-     *
-     */
-    private static class FetchOneFeed extends Job {
-        private JsonObject feed;
-        private FeedStorer storer;
-        private Set<MetroArea> updated;
-        
-        public FetchOneFeed (JsonObject feed, FeedStorer storer, Set<MetroArea> updated) {
-            this.feed = feed;
-            this.storer = storer;
-            this.updated = updated;
-        }
-        
-        public void doJob () {
+public class GtfsDataExchangeUpdater implements Updater {	
+	public Set<MetroArea> update (FeedStorer storer) {	    
+		Set<MetroArea> updated = new HashSet<MetroArea>();
+		
+		// First, fetch the RSS feed
+		HttpResponse res = WS.url("http://www.gtfs-data-exchange.com/api/agencies").get();
+		int status = res.getStatus(); 
+		if (status != 200) {
+			Logger.error("Error fetching GTFS changes from Data Exchange: HTTP status %s", status);
+			return null;
+		}
+		
+		JsonObject agencies = res.getJson().getAsJsonObject();
+		JsonArray data = agencies.get("data").getAsJsonArray();
+		JsonObject feed;
+		
+		for (JsonElement rawFeed : data) {
+            feed = rawFeed.getAsJsonObject();
+
             String dataExchangeId = feed.get("dataexchange_id").getAsString();
 
             if (dataExchangeId == null || dataExchangeId.equals(""))
-                return;
+                continue;
 
             // ORDER BY ...: so failed feeds aren't continuously refetched.
             GtfsFeed originalFeed = GtfsFeed.find("dataExchangeId = ? AND supersededBy IS NULL ORDER BY dateUpdated DESC",
@@ -88,16 +86,17 @@ public class GtfsDataExchangeUpdater implements Updater {
             if (originalFeed != null) {
                 // difference of less than 2000ms: ignore
                 if ((lastUpdated - originalFeed.dateUpdated.getTime()) < 2000) {
-                    return;
+                    continue;
                 }
             }
 
             // get the data file URL
-            HttpResponse res = WS.url("http://www.gtfs-data-exchange.com/agency/" + 
+            res = WS.url("http://www.gtfs-data-exchange.com/agency/" + 
                     dataExchangeId + "/json").get();
-            if (!res.success()) {
-                Logger.error("Error fetching agency %s, status %s", dataExchangeId, res.getStatus());
-                return;
+            status = res.getStatus();
+            if (status != 200) {
+                Logger.error("Error fetching agency %s, status %s", dataExchangeId, status);
+                continue;
             }
 
             JsonObject agency = res.getJson().getAsJsonObject();
@@ -110,7 +109,8 @@ public class GtfsDataExchangeUpdater implements Updater {
             String feedId = storer.storeFeed(url);
             if (feedId == null) {
                 Logger.error("Could not retrieve feed %s", url);
-                JPA.setRollbackOnly();
+                // feed will be redownloaded on next attempt
+                continue;
             }
 
             GtfsFeed newFeed;
@@ -145,13 +145,13 @@ public class GtfsDataExchangeUpdater implements Updater {
                 // still save it in the DB
                 newFeed.status = FeedParseStatus.FAILED;
                 newFeed.save();
-
+                
                 if (originalFeed != null) {
                     originalFeed.supersededBy = newFeed;
                     originalFeed.save();
                 }
 
-                return;
+                continue;
             }
 
             storer.releaseFeed(feedId);
@@ -179,41 +179,8 @@ public class GtfsDataExchangeUpdater implements Updater {
                 originalFeed.supersededBy = newFeed;
                 originalFeed.save();
             }
-        }
-    }
-    
-    public Set<MetroArea> update (FeedStorer storer) {	    
-        Set<MetroArea> updated = new HashSet<MetroArea>();
-
-        // First, fetch the RSS feed
-        HttpResponse res = WS.url("http://www.gtfs-data-exchange.com/api/agencies").get();
-        int status = res.getStatus(); 
-        if (status != 200) {
-            Logger.error("Error fetching GTFS changes from Data Exchange: HTTP status %s", status);
-            return null;
-        }
-
-        JsonObject agencies = res.getJson().getAsJsonObject();
-        JsonArray data = agencies.get("data").getAsJsonArray();
-        JsonObject feed;
-        FetchOneFeed job;
-        
-        for (JsonElement rawFeed : data) {
-            feed = rawFeed.getAsJsonObject();
-
-            job = new FetchOneFeed(feed, storer, updated);
-            
-            // per https://groups.google.com/forum/?fromgroups=#!topic/play-framework/j2MbYy6W79w
-            // this runs the subjob in this thread
-            try {
-                job.now().get();
-            } catch (Exception e) {
-                Logger.error("Error during retrieval of %s", 
-                        feed.get("dataexchange_id").getAsString());
-                e.printStackTrace();
-            }
-        }
-
-        return updated;
-    }
+		}
+		
+		return updated;
+	}
 }
