@@ -80,6 +80,7 @@ public class UpdaterFactory {
 		        metros.addAll(updater.update(storer));
 		    } catch (Exception e) {
 		        Logger.error("Updater failed: ", updater);
+		        e.printStackTrace();
 		    }
 		}
 		
@@ -88,6 +89,7 @@ public class UpdaterFactory {
 		        hook.update(metros);
 		    } catch (Exception e) {
 		        Logger.error("Hook failed: ", hook);
+		        e.printStackTrace();
 		    }
 		}
 	}
