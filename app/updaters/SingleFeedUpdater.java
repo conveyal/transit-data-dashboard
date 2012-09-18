@@ -48,113 +48,98 @@ public class SingleFeedUpdater implements Updater {
     public Set<MetroArea> update (FeedStorer storer) {
         // find the old feed, if it exists
         Set<MetroArea> changed = new HashSet<MetroArea>();
-        
-        JPA.em().getTransaction().begin();
-        try {
-            GtfsFeed original = GtfsFeed.find("byDownloadUrl", this.downloadUrl).first();
-            GtfsFeed feed;
 
-            boolean downloadFeed;
+        GtfsFeed original = GtfsFeed.find("byDownloadUrl", this.downloadUrl).first();
+        GtfsFeed feed;
 
-            if (original != null) {
-                feed = original.clone();
-                downloadFeed = false;
-            }
-            else {
-                downloadFeed = true;
-                feed = new GtfsFeed();
-            }
+        boolean downloadFeed;
 
-            // determine if it needs to be downloaded
-            HttpResponse modifiedRes = WS.url(downloadUrl).head();
-            if (!modifiedRes.success()) {
-                Logger.error("Error fetching %s", downloadUrl);
+        if (original != null) {
+            feed = original.clone();
+            downloadFeed = false;
+        }
+        else {
+            downloadFeed = true;
+            feed = new GtfsFeed();
+        }
+
+        // determine if it needs to be downloaded
+        HttpResponse modifiedRes = WS.url(downloadUrl).head();
+        if (!modifiedRes.success()) {
+            Logger.error("Error fetching %s", downloadUrl);
+            return changed;
+        }    
+
+        String modifiedRaw = modifiedRes.getHeader("Last-Modified");
+        Date modified;
+        if (modifiedRaw == null) {
+            Logger.warn(
+                    "Server at %s sends no Last-Modified header; feed will always be redownloaded",
+                    downloadUrl);
+            downloadFeed = true;
+            modified = new Date();
+        }
+        else {
+            SimpleDateFormat httpDate = new SimpleDateFormat("E, d MMM yyyy HH:mm:ss z");
+
+            try {
+                modified = httpDate.parse(modifiedRaw);
+            } catch (ParseException e) {
+                Logger.error("Malformed Last-Modified header for server at %s, was %s",
+                        downloadUrl, modifiedRaw);
+                e.printStackTrace();
                 return changed;
-            }    
+            }
 
-            String modifiedRaw = modifiedRes.getHeader("Last-Modified");
-            Date modified;
-            if (modifiedRaw == null) {
-                Logger.warn(
-                        "Server at %s sends no Last-Modified header; feed will always be redownloaded",
-                        downloadUrl);
+            if (original != null && modified.compareTo(original.dateUpdated) > 0) {
                 downloadFeed = true;
-                modified = new Date();
-            }
-            else {
-                SimpleDateFormat httpDate = new SimpleDateFormat("E, d MMM yyyy HH:mm:ss z");
-
-                try {
-                    modified = httpDate.parse(modifiedRaw);
-                } catch (ParseException e) {
-                    Logger.error("Malformed Last-Modified header for server at %s, was %s",
-                            downloadUrl, modifiedRaw);
-                    e.printStackTrace();
-                    return changed;
-                }
-
-                if (original != null && modified.compareTo(original.dateUpdated) > 0) {
-                    downloadFeed = true;
-                }
-            }
-
-            if (downloadFeed) {
-                String feedId = storer.storeFeed(downloadUrl);
-                File feedData = storer.getFeed(feedId);
-                feed.storedId = feedId;
-                FeedStatsCalculator stats;
-                
-                feed.downloadUrl = this.downloadUrl;
-                
-                try {
-                    stats = new FeedStatsCalculator(feedData);
-                    stats.applyExtended(feed);
-                } catch (Exception e) {
-                    feed.status = FeedParseStatus.FAILED;
-                    Logger.warn("Exception calculating feed stats for %s", downloadUrl);
-                    e.printStackTrace();
-                }
-
-                storer.releaseFeed(feedId);
-                feed.dateUpdated = modified;
-
-                if (original == null)
-                    feed.dateAdded = modified;
-
-                feed.save();
-                
-                if (original != null) {
-                    original.supersededBy = feed;
-                    original.save();
-                }
-
-                List<NtdAgency> agencies = feed.getAgencies();
-
-                if (agencies.size() == 0)
-                    feed.review = ReviewType.NO_AGENCY;
-
-                feed.save();
-
-                for (NtdAgency agency : feed.getEnabledAgencies()) {
-                    for (MetroArea area : agency.getEnabledMetroAreas()) {
-                        changed.add(area);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Logger.error("Exception during update");
-            e.printStackTrace();
-            if (JPA.em().getTransaction().isActive())
-                JPA.em().getTransaction().rollback();
-        } finally {
-            if (JPA.em().getTransaction().isActive()) {
-                if (JPA.em().getTransaction().getRollbackOnly())
-                    JPA.em().getTransaction().rollback();
-                else
-                    JPA.em().getTransaction().commit();
             }
         }
-        
+
+        if (downloadFeed) {
+            String feedId = storer.storeFeed(downloadUrl);
+            File feedData = storer.getFeed(feedId);
+            feed.storedId = feedId;
+            FeedStatsCalculator stats;
+
+            feed.downloadUrl = this.downloadUrl;
+
+            try {
+                stats = new FeedStatsCalculator(feedData);
+                stats.applyExtended(feed);
+            } catch (Exception e) {
+                feed.status = FeedParseStatus.FAILED;
+                Logger.warn("Exception calculating feed stats for %s", downloadUrl);
+                e.printStackTrace();
+            }
+
+            storer.releaseFeed(feedId);
+            feed.dateUpdated = modified;
+
+            if (original == null)
+                feed.dateAdded = modified;
+
+            feed.save();
+
+            if (original != null) {
+                original.supersededBy = feed;
+                original.save();
+            }
+
+            List<NtdAgency> agencies = feed.getAgencies();
+
+            if (agencies.size() == 0)
+                feed.review = ReviewType.NO_AGENCY;
+
+            feed.save();
+
+            for (NtdAgency agency : feed.getEnabledAgencies()) {
+                for (MetroArea area : agency.getEnabledMetroAreas()) {
+                    changed.add(area);
+                }
+            }
+        }
+
         return changed;
     }
 }
