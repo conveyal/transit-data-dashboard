@@ -36,23 +36,8 @@ public class DeploymentPlanGeneratorHook implements UpdaterHook {
 
 	@Override
 	public void update(Set<MetroArea> areas) {	    
-	    JPA.em().getTransaction().begin();
-	    try {
-	        for (MetroArea area : areas) {
-	            area.rebuild();
-	        }
-        } catch (Exception e) {
-            Logger.error("Exception making graph rebuild request");
-            e.printStackTrace();
-            if (JPA.em().getTransaction().isActive())
-                JPA.em().getTransaction().rollback();
-        } finally {
-            if (JPA.em().getTransaction().isActive()) {
-                if (JPA.em().getTransaction().getRollbackOnly())
-                    JPA.em().getTransaction().rollback();
-                else
-                    JPA.em().getTransaction().commit();
-            }
-        }
+	    for (MetroArea area : areas) {
+	        area.rebuild();
+	    }
 	}
 }
