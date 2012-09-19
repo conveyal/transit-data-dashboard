@@ -273,7 +273,8 @@ public class Mapper extends Controller {
 
     /**
      * Manually map feeds to agencies. This will connect each feed specified with each agency
-     * specified. All feeds specified will be connected to all agencies specified.
+     * specified. All feeds specified will be connected to all agencies specified. This is used with
+     * the client at /admin/mapfeeds.html
      * @param feed The feeds to map
      * @param agency The agencies to map
      */
@@ -389,12 +390,20 @@ public class Mapper extends Controller {
 
         renderJSON(agencies);
     }
-    
+
+    /**
+     * Manually run the GTFS update
+     */
     public static void fetchGtfs () {
     	new UpdateGtfs().now();
     	renderJSON("{\"status\":\"running\"}");
     }
     
+    /**
+     * Manually create a deployment plan and send it to the deployer instance specified by the URL.
+     * Note that this will re-set scheduled rebuilds, so be aware of that, if you don't actually
+     * deploy the resulting plan
+     */
     public static void createDeploymentPlan (MetroArea metroArea, @As("yyyy-MM-dd") Date date,
             Integer window, String send) {
         
@@ -417,7 +426,8 @@ public class Mapper extends Controller {
     }
     
     /**
-     * Create GTFS bundle entries for the given metro area ID.
+     * Create OTP GTFS bundle entries for the given metro area ID. Uses an old, very simple 
+     * algorithm rather than the more-sophisticated Deployment Planner.
      */
     public static void createGtfsBundles (MetroArea metroArea) {
         Set<GtfsFeed> feeds = new HashSet<GtfsFeed>();
