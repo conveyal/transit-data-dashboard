@@ -4,9 +4,7 @@ A dashboard for tracking transit data coverage and updates.
 
 ## Loading Data
 
-Data come from a variety of sources, mostly GTFS feeds and the [National Transit Database](http://ntdprogram.gov). GTFS feeds are processed into a JSON-based format by the tools in the [otp_gtfs](https://github.com/demory/otp_gtfs) project maintained by David Emory. Metro areas can be produced in one of a number of ways; the current methodology is to
-dissolve the boundaries between touching GTFS feeds and create metro areas that way. That is described in more detail below. Though the data sets are linked in the database, it is generally not
-possible to find datasets that are pre-linked, more on that below as well. The general procedure is to load unlinked data and then link it after the load. For more of a tutorial format, see the DataLoading page on the wiki.
+Data come from a variety of sources, mostly GTFS feeds and the [National Transit Database](http://ntdprogram.gov). GTFS feeds come primarily from [GTFS Data Exchange](http://gtfs-data-exchange.com) and are processed and information about them is stored in a database. Metro areas come from NTD's UZAs, with geometries from the Census Bureau. That is described in more detail below. Though the data sets are linked in the database, it is generally not possible to find datasets that are pre-linked, more on that below as well. The general procedure is to load unlinked data and then link it after the load. For more of a tutorial format, see the DataLoading page on the wiki.
 
 ### Agencies
 
@@ -22,7 +20,9 @@ There are two ways to load GTFS data; generally we follow this one.
 
 First, configure your `application-context.xml` with the updaters that you want (see the Configuration page on the wiki). Then, go to the admin console at `/api/admin/index` and click on 'Fetch GTFS'. Wait a while while all the feeds are downloaded. Many of them will automatically be matched to agencies.
 
-Once you have a JSON file produced by the otp_gtfs tools, you can load it to the database using the `utils/loadFeedsToDashboard.py` script. This script is used like so:
+This is the older way, which should still work, although the other way is recommended to ensure that subsequent updates are painless.
+
+Once you have a JSON file produced by the [otp_gtfs](https://github.com/demory/otp_gtfs) tools, you can load it to the database using the `utils/loadFeedsToDashboard.py` script. This script is used like so:
 
  `loadFeedsToDashboard.py input.json`
 
@@ -54,7 +54,7 @@ DANGER! Clears all agency to metro area mappings, regardless of how they were cr
 
 `autoNameMetroAreas` - `/api/mapper/autoNameMetroAreas`:
 
-Attempt to auto name metro areas based on the feeds in them. DANGER! Will overwrite any already-defined names.
+Attempt to auto name metro areas based on the agencies in them. DANGER! Will overwrite any already-defined names.
 
 `mapAgenciesByUZAAndMerge` - `/api/mapper/mapAgenciesByUZAAndMerge`
 
@@ -79,6 +79,18 @@ This recalculates the feed statistics for every feed.
 `createDeletedMetroAreas`
 
 This attempts to recreate deleted Google metro area placeholders based on the Google agencies in the file. It is not used very often, because it is very specialized. Generally, using database backups and transactions can avoid the need to use this one.
+
+`calculateFeedStats?storedId=id`
+
+This calculates statistics for the feed in storage described by ID (note that this is the ID in storage, not the ID of the GtfsFeed in the database; this is so that one can diagnose load crashes. It renders the statistics on the feed as JSON; these statistics are what drive the deployment planner (start date, end date, &c.).
+
+`setGoogleGtfsFromParse?name=...&areaName=...&lat=...&lon=...`
+
+Attempts to match an agency from the Google Transit text page to a metro area based on its location and name, using Postgres full-text search tools. It is used by `loadGoogleTransit.js` and should generally not be used directly.
+
+`connectFeedsAndAgencies?feed=...&feed=...&agency=...&agency=... . . . `
+
+This is used by `/admin/mapfeeds.html`, the bulk feed mapper, to connect agencies together.
 
 Many of these tasks can also be performed in a one-by-one fashion using the admin interface (see the wiki).
 
