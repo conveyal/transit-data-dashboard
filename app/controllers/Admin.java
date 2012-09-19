@@ -494,8 +494,7 @@ public class Admin extends Mapper {
          int count = 0;
          DeploymentPlan dp;
          for (MetroArea metro : MetroArea.getAllMetrosWithTransit()) {
-             dp = new DeploymentPlan(metro);
-             dp.sendTo(Play.configuration.getProperty("send_deployer_requests_to"));
+             metro.rebuild();
              count++;
          }
          renderText("Deployed " + count + " metros.");
