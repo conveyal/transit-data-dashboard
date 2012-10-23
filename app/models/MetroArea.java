@@ -322,7 +322,7 @@ public class MetroArea extends Model {
     public void autogeom() {
         Geometry out = null;
         List<Geometry> agencyGeoms = new ArrayList<Geometry>();
-	Geometry agencyGeom;
+        Geometry agencyGeom;
         Integer srid = null;
         
         for (NtdAgency agency : agencies) {
@@ -330,20 +330,20 @@ public class MetroArea extends Model {
             if (agencyGeom == null)
                 continue;
             
-	    if (srid != null)
-		srid = agencyGeom.getSRID();
+            if (srid != null)
+                srid = agencyGeom.getSRID();
 
-	    agencyGeoms.add(agencyGeom);
+            agencyGeoms.add(agencyGeom);
         }
         
         if (srid == null)
             the_geom = null;
         else {
-	    Geometry[] geoms = new Geometry[agencyGeoms.size()];
-	    geoms = agencyGeoms.toArray(geoms);
-	    GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
-	    GeometryCollection gc = new GeometryCollection(geoms, gf);
-	    out = gc.buffer(0.0000001);
+            Geometry[] geoms = new Geometry[agencyGeoms.size()];
+            geoms = agencyGeoms.toArray(geoms);
+            GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
+            GeometryCollection gc = new GeometryCollection(geoms, gf);
+            out = gc.buffer(0.0000001);
             out.setSRID(srid);
             the_geom = GeometryUtils.forceToMultiPolygon(out);
         }
