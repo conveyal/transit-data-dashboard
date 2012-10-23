@@ -30,6 +30,7 @@ import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.operation.overlay.OverlayOp;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 
 import deployment.DeploymentPlan;
 
@@ -344,6 +345,7 @@ public class MetroArea extends Model {
             GeometryFactory gf = GeometryUtils.getGeometryFactoryForSrid(4326);
             GeometryCollection gc = new GeometryCollection(geoms, gf);
             out = gc.buffer(0.0000001);
+            out = DouglasPeuckerSimplifier.simplify(out, 0.001);
             out.setSRID(srid);
             the_geom = GeometryUtils.forceToMultiPolygon(out);
         }
