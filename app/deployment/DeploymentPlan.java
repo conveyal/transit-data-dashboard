@@ -119,7 +119,7 @@ public class DeploymentPlan {
 				// We use the feed ID of the latest feed in this chain of supersession to prevent
 				// "parallel" feeds from being merged (e.g. to prevent Metro-North from being
 				// merged with MTA NYCT or SEPTA Bus from being merged with SEPTA Rail)
-				addFeeds(agency.name + "_" + feed.id, feed, toInclude);
+				addFeeds(agency.name + "-" + feed.id, feed, toInclude);
 			}
 		}
 		
