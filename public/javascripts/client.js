@@ -21,15 +21,22 @@ function DataController (mapController) {
         }        	
     });
     
-    var votesdf = //new $.Deferred();
+    var votesdf = new $.Deferred();
     $.ajax({
     	url: DataController.API_LOCATION + 'getvotes/' +
     		DataController.VOTE_NAMESPACE,
     	dataType: 'json',
     	success: function (data) {
     		instance.voteData = data;
-    		//votesdf.resolve();
-    	}
+    		votesdf.resolve();
+    	},
+        error: function() {
+          // fail gracefully, i.e. pretend nothing happened
+          // note that this change is only in the static version, to
+          // make a demo work
+          instance.voteData = {};
+          votesdf.resolve();
+        }
     });
     
     $.when(votesdf, agenciesdf).done(function () {
